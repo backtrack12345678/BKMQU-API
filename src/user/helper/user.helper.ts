@@ -147,7 +147,7 @@ export class UserHelper {
     });
   }
 
-  userSelectCondition(role: string, type: string) {
+  userSelectCondition(role: string) {
     const roleSelectCondition = {
       mesjid: {
         noRegister: true,
@@ -165,14 +165,14 @@ export class UserHelper {
       email: true,
       photo: { select: { nama: true } },
       sampul: { select: { nama: true } },
-      role: type === 'private' || undefined,
+      role: true,
       detailUser: {
         select: {
           nama: true,
           alamat: true,
           kota_kab: { select: { nama: true } },
           kecamatan: { select: { nama: true } },
-          ...(type === 'private' || role === 'mesjid' ? { saldo: true } : {}),
+          saldo: true,
         },
       },
       ...(roleSelectCondition[role] && {
@@ -209,9 +209,10 @@ export class UserHelper {
       nama: user.detailUser.nama,
       kecamatan: user.detailUser.kecamatan.nama,
       alamat: user.detailUser.alamat,
-      saldo: user.detailUser.saldo
-        ? parseInt(String(user.detailUser.saldo))
-        : undefined,
+      saldo:
+        type === 'private' || user.role === 'mesjid'
+          ? parseInt(String(user.detailUser.saldo))
+          : undefined,
       photo: `${getHost(request)}/api/files/users/${user.photo.nama}`,
       sampul: `${getHost(request)}/api/files/users/${user.sampul.nama}`,
       [user.role]: {
