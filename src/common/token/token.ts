@@ -13,8 +13,8 @@ export class Token {
       }),
     };
 
-    const expiresIn: string =
-      type === 'accessToken' ? process.env.ACCESS_TOKEN_AGE : '30d';
+    const expiresIn: string | number =
+      type === 'accessToken' ? Number(process.env.ACCESS_TOKEN_AGE) : '30d';
     const secret: string =
       type === 'accessToken'
         ? process.env.ACCESS_TOKEN_KEY
