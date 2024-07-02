@@ -1,0 +1,159 @@
+import { Injectable } from '@nestjs/common';
+import { AlquranQuery, KecamatanQuery, MesjidQuery } from './dto/get.dto';
+import { Request } from 'express';
+import { PrismaService } from '../common/prisma.service';
+import { getHost } from '../common/utils/utils';
+import {
+  AlquranResponse,
+  BankResponse,
+  KategoriSedekahResponse,
+  KecamatanResponse,
+  MesjidResponse,
+} from './dto/response.dto';
+
+@Injectable()
+export class MasterService {
+  constructor(private prismaService: PrismaService) {}
+
+  async getMesjid(
+    request: Request,
+    query?: MesjidQuery,
+  ): Promise<MesjidResponse[]> {
+    const filters = query.location
+      ? [
+          {
+            OR: [
+              {
+                kecamatan: {
+                  nama: {
+                    contains: query.location,
+                  },
+                },
+              },
+              {
+                kota_kab: {
+                  nama: {
+                    contains: query.location,
+                  },
+                },
+              },
+            ],
+          },
+        ]
+      : [];
+    const mesjid = await this.prismaService.detail_User.findMany({
+      where: {
+        status: 'DITERIMA',
+        user: {
+          isVerified: true,
+          role: 'mesjid',
+        },
+        AND: filters,
+      },
+      select: {
+        nama: true,
+        userId: true,
+        user: {
+          select: {
+            mesjid: {
+              select: {
+                id: true,
+                noRegister: true,
+              },
+            },
+            photo: {
+              select: {
+                nama: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return mesjid.map((m) => ({
+      id: m.userId,
+      mesjidId: m.user.mesjid.id,
+      nama: m.nama,
+      noRegister: m.user.mesjid.noRegister,
+      photo: `${getHost(request)}/api/files/users/${m.user.photo.nama}`,
+    }));
+  }
+
+  async getKecamatan(query: KecamatanQuery): Promise<KecamatanResponse[]> {
+    return this.prismaService.kecamatan.findMany({
+      ...(query.nama && {
+        where: {
+          OR: [
+            {
+              nama: {
+                contains: query.nama,
+              },
+            },
+            {
+              kota_kab: {
+                nama: {
+                  contains: query.nama,
+                },
+              },
+            },
+          ],
+        },
+      }),
+      take: !query.nama ? 10 : undefined,
+      select: {
+        id: true,
+        kode: true,
+        nama: true,
+        kota_kab: {
+          select: {
+            nama: true,
+          },
+        },
+        provinsi: {
+          select: {
+            nama: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getBank(): Promise<BankResponse[]> {
+    return this.prismaService.bank.findMany({
+      select: {
+        id: true,
+        nama: true,
+      },
+    });
+  }
+
+  async getAlquran(
+    query: AlquranQuery,
+  ): Promise<AlquranResponse | AlquranResponse[]> {
+    const result = await this.prismaService.surah.findMany({
+      ...(query.surahId && {
+        where: {
+          id: query.surahId,
+        },
+        include: {
+          ayat: true,
+        },
+      }),
+    });
+    return result[0].ayat ? result[0] : result;
+  }
+
+  async getKategoriSedekah(): Promise<KategoriSedekahResponse[]> {
+    const result = await this.prismaService.kategori_Sedekah.findMany({
+      select: {
+        id: true,
+        nama: true,
+      },
+    });
+    return result.map((kategori) => ({
+      kategoriId: kategori.id,
+      nama: kategori.nama,
+    }));
+  }
+}

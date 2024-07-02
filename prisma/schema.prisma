@@ -1,0 +1,608 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String                  @id @db.VarChar(150)
+  phone        String                  @unique @db.VarChar(20)
+  password     String                  @db.VarChar(100)
+  email        String                  @unique @db.VarChar(200)
+  role         String                  @db.VarChar(10)
+  isVerified   Boolean                 @default(false) @map("is_verified")
+  acceptTerm   Boolean?                @map("accept_term")
+  createdAt    DateTime                @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt    DateTime?               @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  mesjid       Mesjid?
+  pengurus     Pengurus?
+  jamaah       Jamaah?
+  penceramah   Penceramah?
+  refreshToken Refresh_Token?
+  dokumenBukti Dokumen_Bukti?
+  detailUser   Detail_User?
+  posts        Posts[]
+  aktivitas    Aktivitas[]
+  recipient    Midtrans_Transactions[] @relation("recipient")
+  userInfaq    User_Infaq[]
+  userSedekah  User_Sedekah[]
+  kajian       Kajian[]
+  photo        Photo_User?
+  sampul       Sampul_User?
+
+  @@map("user")
+}
+
+model Detail_User {
+  id           Int            @id @default(autoincrement())
+  userId       String         @unique @map("user_id") @db.VarChar(150)
+  user         User           @relation(fields: [userId], references: [id])
+  nama         String         @db.VarChar(200)
+  tanggalLahir DateTime?      @map("tanggal_lahir")
+  status       String         @default("PENDING") @db.VarChar(10)
+  kecamatanId  Int            @map("kecamatan_id")
+  kecamatan    Kecamatan      @relation(fields: [kecamatanId], references: [id])
+  kotaKabId    Int            @map("kota_kab_id")
+  kota_kab     Kota_Kabupaten @relation(fields: [kotaKabId], references: [id])
+  provinsiId   Int            @map("provinsi_id")
+  provinsi     Provinsi       @relation(fields: [provinsiId], references: [id])
+  alamat       String?        @db.Text
+  saldo        BigInt         @default(0) @db.BigInt
+  createdAt    DateTime       @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt    DateTime?      @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("detail_user")
+}
+
+model Photo_User {
+  id        Int       @id @default(autoincrement())
+  userId    String    @unique @map("user_id") @db.VarChar(150)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nama      String    @default("default_user.jpg") @db.VarChar(250)
+  path      String    @db.Text
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("photo_user")
+}
+
+model Sampul_User {
+  id        Int       @id @default(autoincrement())
+  userId    String    @unique @map("user_id") @db.VarChar(150)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nama      String    @default("default_sampul.jpg") @db.VarChar(250)
+  path      String    @db.Text
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("sampul_user")
+}
+
+model Mesjid {
+  id              Int                @id @default(autoincrement())
+  userId          String             @unique @map("user_id") @db.VarChar(150)
+  user            User               @relation(fields: [userId], references: [id])
+  noRegister      String             @unique @map("no_register") @db.VarChar(200)
+  imam            String?            @db.VarChar(200)
+  saldo           BigInt             @default(0) @db.BigInt
+  pengurus        Pengurus[]
+  jamaah          Jamaah[]
+  kas             Kas[]
+  mutasi          Mutasi[]
+  dokumenQr       Dokumen_QR?
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  infaq           Infaq[]
+  penerimaSedekah Penerima_Sedekah[]
+  transaksiMesjid Transaksi_Mesjid[]
+
+  @@map("mesjid")
+}
+
+model Pengurus {
+  id            Int       @id @default(autoincrement())
+  userId        String    @unique @map("user_id") @db.VarChar(150)
+  user          User      @relation(fields: [userId], references: [id])
+  jabatan       String    @db.VarChar(100)
+  uraianJabatan String?   @map("uraian_jabatan") @db.VarChar(150)
+  mesjidId      Int       @map("mesjid_id")
+  mesjid        Mesjid    @relation(fields: [mesjidId], references: [id])
+  createdAt     DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt     DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("pengurus")
+}
+
+model Jamaah {
+  id        Int       @id @default(autoincrement())
+  userId    String    @unique @map("user_id") @db.VarChar(150)
+  user      User      @relation(fields: [userId], references: [id])
+  mesjidId  Int       @map("mesjid_id")
+  mesjid    Mesjid    @relation(fields: [mesjidId], references: [id])
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("jamaah")
+}
+
+model Penceramah {
+  id        Int       @id @default(autoincrement())
+  userId    String    @unique @map("user_id") @db.VarChar(150)
+  user      User      @relation(fields: [userId], references: [id])
+  keahlian  String    @db.VarChar(100)
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("penceramah")
+}
+
+model Otp {
+  id          Int       @id @default(autoincrement())
+  phone       String    @unique @db.VarChar(20)
+  otp_hashed  String    @db.VarChar(150)
+  expired_otp String    @db.VarChar(100)
+  type        String    @db.VarChar(25)
+  createdAt   DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt   DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("otp")
+}
+
+model Refresh_Token {
+  id                Int       @id @default(autoincrement())
+  userId            String    @unique @map("user_id") @db.VarChar(150)
+  user              User      @relation(fields: [userId], references: [id])
+  refreshToken      String    @map("refresh_token") @db.VarChar(250)
+  notificationToken String?   @map("notification_token") @db.VarChar(250)
+  createdAt         DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt         DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("refresh_token")
+}
+
+model Provinsi {
+  id         Int              @id @default(autoincrement())
+  kode       String           @db.VarChar(10)
+  nama       String           @db.VarChar(200)
+  kota_kab   Kota_Kabupaten[]
+  kecamatan  Kecamatan[]
+  createdAt  DateTime         @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt  DateTime?        @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  detailUser Detail_User[]
+
+  @@map("provinsi")
+}
+
+model Kota_Kabupaten {
+  id         Int           @id @default(autoincrement())
+  provinsiId Int           @map("provinsi_id")
+  provinsi   Provinsi      @relation(fields: [provinsiId], references: [id])
+  kode       String        @db.VarChar(10)
+  nama       String        @db.VarChar(150)
+  createdAt  DateTime      @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt  DateTime?     @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  kecamatan  Kecamatan[]
+  detailUser Detail_User[]
+
+  @@map("kota_Kabupaten")
+}
+
+model Kecamatan {
+  id         Int            @id @default(autoincrement())
+  provinsiId Int            @map("provinsi_id")
+  provinsi   Provinsi       @relation(fields: [provinsiId], references: [id])
+  kotaKabId  Int            @map("kota_kab_id")
+  kota_kab   Kota_Kabupaten @relation(fields: [kotaKabId], references: [id])
+  kode       String         @unique @db.VarChar(10)
+  nama       String         @db.VarChar(150)
+  createdAt  DateTime       @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt  DateTime?      @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  detailUser Detail_User[]
+
+  @@index([nama])
+  @@map("kecamatan")
+}
+
+model Dokumen_Bukti {
+  id        Int       @id @default(autoincrement())
+  userId    String    @unique @map("user_id") @db.VarChar(250)
+  user      User      @relation(fields: [userId], references: [id])
+  nama      String    @db.VarChar(250)
+  path      String    @db.Text
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("dokumen_bukti")
+}
+
+model Dokumen_QR {
+  id        Int       @id @default(autoincrement())
+  mesjidId  Int       @unique @map("mesjid_id") @db.Int()
+  mesjid    Mesjid    @relation(fields: [mesjidId], references: [id])
+  nama      String    @db.VarChar(250)
+  path      String    @db.Text
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("dokumen_qr")
+}
+
+model Posts {
+  id       String        @id @default(cuid())
+  userId   String        @map("user_id") @db.VarChar(250)
+  user     User          @relation(fields: [userId], references: [id])
+  captions String?       @db.Text
+  media    Posts_Media[]
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("posts")
+}
+
+model Posts_Media {
+  id     Int    @id @default(autoincrement())
+  postId String @map("post_id") @db.VarChar(100)
+  post   Posts  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  nama   String @db.VarChar(250)
+  path   String @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("posts_media")
+}
+
+model Aktivitas {
+  id       String   @id @default(cuid())
+  userId   String   @map("user_id") @db.VarChar(150)
+  user     User     @relation(fields: [userId], references: [id])
+  judul    String   @db.VarChar(100)
+  captions String   @db.Text
+  mulai    DateTime
+  selesai  DateTime
+
+  createdAt DateTime            @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime?           @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  media     Aktivitas_Media[]
+  dokumen   Aktivitas_Dokumen[]
+
+  @@map("aktivitas")
+}
+
+model Aktivitas_Media {
+  id          Int       @id @default(autoincrement())
+  aktivitasId String    @map("aktivitas_id") @db.VarChar(100)
+  aktivitas   Aktivitas @relation(fields: [aktivitasId], references: [id], onDelete: Cascade)
+  nama        String    @db.VarChar(250)
+  path        String    @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("aktivitas_media")
+}
+
+model Aktivitas_Dokumen {
+  id          Int       @id @default(autoincrement())
+  aktivitasId String    @map("aktivitas_id") @db.VarChar(100)
+  aktivitas   Aktivitas @relation(fields: [aktivitasId], references: [id], onDelete: Cascade)
+  nama        String    @db.VarChar(250)
+  path        String    @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("aktivitas_dokumen")
+}
+
+model Kajian {
+  id        String @id @db.VarChar(150)
+  userId    String @map("user_id") @db.VarChar(150)
+  user      User   @relation(fields: [userId], references: [id])
+  judul     String @db.VarChar(100)
+  deskripsi String @db.Text()
+
+  createdAt DateTime          @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime?         @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  thumbnail Kajian_Thumbnail?
+  contents  Kajian_Konten[]
+
+  @@map("kajian")
+}
+
+model Kajian_Thumbnail {
+  id       Int    @id @default(autoincrement())
+  kajianId String @unique @map("kajian_id") @db.VarChar(150)
+  kajian   Kajian @relation(fields: [kajianId], references: [id], onDelete: Cascade)
+  nama     String @db.VarChar(250)
+  path     String @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("kajian_thumbnail")
+}
+
+model Kajian_Konten {
+  id       String @id @default(cuid())
+  kajianId String @map("kajian_id") @db.VarChar(150)
+  kajian   Kajian @relation(fields: [kajianId], references: [id], onDelete: Cascade)
+  judul    String @db.VarChar(100)
+  captions String @db.Text
+
+  createdAt DateTime                 @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime?                @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  media     Kajian_Konten_Media?
+  thumbnail Kajian_Konten_Thumbnail?
+
+  @@map("kajian_konten")
+}
+
+model Kajian_Konten_Media {
+  id             Int           @id @default(autoincrement())
+  kajianKontenId String        @unique @map("kajian_konten_id") @db.VarChar(100)
+  kajianKonten   Kajian_Konten @relation(fields: [kajianKontenId], references: [id], onDelete: Cascade)
+  nama           String        @db.VarChar(250)
+  path           String        @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("kajian_konten_media")
+}
+
+model Kajian_Konten_Thumbnail {
+  id             Int           @id @default(autoincrement())
+  kajianKontenId String        @unique @map("kajian_konten_id") @db.VarChar(100)
+  kajianKonten   Kajian_Konten @relation(fields: [kajianKontenId], references: [id], onDelete: Cascade)
+  nama           String        @db.VarChar(250)
+  path           String        @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("kajian_konten_thumbnail")
+}
+
+model Mutasi {
+  id             Int       @id @default(autoincrement())
+  mesjidId       Int       @map("mesjid_id")
+  mesjid         Mesjid    @relation(fields: [mesjidId], references: [id])
+  senderKasId    String    @map("sender_kas_id") @db.VarChar(150)
+  senderKas      Kas       @relation("senderKas", fields: [senderKasId], references: [id])
+  recipientKasId String    @map("recipient_kas_id") @db.VarChar(150)
+  recipientKas   Kas       @relation("recipientKas", fields: [recipientKasId], references: [id])
+  jumlah         BigInt    @db.BigInt
+  tanggal        Int       @db.SmallInt
+  bulan          String    @db.VarChar(20)
+  tahun          Int       @db.Year
+  createdAt      DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt      DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("mutasi")
+}
+
+model Kas {
+  id              String              @id @db.VarChar(150)
+  jenis           String              @db.VarChar(20)
+  namaBank        String              @map("nama_bank") @db.VarChar(150)
+  namaRekening    String              @map("nama_rekening") @db.VarChar(150)
+  nomorRekening   String              @map("nomor_rekening") @db.VarChar(150)
+  fotoRekening    String              @map("foto_rekening") @db.Text
+  path            String              @db.Text
+  mesjidId        Int                 @map("mesjid_id")
+  mesjid          Mesjid              @relation(fields: [mesjidId], references: [id])
+  arusKas         Arus_Kas[]
+  rekapKasBulanan Rekap_Kas_Bulanan[]
+  createdAt       DateTime            @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt       DateTime?           @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  mutasiPengirim  Mutasi[]            @relation("senderKas")
+  mutasiPenerima  Mutasi[]            @relation("recipientKas")
+
+  @@map("kas")
+}
+
+model Arus_Kas {
+  id                 Int       @id @default(autoincrement())
+  kategori           String    @db.VarChar(30)
+  uraian             String    @db.Text
+  metode             String    @db.VarChar(30)
+  namaPenerimaKeluar String?   @map("nama_penerima_keluar") @db.VarChar(150)
+  jumlah             BigInt    @db.BigInt
+  status             String    @db.VarChar(20)
+  bukti              String?   @db.Text
+  path               String?   @db.Text
+  tanggal            Int       @db.SmallInt
+  bulan              String    @db.VarChar(20)
+  tahun              Int       @db.Year
+  kasId              String    @map("kas_id") @db.VarChar(150)
+  kas                Kas       @relation(fields: [kasId], references: [id])
+  createdAt          DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt          DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@index([bulan])
+  @@map("arus_kas")
+}
+
+model Rekap_Kas_Bulanan {
+  id           Int       @id @default(autoincrement())
+  totalKeluar  BigInt    @map("total_keluar") @db.BigInt
+  totalMasuk   BigInt    @map("total_masuk") @db.BigInt
+  initialSaldo BigInt    @map("initial_saldo") @db.BigInt
+  bulan        String    @db.VarChar(20)
+  tahun        Int       @db.Year
+  kasId        String    @map("kas_id") @db.VarChar(150)
+  kas          Kas       @relation(fields: [kasId], references: [id])
+  createdAt    DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt    DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("rekap_kas_bulanan")
+}
+
+model Bank {
+  id        Int       @id @default(autoincrement())
+  kode      String    @unique @db.VarChar(100)
+  nama      String    @db.VarChar(150)
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("bank")
+}
+
+model Surah {
+  id        Int    @id @default(autoincrement())
+  namaSurah String @map("nama_surah") @db.VarChar(100)
+  ayat      Ayat[]
+
+  @@map("surah")
+}
+
+model Ayat {
+  id         Int    @id @default(autoincrement())
+  surahId    Int    @map("surah_id") @db.Int()
+  surah      Surah  @relation(fields: [surahId], references: [id])
+  nomorAyat  Int    @map("nomor_ayat") @db.Int()
+  teksArab   String @map("teks_arab") @db.Text
+  terjemahan String @db.Text
+  teksLatin  String @map("teks_latin") @db.Text
+
+  @@map("ayat")
+}
+
+model List_Categories {
+  id                   Int                     @id @default(autoincrement())
+  nama                 String                  @db.VarChar(100)
+  createdAt            DateTime                @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt            DateTime?               @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  midtransTransactions Midtrans_Transactions[]
+
+  @@map("list_categories")
+}
+
+model Midtrans_Transactions {
+  id              String            @id @db.VarChar(150)
+  recipientId     String            @map("recipient_id") @db.VarChar(150)
+  recipient       User              @relation("recipient", fields: [recipientId], references: [id])
+  categoryId      Int               @map("category_id") @db.Int
+  category        List_Categories   @relation(fields: [categoryId], references: [id])
+  amount          Int               @db.Int
+  netAmount       Int               @default(0) @map("net_amount") @db.Int
+  redirectUrl     String            @map("redirect_url") @db.VarChar(150)
+  isInserted      Boolean           @default(false) @map("is_inserted")
+  createdAt       DateTime          @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt       DateTime?         @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  userInfaq       User_Infaq?
+  userSedekah     User_Sedekah?
+  transaksiMesjid Transaksi_Mesjid?
+
+  @@map("midtrans_transactions")
+}
+
+model Infaq {
+  id            String         @id @db.VarChar(150)
+  mesjidUserId  String         @map("mesjid_user_id") @db.VarChar(150)
+  mesjid        Mesjid         @relation(fields: [mesjidUserId], references: [userId])
+  uraian        String         @db.Text
+  targetNominal BigInt         @map("target_nominal") @db.BigInt
+  saldoMasuk    BigInt         @default(0) @map("saldo_masuk") @db.BigInt
+  foto          String         @db.VarChar(150)
+  path          String         @db.VarChar(150)
+  createdAt     DateTime       @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt     DateTime?      @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  infaqTarget   Infaq_Target[]
+
+  @@map("infaq")
+}
+
+model User_Infaq {
+  id          Int                   @id @default(autoincrement())
+  midtransId  String                @unique @map("midtrans_id") @db.VarChar(150)
+  midtrans    Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
+  userId      String                @map("user_id") @db.VarChar(150)
+  user        User                  @relation(fields: [userId], references: [id])
+  pesan       String?               @db.Text
+  createdAt   DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt   DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  infaqTarget Infaq_Target?
+
+  @@map("user_infaq")
+}
+
+model Infaq_Target {
+  userInfaqId Int        @unique @map("user_infaq_id") @db.Int
+  userInfaq   User_Infaq @relation(fields: [userInfaqId], references: [id], onDelete: Cascade)
+  infaqId     String     @map("infaq_id") @db.VarChar(150)
+  infaq       Infaq      @relation(fields: [infaqId], references: [id], onDelete: Cascade)
+
+  @@id([userInfaqId, infaqId])
+  @@map("infaq_target")
+}
+
+model Kategori_Sedekah {
+  id              Int                @id @default(autoincrement())
+  nama            String             @db.VarChar(100)
+  createdAt       DateTime           @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt       DateTime?          @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  penerimaSedekah Penerima_Sedekah[]
+  userSedekah     User_Sedekah[]
+
+  @@map("kategori_sedekah")
+}
+
+model Penerima_Sedekah {
+  id             Int              @id @default(autoincrement())
+  mesjidUserId   String           @map("mesjid_user_id") @db.VarChar(150)
+  mesjid         Mesjid           @relation(fields: [mesjidUserId], references: [userId])
+  kategoriId     Int              @map("kategori_id") @db.Int()
+  kategori       Kategori_Sedekah @relation(fields: [kategoriId], references: [id])
+  namaPenerima   String           @map("nama_penerima") @db.VarChar(200)
+  usia           Int              @db.Int
+  jumlahKeluarga Int              @map("jumlah_keluarga") @db.Int
+  alamat         String           @db.Text
+  createdAt      DateTime         @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt      DateTime?        @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("penerima_sedekah")
+}
+
+model User_Sedekah {
+  id         Int                   @id @default(autoincrement())
+  userId     String                @map("user_id") @db.VarChar(150)
+  user       User                  @relation(fields: [userId], references: [id])
+  midtransId String                @unique @map("midtrans_id") @db.VarChar(150)
+  midtrans   Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
+  kategoriId Int                   @map("kategori_id") @db.Int()
+  kategori   Kategori_Sedekah      @relation(fields: [kategoriId], references: [id])
+  pesan      String?               @db.Text
+  createdAt  DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt  DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("user_sedekah")
+}
+
+model Transaksi_Mesjid {
+  id           Int                   @id @default(autoincrement())
+  mesjidUserId String                @map("mesjid_user_id") @db.VarChar(150)
+  mesjid       Mesjid                @relation(fields: [mesjidUserId], references: [userId])
+  midtransId   String                @unique @map("midtrans_id") @db.VarChar(150)
+  midtrans     Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
+  createdAt    DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt    DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("transaksi_mesjid")
+}
+
+// buat model infaq sedekah 
+// masjid membuat list sedekah / infaq dan get datanya public
+// publik bisa melihat list sedekah / infaq dan melakukan infaq / sedekah dengan menginputkan foto bukti
+// publik bisa melihat riwayat infaq / sedekah miliknya sendiri
