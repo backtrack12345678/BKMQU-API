@@ -238,7 +238,7 @@ export class UserService {
   ): Promise<UserResponse> {
     const userData: UserResult = await this.prismaService.user.findUnique({
       where: { id: user.id },
-      select: this.userHelper.userSelectCondition(user.role, type),
+      select: this.userHelper.userSelectCondition(user.role),
     });
 
     if (!userData) {
