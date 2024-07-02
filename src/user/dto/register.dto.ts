@@ -55,7 +55,7 @@ export class RegisterDto {
 
   @IsNotEmpty()
   @IsBoolean()
-  @Transform(({ value }) => value === true)
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsIn([true], { message: 'Accept term must be true' })
   acceptTerm: boolean;
 
