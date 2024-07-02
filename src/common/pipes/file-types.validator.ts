@@ -46,7 +46,6 @@ export class FileTypesValidator extends FileValidator {
   validationOptions: Record<string, any>;
 
   async isValid(file: Express.Multer.File): Promise<boolean> {
-    console.log(file, this.validationOptions.mimeTypes);
     const fileExt: string = extname(file.originalname).toLowerCase();
     // const fileType = await import('file-type');
     // const { ext, mime } = await fileType.fileTypeFromFile(file.path);
