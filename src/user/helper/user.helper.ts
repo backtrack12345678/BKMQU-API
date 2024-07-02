@@ -184,22 +184,23 @@ export class UserHelper {
   toUserResponse(user: UserResult, request: any, type: string): UserResponse {
     const toRoleResponse = {
       mesjid: {
-        noRegister: user.mesjid.noRegister,
-        imam: user.mesjid.imam,
-        jamaah: user.mesjid._count.jamaah,
+        noRegister: user.mesjid?.noRegister,
+        imam: user.mesjid?.imam,
+        jamaah: user.mesjid?._count?.jamaah,
       },
       pengurus: {
-        jabatan: user.pengurus.jabatan,
-        uraianJabatan: user.pengurus.uraianJabatan,
+        jabatan: user.pengurus?.jabatan,
+        uraianJabatan: user.pengurus?.uraianJabatan,
       },
       penceramah: {
-        keahlian: user.penceramah.keahlian,
+        keahlian: user.penceramah?.keahlian,
       },
       jamaah: {
-        mesjidId: user.jamaah.mesjid.id,
-        mesjidUserId: user.jamaah.mesjid.userId,
+        mesjidId: user.jamaah?.mesjid?.id,
+        mesjidUserId: user.jamaah?.mesjid?.userId,
       },
     };
+
     return {
       id: user.id,
       phone: user.phone,
