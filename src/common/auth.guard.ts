@@ -39,24 +39,12 @@ export class AuthGuard implements CanActivate {
         token,
         'accessToken',
       );
-      // const user = await this.prismaService.user.findUnique({
-      //   where: {
-      //     id: payload.id,
-      //   },
-      //   include: {
-      //     detailUser: true,
-      //   },
-      // });
-
-      // if (!user) {
-      //   throw new HttpException('Unauthorized', 401);
-      // }
 
       request['user'] = {
         id: payload.id,
         role: payload.role,
       };
-    } catch {
+    } catch (e) {
       throw new HttpException(
         'Kredensial Tidak Valid. Silahkan Login Kembali',
         401,
