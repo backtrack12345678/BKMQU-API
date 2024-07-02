@@ -93,7 +93,6 @@ model Mesjid {
   user            User               @relation(fields: [userId], references: [id])
   noRegister      String             @unique @map("no_register") @db.VarChar(200)
   imam            String?            @db.VarChar(200)
-  saldo           BigInt             @default(0) @db.BigInt
   pengurus        Pengurus[]
   jamaah          Jamaah[]
   kas             Kas[]
