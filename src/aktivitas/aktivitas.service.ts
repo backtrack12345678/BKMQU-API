@@ -1,6 +1,6 @@
 import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAktivitasDto } from './dto/create-aktivita.dto';
-import { UpdateAktivitaDto } from './dto/update-aktivita.dto';
+// import { UpdateAktivitaDto } from './dto/update-aktivita.dto';
 import { PrismaService } from '../common/prisma.service';
 import { Auth } from '../model/user.model';
 import { AktivitasResponse, AktivitasResult } from './dto/response.dto';
@@ -155,9 +155,9 @@ export class AktivitasService {
     return this.toAktivitasResponse(aktivitas, getHost(request));
   }
 
-  update(id: number, updateAktivitaDto: UpdateAktivitaDto) {
-    return `This action updates a #${id} aktivita`;
-  }
+  // update(id: number, updateAktivitaDto: UpdateAktivitaDto) {
+  //   return `This action updates a #${id} aktivita`;
+  // }
 
   async removeAktivitas(user: Auth, id: string): Promise<void> {
     await this.checkAktivitasOwner(user?.id || 'mesjid-sfsdfsdfsdf', id);

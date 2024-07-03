@@ -3,7 +3,7 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  // Patch,
   Param,
   Delete,
   HttpCode,
@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { AktivitasService } from './aktivitas.service';
 import { CreateAktivitasDto } from './dto/create-aktivita.dto';
-import { UpdateAktivitaDto } from './dto/update-aktivita.dto';
+// import { UpdateAktivitaDto } from './dto/update-aktivita.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { WebResponse } from '../model/web.model';
 import { AktivitasResponse } from './dto/response.dto';
@@ -75,13 +75,13 @@ export class AktivitasController {
     };
   }
 
-  @Patch('/:id')
-  update(
-    @Param('id') id: string,
-    @Body() updateAktivitaDto: UpdateAktivitaDto,
-  ) {
-    return this.aktivitasService.update(+id, updateAktivitaDto);
-  }
+  // @Patch('/:id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updateAktivitaDto: UpdateAktivitaDto,
+  // ) {
+  //   return this.aktivitasService.update(+id, updateAktivitaDto);
+  // }
 
   @Delete('/:id')
   @Auth()
