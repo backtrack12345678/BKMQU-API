@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  HttpException,
+  Injectable,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from './role.enum';
 import { ROLES_KEY } from './role.decorator';
@@ -17,6 +22,11 @@ export class RoleGuard implements CanActivate {
       return true;
     }
     const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.role?.includes(role));
+
+    if (!requiredRoles.some((role) => user.role?.includes(role))) {
+      throw new HttpException('Anda tidak memiliki izin untuk akses', 403);
+    }
+
+    return true;
   }
 }
