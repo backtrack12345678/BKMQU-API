@@ -231,9 +231,7 @@ export class KajianService {
       take: query.size,
       orderBy: { createdAt: 'desc' },
       skip: query.cursor ? 1 : undefined,
-      cursor: {
-        id: query.cursor || undefined,
-      },
+      cursor: query.cursor ? { id: query.cursor } : undefined,
       select: this.kajianSelectCondition,
     });
 
@@ -369,10 +367,7 @@ export class KajianService {
     request: Request,
     kajianId: string,
     query?: GetKajianContentsQueryDto,
-    credentials?: Auth,
   ): Promise<KajianContentResponse[] | []> {
-    if (credentials) {
-    }
     const kajianContents = await this.prismaService.kajian_Konten.findMany({
       where: {
         kajianId: kajianId,
@@ -380,9 +375,7 @@ export class KajianService {
       take: query.size,
       orderBy: { createdAt: TimeSort[query.timeSort] },
       skip: query.cursor ? 1 : undefined,
-      cursor: {
-        id: query.cursor || undefined,
-      },
+      cursor: query.cursor ? { id: query.cursor } : undefined,
       select: this.kajianContentSelectCondition,
     });
 
