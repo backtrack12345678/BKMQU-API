@@ -1,6 +1,7 @@
 import { Transform } from 'class-transformer';
 import {
   IsIn,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -9,10 +10,12 @@ import {
 
 export class GetKajianQueryDto {
   @IsOptional()
+  @IsNotEmpty()
   @IsString()
   cursor?: string;
 
   @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
   @IsPositive()
   @Transform(({ value }) => parseInt(value, 10))
