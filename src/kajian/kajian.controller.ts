@@ -61,7 +61,7 @@ export class KajianController {
   async createKajian(
     @Req() request: any,
     @Body() payload: CreateKajianDto,
-    @UploadedFile()
+    @UploadedFile(ParseFilePipe)
     thumbnail: Express.Multer.File,
   ): Promise<WebResponse<KajianResponse>> {
     const result: KajianResponse = await this.kajianService.createKajian(
