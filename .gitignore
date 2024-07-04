@@ -61,6 +61,7 @@ uploads/bukti/pengurus/*
 uploads/bukti/mesjid/*
 uploads/users/*
 uploads/posts/*
+uploads/kajian/*
 uploads/rekening/*
 uploads/aktivitas/*
 uploads/qris/*
@@ -75,6 +76,7 @@ uploads/arus-kas/*
 !uploads/users/default_user.jpg
 !uploads/users/default_sampul.jpg
 !uploads/posts/.gitkeep
+!uploads/kajian/.gitkeep
 !uploads/rekening/.gitkeep
 !uploads/aktivitas/.gitkeep
 !uploads/qris/.gitkeep
