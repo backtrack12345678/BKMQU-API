@@ -27,7 +27,7 @@ export async function sendOTPToWA(
   phone: string,
 ): Promise<string> {
   const options = {
-    instance_key: '5hif30AEGlPM',
+    instance_key: process.env.OTP_INSTANCE_KEY,
     jid: phone,
     message: `Halo! Ini adalah kode OTP Anda: *${otpNumber}*. Berlaku Selama 2 Menit. Mohon jangan memberikan kode ini kepada siapa pun. Terima kasih!
       `,
