@@ -20,6 +20,6 @@ export class UpdateProfileDto {
 export class UpdateUserImageDto {
   @IsNotEmpty()
   @IsString()
-  @IsIn(['Photo, Sampul'])
+  @IsIn(['Photo', 'Sampul'])
   type: string;
 }
