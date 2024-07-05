@@ -207,6 +207,7 @@ export class UserHelper {
       email: user.email,
       role: type === 'private' ? user.role : undefined,
       nama: user.detailUser.nama,
+      kota_kab: user.detailUser.kota_kab.nama,
       kecamatan: user.detailUser.kecamatan.nama,
       alamat: user.detailUser.alamat,
       saldo:

@@ -57,6 +57,7 @@ export class UserResult extends User {
 
 export class UserResponse extends User {
   nama: string;
+  kota_kab: string;
   kecamatan: string;
   alamat: string;
   saldo?: number;
