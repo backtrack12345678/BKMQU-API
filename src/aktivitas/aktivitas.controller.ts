@@ -30,11 +30,11 @@ const allowedMimeTypes = {
 
 @Controller('/api/aktivitas')
 export class AktivitasController {
-  constructor(private readonly aktivitasService: AktivitasService) {}
+  constructor(private readonly aktivitasService: AktivitasService) { }
 
   @Post()
   @Auth()
-  @Roles(Role.MESJID)
+  @Roles(Role.MESJID, Role.PENCERAMAH)
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'media' }, { name: 'dokumen' }], {
       dest: './uploads/aktivitas',
@@ -85,7 +85,7 @@ export class AktivitasController {
 
   @Delete('/:id')
   @Auth()
-  @Roles(Role.MESJID)
+  @Roles(Role.MESJID, Role.PENCERAMAH)
   async removeAktivitas(
     @Param('id') id: string,
     @Req() request,
