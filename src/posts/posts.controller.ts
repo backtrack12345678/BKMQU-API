@@ -31,12 +31,12 @@ const allowedMimeTypes = {
 
 @Controller('/api/posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(private readonly postsService: PostsService) { }
 
   @Post()
   @HttpCode(201)
   @Auth()
-  @Roles(Role.MESJID)
+  @Roles(Role.MESJID, Role.PENCERAMAH)
   @UseInterceptors(
     FilesInterceptor('media', Infinity, {
       dest: './uploads/posts',
@@ -98,7 +98,7 @@ export class PostsController {
 
   @Delete('/:id')
   @Auth()
-  @Roles(Role.MESJID)
+  @Roles(Role.MESJID, Role.PENCERAMAH)
   async remove(
     @Param('id') id: string,
     @Req() request,
