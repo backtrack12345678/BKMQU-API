@@ -57,7 +57,13 @@ export class FilesController {
   }
 
   @Get('/kajian/:filename')
-  getKajianMedia() {}
+  getKajianMedia(
+    @Param('filename') filename: string,
+    @Res() response: Response,
+  ) {
+    const file = this.filesService.serveFiles(filename, 'kajian');
+    file.pipe(response);
+  }
 
   @Get('/infaq/:filename')
   getInfaqFile(@Param('filename') filename: string, @Res() response: Response) {
