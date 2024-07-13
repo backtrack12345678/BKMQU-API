@@ -30,7 +30,7 @@ const allowedMimeTypes = {
 
 @Controller('/api/aktivitas')
 export class AktivitasController {
-  constructor(private readonly aktivitasService: AktivitasService) { }
+  constructor(private readonly aktivitasService: AktivitasService) {}
 
   @Post()
   @Auth()
