@@ -46,9 +46,9 @@ const allowedMimeTypes = {
 export class KajianController {
   constructor(private readonly kajianService: KajianService) {}
 
+  @Post('/')
   @Auth()
   @Roles(Role.PENCERAMAH)
-  @Post('/')
   @HttpCode(201)
   @UseInterceptors(
     FileInterceptor('thumbnail', {
@@ -107,9 +107,9 @@ export class KajianController {
     };
   }
 
+  @Patch('/:kajianId')
   @Auth()
   @Roles(Role.PENCERAMAH)
-  @Patch('/:kajianId')
   @UseInterceptors(
     FileInterceptor('thumbnail', {
       dest: './uploads/kajian',
@@ -142,9 +142,9 @@ export class KajianController {
     };
   }
 
+  @Delete('/:kajianId')
   @Auth()
   @Roles(Role.PENCERAMAH)
-  @Delete('/:kajianId')
   async removeKajian(
     @Req() request: any,
     @Param('kajianId') kajianId: string,
@@ -157,9 +157,9 @@ export class KajianController {
     };
   }
 
+  @Post('/:kajianId/contents')
   @Auth()
   @Roles(Role.PENCERAMAH)
-  @Post('/:kajianId/contents')
   @HttpCode(201)
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -227,9 +227,9 @@ export class KajianController {
     };
   }
 
+  @Patch('/:kajianId/contents/:kajianContentId')
   @Auth()
   @Roles(Role.PENCERAMAH)
-  @Patch('/:kajianId/contents/:kajianContentId')
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -268,9 +268,9 @@ export class KajianController {
     };
   }
 
+  @Delete('/:kajianId/contents/:kajianContentId')
   @Auth()
   @Roles(Role.PENCERAMAH)
-  @Delete('/:kajianId/contents/:kajianContentId')
   async removeKajianContent(
     @Req() request: any,
     @Param() param: KajianContentParam,
