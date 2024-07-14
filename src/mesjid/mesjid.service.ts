@@ -47,7 +47,7 @@ export class MesjidService {
           {
             user: {
               detailUser: {
-                status,
+                status: query.status,
               },
             },
           },
