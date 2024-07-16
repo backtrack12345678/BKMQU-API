@@ -39,7 +39,7 @@ import { validateFileType } from '../common/pipes/file-validator';
 
 const allowedMimeTypes = {
   thumbnail: ['image/png', 'image/jpg', 'image/jpeg'],
-  media: ['image/jpg', 'image/jpeg'],
+  media: ['video/mp4'],
 };
 
 @Controller('/api/kajian')
