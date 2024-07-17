@@ -99,7 +99,7 @@ export class Helper {
       namaBank: kas.namaBank,
       namaRek: kas.namaRekening,
       nomorRek: kas.nomorRekening,
-      saldoAwal: parseInt(kas.rekapKasBulanan['initialSaldo']),
+      saldoAwal: parseInt(kas.rekapKasBulanan['initial_saldo']),
       bulan: kas.rekapKasBulanan['bulan'],
       tahun: kas.rekapKasBulanan['tahun'],
     };
