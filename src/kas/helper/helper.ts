@@ -43,8 +43,8 @@ export class Helper {
       namaBank: payload.namaBank || '',
       namaRekening: payload.namaRek || '',
       nomorRekening: payload.nomorRek || '',
-      fotoRekening: fotoRek.filename || '',
-      path: fotoRek.path || '',
+      fotoRekening: fotoRek?.filename || '',
+      path: fotoRek?.path || '',
       mesjidId: mesjidId,
       rekapKasBulanan: {
         create: {
