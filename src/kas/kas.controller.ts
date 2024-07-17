@@ -90,15 +90,6 @@ export class KasController {
   @Auth()
   @Roles(Role.MESJID)
   @HttpCode(201)
-  @UseInterceptors(
-    FileInterceptor('fotoRek', {
-      dest: './uploads/rekening',
-      fileFilter(req, file, cb) {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
-    }),
-  )
-
   async createKasTunai(
     @Req() request,
     @Body() payload: CreateKasTunaiDto,
