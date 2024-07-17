@@ -19,6 +19,7 @@ import {
   CreateArusKasMasukDto,
   CreateKasBankDto,
   CreateKasMutasiDto,
+  CreateKasTunaiDto,
 } from './dto/create-kas.dto';
 // import { UpdateKaDto } from './dto/update-ka.dto';
 import { Auth } from '../common/auth.decorator';
@@ -53,7 +54,7 @@ const allowedMimeTypes = {
 
 @Controller('/api/kas')
 export class KasController {
-  constructor(private readonly kasService: KasService) {}
+  constructor(private readonly kasService: KasService) { }
 
   @Post('/bank')
   @Auth()
@@ -78,6 +79,31 @@ export class KasController {
       payload,
       fotoRek,
     );
+    return {
+      status: 'success',
+      message: 'Kas Berhasil Dibuat',
+      data: result,
+    };
+  }
+
+  @Post('/tunai')
+  @Auth()
+  @Roles(Role.MESJID)
+  @HttpCode(201)
+  @UseInterceptors(
+    FileInterceptor('fotoRek', {
+      dest: './uploads/rekening',
+      fileFilter(req, file, cb) {
+        validateFileType(allowedMimeTypes, file, cb);
+      },
+    }),
+  )
+
+  async createKasTunai(
+    @Req() request,
+    @Body() payload: CreateKasTunaiDto,
+  ): Promise<WebResponse<KasResponse>> {
+    const result = await this.kasService.createKasTunai(request.user, payload);
     return {
       status: 'success',
       message: 'Kas Berhasil Dibuat',
