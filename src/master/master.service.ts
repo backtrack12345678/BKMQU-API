@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { AlquranQuery, KecamatanQuery, MesjidQuery } from './dto/get.dto';
+import {
+  AlquranQuery,
+  KecamatanQuery,
+  MesjidQuery,
+  PenceramahQuery,
+} from './dto/get.dto';
 import { Request } from 'express';
 import { PrismaService } from '../common/prisma.service';
 import { getHost } from '../common/utils/utils';
@@ -9,6 +14,7 @@ import {
   KategoriSedekahResponse,
   KecamatanResponse,
   MesjidResponse,
+  PenceramahResponse,
 } from './dto/response.dto';
 
 @Injectable()
@@ -77,6 +83,58 @@ export class MasterService {
       nama: m.nama,
       noRegister: m.user.mesjid.noRegister,
       photo: `${getHost(request)}/api/files/users/${m.user.photo.nama}`,
+    }));
+  }
+
+  async getPenceramah(
+    request: Request,
+    query?: PenceramahQuery,
+  ): Promise<PenceramahResponse[] | []> {
+    const penceramah = await this.prismaService.user.findMany({
+      where: {
+        isVerified: true,
+        role: 'penceramah',
+        detailUser: {
+          status: 'DITERIMA',
+          nama: {
+            contains: query.nama || undefined,
+          },
+        },
+      },
+      take: query.size,
+      ...(query.cursor && {
+        skip: 1,
+        cursor: {
+          id: query.cursor,
+        },
+      }),
+      select: {
+        id: true,
+        detailUser: {
+          select: {
+            nama: true,
+          },
+        },
+        penceramah: {
+          select: {
+            id: true,
+            keahlian: true,
+          },
+        },
+        photo: {
+          select: {
+            nama: true,
+          },
+        },
+      },
+    });
+
+    return penceramah.map((p) => ({
+      id: p.id,
+      penceramahId: p.penceramah.id,
+      nama: p.detailUser.nama,
+      keahlian: p.penceramah.keahlian,
+      photo: `${getHost(request)}/api/files/users/${p.photo.nama}`,
     }));
   }
 
