@@ -270,17 +270,22 @@ export class MidtransService {
         notificationToken: true,
       },
     });
-    return tokens.map((token, index) => ({
-      ...(token.notificationToken && {
-        to: token.notificationToken,
-        title:
-          index === 0
-            ? `Transaksi ${paymentData.category} Berhasil`
-            : `Dana ${paymentData.category} Masuk!`,
-        body: `${paymentData.category} sebesar Rp. ${paymentData.amount} berhasil !`,
-        priority: 'default',
-      }),
-    }));
+    return tokens
+      .map((token, index) => {
+        if (token.notificationToken) {
+          return {
+            to: token.notificationToken,
+            title:
+              index === 0
+                ? `Transaksi ${paymentData.category} Berhasil`
+                : `Dana ${paymentData.category} Masuk!`,
+            body: `${paymentData.category} sebesar Rp. ${paymentData.amount} berhasil !`,
+            priority: 'default',
+          };
+        }
+        return null;
+      })
+      .filter((notification) => notification !== null);
   }
 
   async createMidtransTransaction(categoryId, payload) {
