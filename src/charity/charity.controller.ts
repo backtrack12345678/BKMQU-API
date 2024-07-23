@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UploadedFile,
   HttpCode,
+  ParseFilePipe,
 } from '@nestjs/common';
 import { CharityService } from './charity.service';
 import {
@@ -110,7 +111,7 @@ export class CharityController {
   async createInfaqMesjid(
     @Req() request: any,
     @Body() payload: CreateInfaqMesjidDto,
-    @UploadedFile() content: Express.Multer.File,
+    @UploadedFile(ParseFilePipe) content: Express.Multer.File,
   ) {
     const result = await this.charityService.createInfaq(
       request,

@@ -19,6 +19,22 @@ export class KecamatanQuery {
   // size?: number = 10;
 }
 
+export class PenceramahQuery {
+  @IsOptional()
+  @IsString()
+  nama?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  @Transform(({ value }) => parseInt(value, 10))
+  size?: number = 5;
+
+  @IsOptional()
+  @IsString()
+  cursor?: string;
+}
+
 export class AlquranQuery {
   @Transform(({ value }) => parseInt(value, 10))
   @IsOptional()

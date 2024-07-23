@@ -6,6 +6,14 @@ export class MesjidResponse {
   photo: string;
 }
 
+export class PenceramahResponse {
+  id: string;
+  penceramahId: number;
+  nama: string;
+  keahlian: string;
+  photo: string;
+}
+
 export class KecamatanResponse {
   id: number;
   kode: string;

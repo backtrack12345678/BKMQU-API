@@ -1,6 +1,11 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import { MasterService } from './master.service';
-import { AlquranQuery, KecamatanQuery, MesjidQuery } from './dto/get.dto';
+import {
+  AlquranQuery,
+  KecamatanQuery,
+  MesjidQuery,
+  PenceramahQuery,
+} from './dto/get.dto';
 import { Request } from 'express';
 import {
   AlquranResponse,
@@ -25,6 +30,18 @@ export class MasterController {
     @Req() request: Request,
   ): Promise<WebResponse<MesjidResponse[]>> {
     const result = await this.masterService.getMesjid(request, query);
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
+  @Get('/penceramah')
+  async getPenceramah(
+    @Query() query: PenceramahQuery,
+    @Req() request: Request,
+  ): Promise<WebResponse<PenceramahQuery[]>> {
+    const result = await this.masterService.getPenceramah(request, query);
     return {
       status: 'success',
       data: result,

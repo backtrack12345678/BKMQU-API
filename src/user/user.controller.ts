@@ -311,7 +311,6 @@ export class UserController {
 
   // public posts
   @Get('/:userId/posts')
-  @Auth()
   async findAllUserPublicPosts(
     @Req() request: any,
     @Param('userId') userId: string,
