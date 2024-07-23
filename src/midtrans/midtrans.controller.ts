@@ -5,14 +5,14 @@ import {
   Delete,
   Req,
   Post,
-  UsePipes,
-  ValidationPipe,
   Body,
+  UseInterceptors,
 } from '@nestjs/common';
 import { MidtransService } from './midtrans.service';
 import { Auth } from '../common/auth.decorator';
 import { UpdateWebhookDto } from './dto/update-midtrans.dto';
 import { WebResponse } from '../model/web.model';
+import { MidtransInterceptor } from './midtrans.interceptor';
 
 @Controller('/api/midtrans')
 export class MidtransController {
@@ -52,7 +52,7 @@ export class MidtransController {
   }
 
   @Post('/transaction/webhook')
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: false }))
+  @UseInterceptors(MidtransInterceptor)
   async updateSaldoWebHook(
     @Body() payload: UpdateWebhookDto,
   ): Promise<WebResponse<true>> {
