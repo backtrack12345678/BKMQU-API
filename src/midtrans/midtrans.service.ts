@@ -250,6 +250,7 @@ export class MidtransService {
 
   async pushNotification(paymentData) {
     const notificationData = await this.getNotificationData(paymentData);
+    console.log(notificationData);
     if (notificationData.length > 0) {
       await this.axiosService.notificationInstance.post(
         '--/api/v2/push/send',

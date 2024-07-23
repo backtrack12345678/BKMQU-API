@@ -37,7 +37,6 @@ export class CharityController {
 
   @Post('/infaq')
   @Auth()
-  @Roles(Role.MESJID)
   @HttpCode(201)
   async createDonasiInfaq(
     @Req() request: any,
@@ -56,7 +55,6 @@ export class CharityController {
 
   @Post('/infaq/:infaqId')
   @Auth()
-  @Roles(Role.MESJID)
   @HttpCode(201)
   async createDonasiInfaqById(
     @Req() request: any,
@@ -77,7 +75,6 @@ export class CharityController {
 
   @Post('/sedekah/:kategoriId')
   @Auth()
-  @Roles(Role.MESJID)
   @HttpCode(201)
   async createDonasiSedekah(
     @Req() request: any,
