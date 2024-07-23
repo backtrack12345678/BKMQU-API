@@ -263,7 +263,7 @@ export class MidtransService {
     const tokens = await this.prismaService.refresh_Token.findMany({
       where: {
         userId: {
-          in: [paymentData.recipientId, paymentData.senderId],
+          in: [paymentData.senderId, paymentData.recipientId],
         },
       },
       select: {
