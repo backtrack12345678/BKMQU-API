@@ -205,7 +205,7 @@ export class UserHelper {
       id: user.id,
       phone: user.phone,
       email: user.email,
-      role: type === 'private' ? user.role : undefined,
+      role: user.role,
       nama: user.detailUser.nama,
       kota_kab: user.detailUser.kota_kab.nama,
       kecamatan: user.detailUser.kecamatan.nama,
