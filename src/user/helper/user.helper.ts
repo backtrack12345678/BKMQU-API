@@ -216,10 +216,12 @@ export class UserHelper {
           : undefined,
       photo: `${getHost(request)}/api/files/users/${user.photo.nama}`,
       sampul: `${getHost(request)}/api/files/users/${user.sampul.nama}`,
-      [user.role]: {
-        id: user[user.role].id,
-        ...toRoleResponse[user.role],
-      },
+      ...(toRoleResponse[user.role] && {
+        [user.role]: {
+          id: user[user.role].id,
+          ...toRoleResponse[user.role],
+        },
+      }),
     };
   }
 
