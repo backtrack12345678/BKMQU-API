@@ -26,12 +26,12 @@ import { GetPostsQueryDto } from './dto/get.dto';
 import { validateFileType } from '../common/pipes/file-validator';
 
 const allowedMimeTypes = {
-  media: ['image/png', 'image/jpg', 'image/jpeg'],
+  media: ['image/png', 'image/jpg', 'image/jpeg', 'video/mp4'],
 };
 
 @Controller('/api/posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) { }
+  constructor(private readonly postsService: PostsService) {}
 
   @Post()
   @HttpCode(201)

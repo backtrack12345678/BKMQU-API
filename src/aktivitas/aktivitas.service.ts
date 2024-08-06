@@ -160,7 +160,7 @@ export class AktivitasService {
   // }
 
   async removeAktivitas(user: Auth, id: string): Promise<void> {
-    await this.checkAktivitasOwner(user?.id || 'mesjid-sfsdfsdfsdf', id);
+    await this.checkAktivitasOwner(user.id, id);
 
     const aktivitas = await this.prismaService.aktivitas.delete({
       where: {

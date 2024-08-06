@@ -9,6 +9,7 @@ import { KasModule } from '../kas/kas.module';
 import { CharityModule } from '../charity/charity.module';
 import { KajianModule } from '../kajian/kajian.module';
 import { FilesModule } from '../files/files.module';
+import { LiveModule } from '../live/live.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { FilesModule } from '../files/files.module';
     CharityModule,
     KajianModule,
     FilesModule,
+    LiveModule,
   ],
   providers: [UserService, UserHelper],
   controllers: [UserController],

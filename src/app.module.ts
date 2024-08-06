@@ -14,6 +14,7 @@ import { KasModule } from './kas/kas.module';
 import { MidtransModule } from './midtrans/midtrans.module';
 import { KajianModule } from './kajian/kajian.module';
 import { CharityModule } from './charity/charity.module';
+import { LiveModule } from './live/live.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CharityModule } from './charity/charity.module';
     MidtransModule,
     KajianModule,
     CharityModule,
+    LiveModule,
   ],
   controllers: [AppController],
   providers: [AppService],

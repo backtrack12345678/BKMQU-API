@@ -38,6 +38,7 @@ model User {
   kajian       Kajian[]
   photo        Photo_User?
   sampul       Sampul_User?
+  live         Live[]
 
   @@map("user")
 }
@@ -371,6 +372,35 @@ model Kajian_Konten_Thumbnail {
   updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
 
   @@map("kajian_konten_thumbnail")
+}
+
+model Live {
+  id      String   @id @db.VarChar(150)
+  userId  String   @map("user_id") @db.VarChar(150)
+  user    User     @relation(fields: [userId], references: [id])
+  judul   String   @db.VarChar(100)
+  link    String   @db.Text
+  mulai   DateTime
+  selesai DateTime
+
+  createdAt DateTime        @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime?       @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  thumbnail Live_Thumbnail?
+
+  @@map("live")
+}
+
+model Live_Thumbnail {
+  id     Int    @id @default(autoincrement())
+  liveId String @unique @map("live_id") @db.VarChar(150)
+  live   Live   @relation(fields: [liveId], references: [id], onDelete: Cascade)
+  nama   String @db.VarChar(250)
+  path   String @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("live_thumbnail")
 }
 
 model Mutasi {

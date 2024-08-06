@@ -49,6 +49,8 @@ import { CharityService } from '../charity/charity.service';
 import { GetKajianQueryDto } from '../kajian/dto/query.dto';
 import { KajianService } from '../kajian/kajian.service';
 import { KajianResponse } from '../kajian/dto/response.dto';
+import { GetLiveQueryDto } from '../live/dto/query..dto';
+import { LiveService } from '../live/live.service';
 
 const allowedMimeTypes = {
   bukti: ['application/pdf', 'image/jpg', 'image/jpeg', 'image/png'],
@@ -63,6 +65,7 @@ export class UserController {
     private postsService: PostsService,
     private aktivitasService: AktivitasService,
     private kajianService: KajianService,
+    private liveService: LiveService,
     private kasService: KasService,
     private charityService: CharityService,
   ) {}
@@ -395,6 +398,24 @@ export class UserController {
     @Query() query: GetKajianQueryDto,
   ): Promise<WebResponse<KajianResponse[] | []>> {
     const result = await this.kajianService.findAllKajian(
+      request,
+      query,
+      'public',
+      userId,
+    );
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
+  @Get('/:userId/live')
+  async findAllUserPublicLive(
+    @Req() request: any,
+    @Param('userId') userId: string,
+    @Query() query: GetLiveQueryDto,
+  ) {
+    const result = await this.liveService.findAllLives(
       request,
       query,
       'public',
