@@ -11,8 +11,12 @@ export class FilesController {
 
   @Get('/users/:filename')
   getUserPhoto(@Param('filename') filename: string, @Res() response: Response) {
-    const file = this.filesService.serveFiles(filename, 'users');
-    file.pipe(response);
+    const { fileStream, mimeType } = this.filesService.serveFiles(
+      filename,
+      'users',
+    );
+    response.setHeader('Content-Type', mimeType);
+    fileStream.pipe(response);
   }
 
   @Get('/bukti/mesjid/:filename')
@@ -22,8 +26,12 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const file = this.filesService.serveFiles(filename, 'bukti/mesjid');
-    file.pipe(response);
+    const { fileStream, mimeType } = this.filesService.serveFiles(
+      filename,
+      'bukti/mesjid',
+    );
+    response.setHeader('Content-Type', mimeType);
+    fileStream.pipe(response);
   }
 
   @Get('/bukti/pengurus/:filename')
@@ -34,8 +42,12 @@ export class FilesController {
     @Res() response: Response,
   ) {
     await this.filesService.checkBuktiPengurusOwner(request.user.id, filename);
-    const file = this.filesService.serveFiles(filename, 'bukti/pengurus');
-    file.pipe(response);
+    const { fileStream, mimeType } = this.filesService.serveFiles(
+      filename,
+      'bukti/pengurus',
+    );
+    response.setHeader('Content-Type', mimeType);
+    fileStream.pipe(response);
   }
 
   @Get('/posts/:filename')
@@ -43,8 +55,12 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const file = this.filesService.serveFiles(filename, 'posts');
-    file.pipe(response);
+    const { fileStream, mimeType } = this.filesService.serveFiles(
+      filename,
+      'posts',
+    );
+    response.setHeader('Content-Type', mimeType);
+    fileStream.pipe(response);
   }
 
   @Get('/aktivitas/:filename')
@@ -52,8 +68,12 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const file = this.filesService.serveFiles(filename, 'aktivitas');
-    file.pipe(response);
+    const { fileStream, mimeType } = this.filesService.serveFiles(
+      filename,
+      'aktivitas',
+    );
+    response.setHeader('Content-Type', mimeType);
+    fileStream.pipe(response);
   }
 
   @Get('/kajian/:filename')
@@ -61,13 +81,21 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const file = this.filesService.serveFiles(filename, 'kajian');
-    file.pipe(response);
+    const { fileStream, mimeType } = this.filesService.serveFiles(
+      filename,
+      'kajian',
+    );
+    response.setHeader('Content-Type', mimeType);
+    fileStream.pipe(response);
   }
 
   @Get('/infaq/:filename')
   getInfaqFile(@Param('filename') filename: string, @Res() response: Response) {
-    const file = this.filesService.serveFiles(filename, 'infaq');
-    file.pipe(response);
+    const { fileStream, mimeType } = this.filesService.serveFiles(
+      filename,
+      'infaq',
+    );
+    response.setHeader('Content-Type', mimeType);
+    fileStream.pipe(response);
   }
 }
