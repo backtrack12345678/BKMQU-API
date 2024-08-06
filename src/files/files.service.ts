@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { join } from 'path';
 import * as fs from 'fs';
 import { PrismaService } from '../common/prisma.service';
+import * as mime from 'mime-types';
 
 @Injectable()
 export class FilesService {
@@ -14,7 +15,9 @@ export class FilesService {
       throw new NotFoundException('File Tidak Ditemukan');
     }
 
-    return fs.createReadStream(filePath);
+    const mimeType = mime.lookup(filePath) || 'application/octet-stream';
+    const fileStream = fs.createReadStream(filePath);
+    return { fileStream, mimeType };
   }
 
   async checkBuktiPengurusOwner(
