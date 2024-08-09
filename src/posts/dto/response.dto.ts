@@ -5,15 +5,21 @@ export class Post {
 }
 
 export class PostResponse extends Post {
-  media: string[] | [];
+  media: MediaResponse[] | [];
   createdAt: Date;
 }
 
 export class PostResult extends Post {
-  media: Media[] | [];
+  media: MediaResult[] | [];
   createdAt: Date;
 }
 
-export class Media {
+export class MediaResult {
   nama: string;
+  type: string;
+}
+
+export class MediaResponse {
+  url: string;
+  type: string;
 }
