@@ -2,22 +2,22 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { join } from 'path';
 import * as fs from 'fs';
 import { PrismaService } from '../common/prisma.service';
-import * as mime from 'mime-types';
+import { fromFile } from 'file-type';
 
 @Injectable()
 export class FilesService {
   constructor(private prismaService: PrismaService) {}
 
-  serveFiles(filename: string, folder: string) {
+  async serveFiles(filename: string, folder: string) {
     const filePath = join(process.cwd(), `uploads/${folder}/${filename}`);
 
     if (!fs.existsSync(filePath)) {
       throw new NotFoundException('File Tidak Ditemukan');
     }
 
-    const mimeType = mime.lookup(filePath) || 'application/octet-stream';
+    const { mime } = await fromFile(filePath);
     const fileStream = fs.createReadStream(filePath);
-    return { fileStream, mimeType };
+    return { fileStream, mime };
   }
 
   async checkBuktiPengurusOwner(
