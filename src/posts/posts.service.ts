@@ -25,7 +25,10 @@ export class PostsService {
       id: post.id,
       userId: post.userId,
       captions: post.captions,
-      media: post.media.map((m) => `${host}/api/files/posts/${m.nama}`),
+      media: post.media.map((m) => ({
+        url: `${host}/api/files/posts/${m.nama}`,
+        type: m.type,
+      })),
       createdAt: post.createdAt,
     };
   }
@@ -39,6 +42,7 @@ export class PostsService {
       media: {
         select: {
           nama: true,
+          type: true,
         },
       },
     };
@@ -82,6 +86,7 @@ export class PostsService {
               create: media.map((m) => ({
                 nama: m.filename,
                 path: m.path,
+                type: m.mimetype,
               })),
             },
           }),
