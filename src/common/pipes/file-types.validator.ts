@@ -1,7 +1,6 @@
 // import { MimeType } from 'file-type/core';
 // import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
-import { extname } from 'path';
-// import * as FileType from 'file-type';
+import { fromFile } from 'file-type';
 
 // @Injectable()
 // export class FileTypePipe implements PipeTransform {
@@ -46,16 +45,14 @@ export class FileTypesValidator extends FileValidator {
   validationOptions: Record<string, any>;
 
   async isValid(file: Express.Multer.File): Promise<boolean> {
-    const fileExt: string = extname(file.originalname).toLowerCase();
-    // const fileType = await import('file-type');
-    // const { ext, mime } = await fileType.fileTypeFromFile(file.path);
+    const { ext, mime } = await fromFile(file.path);
     const allowedExtensions: string[] = this.mimeTypesToExtensions(
       this.validationOptions.mimeTypes[file.fieldname],
     );
 
     return (
-      allowedExtensions.includes(fileExt) &&
-      this.validationOptions.mimeTypes[file.fieldname].includes(file.mimetype)
+      allowedExtensions.includes(ext) &&
+      this.validationOptions.mimeTypes[file.fieldname].includes(mime)
     );
   }
 
@@ -67,7 +64,7 @@ export class FileTypesValidator extends FileValidator {
     const extensions: string[] = [];
     mimeTypes.forEach((mimeType) => {
       const ext = mimeType.split('/')[1];
-      extensions.push(`.${ext}`);
+      extensions.push(`${ext}`);
     });
     return extensions;
   }
