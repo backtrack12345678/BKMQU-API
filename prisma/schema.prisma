@@ -250,11 +250,12 @@ model Posts {
 }
 
 model Posts_Media {
-  id     Int    @id @default(autoincrement())
-  postId String @map("post_id") @db.VarChar(100)
-  post   Posts  @relation(fields: [postId], references: [id], onDelete: Cascade)
-  nama   String @db.VarChar(250)
-  path   String @db.Text
+  id     Int     @id @default(autoincrement())
+  postId String  @map("post_id") @db.VarChar(100)
+  post   Posts   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  nama   String  @db.VarChar(250)
+  path   String  @db.Text
+  type   String? @db.VarChar(100)
 
   createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
   updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
