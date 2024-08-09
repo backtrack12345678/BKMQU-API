@@ -10,7 +10,7 @@ import {
   UseInterceptors,
   UploadedFile,
   HttpCode,
-  ParseFilePipe,
+  ParseFilePipeBuilder,
 } from '@nestjs/common';
 import { CharityService } from './charity.service';
 import {
@@ -21,11 +21,11 @@ import {
 } from './dto/create-charity.dto';
 import { UpdatePenerimaSedekahDto } from './dto/update-charity.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { validateFileType } from '../common/pipes/file-validator';
 import { WebResponse } from '../model/web.model';
 import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
 import { Role } from '../common/role/role.enum';
+import { FileTypesValidator } from '../common/pipes/file-types.validator';
 
 const allowedMimeTypes = {
   content: ['image/jpeg', 'image/jpg', 'image/png'],
@@ -100,15 +100,21 @@ export class CharityController {
   @UseInterceptors(
     FileInterceptor('content', {
       dest: './uploads/infaq',
-      fileFilter(req, file, cb) {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async createInfaqMesjid(
     @Req() request: any,
     @Body() payload: CreateInfaqMesjidDto,
-    @UploadedFile(ParseFilePipe) content: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build(),
+    )
+    content: Express.Multer.File,
   ) {
     const result = await this.charityService.createInfaq(
       request,

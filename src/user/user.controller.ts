@@ -4,9 +4,8 @@ import {
   Delete,
   Get,
   HttpCode,
-  MaxFileSizeValidator,
   Param,
-  ParseFilePipe,
+  ParseFilePipeBuilder,
   ParseIntPipe,
   Patch,
   Post,
@@ -28,7 +27,6 @@ import {
 import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { Auth } from '../common/auth.decorator';
-import { validateFileType } from '../common/pipes/file-validator';
 import { UserHelper } from './helper/user.helper';
 import { UpdateProfileDto, UpdateUserImageDto } from './dto/update.dto';
 import { UserResponse } from './dto/response.dto';
@@ -51,6 +49,7 @@ import { KajianService } from '../kajian/kajian.service';
 import { KajianResponse } from '../kajian/dto/response.dto';
 import { GetLiveQueryDto } from '../live/dto/query..dto';
 import { LiveService } from '../live/live.service';
+import { FileTypesValidator } from '../common/pipes/file-types.validator';
 
 const allowedMimeTypes = {
   bukti: ['application/pdf', 'image/jpg', 'image/jpeg', 'image/png'],
@@ -75,16 +74,20 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('bukti', {
       dest: './uploads/bukti/mesjid',
-      fileFilter: (req, file, cb) => {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async registerMesjid(
     @UploadedFile(
-      new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: 50000000 })],
-      }),
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .addMaxSizeValidator({
+          maxSize: 50000000,
+        })
+        .build(),
     )
     bukti: Express.Multer.File,
     @Body() payload: RegisterMesjidDto,
@@ -105,16 +108,20 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('bukti', {
       dest: './uploads/bukti/pengurus',
-      fileFilter: (req, file, cb) => {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async registerPengurus(
     @UploadedFile(
-      new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: 50000000 })],
-      }),
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .addMaxSizeValidator({
+          maxSize: 50000000,
+        })
+        .build(),
     )
     bukti: Express.Multer.File,
     @Body() payload: RegisterPengurusDto,
@@ -248,15 +255,21 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor('image', {
       dest: './uploads/users',
-      fileFilter: (req, file, cb) => {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async updateUserImage(
     @Req() request: any,
     @Param() param: UpdateUserImageDto,
-    @UploadedFile() image: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build(),
+    )
+    image: Express.Multer.File,
   ): Promise<WebResponse<{ photo?: string; sampul?: string }>> {
     const result = await this.userService.updateUserImage(
       request,

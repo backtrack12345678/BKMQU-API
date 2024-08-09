@@ -10,8 +10,8 @@ import {
   UseInterceptors,
   Req,
   UploadedFile,
-  ParseFilePipe,
   Query,
+  ParseFilePipeBuilder,
 } from '@nestjs/common';
 import { LiveService } from './live.service';
 import { CreateLiveDto } from './dto/create-live.dto';
@@ -20,8 +20,8 @@ import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
 import { Role } from '../common/role/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { validateFileType } from '../common/pipes/file-validator';
 import { GetLiveQueryDto } from './dto/query..dto';
+import { FileTypesValidator } from '../common/pipes/file-types.validator';
 
 const allowedMimeTypes = {
   thumbnail: ['image/png', 'image/jpg', 'image/jpeg'],
@@ -38,15 +38,20 @@ export class LiveController {
   @UseInterceptors(
     FileInterceptor('thumbnail', {
       dest: './uploads/live',
-      fileFilter(req, file, cb) {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async createLive(
     @Req() request: any,
     @Body() payload: CreateLiveDto,
-    @UploadedFile(ParseFilePipe)
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build(),
+    )
     thumbnail: Express.Multer.File,
   ) {
     const result = await this.liveService.createLive(

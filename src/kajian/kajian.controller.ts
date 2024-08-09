@@ -9,10 +9,10 @@ import {
   UseInterceptors,
   UploadedFile,
   Req,
-  ParseFilePipe,
   HttpCode,
   Query,
   UploadedFiles,
+  ParseFilePipeBuilder,
 } from '@nestjs/common';
 import { KajianService } from './kajian.service';
 import {
@@ -35,7 +35,7 @@ import { KajianContentResponse, KajianResponse } from './dto/response.dto';
 import { GetKajianContentsQueryDto, GetKajianQueryDto } from './dto/query.dto';
 import { Request } from 'express';
 import { KajianContentParam } from './dto/param.dto';
-import { validateFileType } from '../common/pipes/file-validator';
+import { FileTypesValidator } from '../common/pipes/file-types.validator';
 
 const allowedMimeTypes = {
   thumbnail: ['image/png', 'image/jpg', 'image/jpeg'],
@@ -53,15 +53,20 @@ export class KajianController {
   @UseInterceptors(
     FileInterceptor('thumbnail', {
       dest: './uploads/kajian',
-      fileFilter(req, file, cb) {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async createKajian(
     @Req() request: any,
     @Body() payload: CreateKajianDto,
-    @UploadedFile(ParseFilePipe)
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build(),
+    )
     thumbnail: Express.Multer.File,
   ): Promise<WebResponse<KajianResponse>> {
     const result: KajianResponse = await this.kajianService.createKajian(
@@ -113,9 +118,6 @@ export class KajianController {
   @UseInterceptors(
     FileInterceptor('thumbnail', {
       dest: './uploads/kajian',
-      fileFilter(req, file, cb) {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async updateKajian(
@@ -123,9 +125,15 @@ export class KajianController {
     @Param('kajianId') kajianId: string,
     @Body() payload: UpdateKajianDto,
     @UploadedFile(
-      new ParseFilePipe({
-        fileIsRequired: false,
-      }),
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build({
+          fileIsRequired: false,
+        }),
     )
     thumbnail?: Express.Multer.File,
   ): Promise<WebResponse<KajianResponse>> {
@@ -169,9 +177,6 @@ export class KajianController {
       ],
       {
         dest: './uploads/kajian',
-        fileFilter(req, file, cb) {
-          validateFileType(allowedMimeTypes, file, cb);
-        },
       },
     ),
   )
@@ -179,7 +184,15 @@ export class KajianController {
     @Req() request: any,
     @Param('kajianId') kajianId: string,
     @Body() payload: CreateKajianContentDto,
-    @UploadedFiles()
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build(),
+    )
     files: { media: Express.Multer.File[]; thumbnail: Express.Multer.File[] },
   ) {
     const result = await this.kajianService.createKajianContent(
@@ -238,9 +251,6 @@ export class KajianController {
       ],
       {
         dest: './uploads/kajian',
-        fileFilter(req, file, cb) {
-          validateFileType(allowedMimeTypes, file, cb);
-        },
       },
     ),
   )
@@ -249,9 +259,15 @@ export class KajianController {
     @Param() param: KajianContentParam,
     @Body() payload: UpdateKajianContentDto,
     @UploadedFiles(
-      new ParseFilePipe({
-        fileIsRequired: false,
-      }),
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build({
+          fileIsRequired: false,
+        }),
     )
     files: { media?: Express.Multer.File[]; thumbnail?: Express.Multer.File[] },
   ): Promise<WebResponse<KajianContentResponse>> {

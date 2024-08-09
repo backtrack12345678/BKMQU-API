@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   Req,
+  ParseFilePipeBuilder,
 } from '@nestjs/common';
 import { AktivitasService } from './aktivitas.service';
 import { CreateAktivitasDto } from './dto/create-aktivita.dto';
@@ -21,7 +22,7 @@ import { Request } from 'express';
 import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
 import { Role } from '../common/role/role.enum';
-import { validateFileType } from '../common/pipes/file-validator';
+import { FileTypesValidator } from '../common/pipes/file-types.validator';
 
 const allowedMimeTypes = {
   media: ['image/png', 'image/jpg', 'image/jpeg'],
@@ -38,16 +39,24 @@ export class AktivitasController {
   @UseInterceptors(
     FileFieldsInterceptor([{ name: 'media' }, { name: 'dokumen' }], {
       dest: './uploads/aktivitas',
-      fileFilter(req, file, cb) {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   @HttpCode(201)
   async createAktivitas(
     @Body() payload: CreateAktivitasDto,
     @Req() request,
-    @UploadedFiles() files?,
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build({
+          fileIsRequired: false,
+        }),
+    )
+    files?: { media?: Express.Multer.File[]; dokumen?: Express.Multer.File[] },
   ): Promise<WebResponse<AktivitasResponse>> {
     const result: AktivitasResponse =
       await this.aktivitasService.createAktivitas(request, payload, files);

@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  // Patch,
   Param,
   Delete,
   UseInterceptors,
@@ -23,7 +22,7 @@ import { WebResponse } from '../model/web.model';
 import { PostResponse } from './dto/response.dto';
 import { Request } from 'express';
 import { GetPostsQueryDto } from './dto/get.dto';
-import { validateFileType } from '../common/pipes/file-validator';
+import { FileTypesValidator } from '../common/pipes/file-types.validator';
 
 const allowedMimeTypes = {
   media: ['image/png', 'image/jpg', 'image/jpeg', 'video/mp4'],
@@ -40,18 +39,21 @@ export class PostsController {
   @UseInterceptors(
     FilesInterceptor('media', Infinity, {
       dest: './uploads/posts',
-      fileFilter: (req, file, cb) => {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async createPost(
     @Req() request,
     @Body() payload: CreatePostDto,
     @UploadedFiles(
-      new ParseFilePipeBuilder().build({
-        fileIsRequired: false,
-      }),
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build({
+          fileIsRequired: false,
+        }),
     )
     media?: Express.Multer.File[],
   ): Promise<WebResponse<PostResponse>> {

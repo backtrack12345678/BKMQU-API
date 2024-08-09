@@ -10,8 +10,8 @@ import {
   UploadedFile,
   Req,
   HttpCode,
-  ParseFilePipe,
   Query,
+  ParseFilePipeBuilder,
 } from '@nestjs/common';
 import { KasService } from './kas.service';
 import {
@@ -45,7 +45,7 @@ import {
 } from './dto/update-kas.dto';
 import { ArusKasParamDto } from './dto/params.dto';
 import { DeleteArusKasDto } from './dto/delete.dto';
-import { validateFileType } from '../common/pipes/file-validator';
+import { FileTypesValidator } from '../common/pipes/file-types.validator';
 
 const allowedMimeTypes = {
   fotoRek: ['image/png', 'image/jpg', 'image/jpeg', 'application/pdf'],
@@ -54,7 +54,7 @@ const allowedMimeTypes = {
 
 @Controller('/api/kas')
 export class KasController {
-  constructor(private readonly kasService: KasService) { }
+  constructor(private readonly kasService: KasService) {}
 
   @Post('/bank')
   @Auth()
@@ -63,15 +63,20 @@ export class KasController {
   @UseInterceptors(
     FileInterceptor('fotoRek', {
       dest: './uploads/rekening',
-      fileFilter(req, file, cb) {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async createKasBank(
     @Req() request,
     @Body() payload: CreateKasBankDto,
-    @UploadedFile()
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build(),
+    )
     fotoRek: Express.Multer.File,
   ): Promise<WebResponse<KasResponse>> {
     const result = await this.kasService.createKasBank(
@@ -119,9 +124,6 @@ export class KasController {
   @UseInterceptors(
     FileInterceptor('fotoRek', {
       dest: './uploads/rekening',
-      fileFilter(req, file, cb) {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async updateKasBank(
@@ -129,9 +131,15 @@ export class KasController {
     @Body() payload: UpdateKasBankDto,
     @Param('kasId') kasId: string,
     @UploadedFile(
-      new ParseFilePipe({
-        fileIsRequired: false,
-      }),
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build({
+          fileIsRequired: false,
+        }),
     )
     fotoRek?: Express.Multer.File,
   ): Promise<WebResponse<boolean>> {
@@ -186,16 +194,21 @@ export class KasController {
   @UseInterceptors(
     FileInterceptor('buktiArus', {
       dest: './uploads/arus-kas',
-      fileFilter(req, file, cb) {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async createArusKasKeluar(
     @Req() request: any,
     @Param('kasId') kasId: string,
     @Body() payload: CreateArusKasKeluarDto,
-    @UploadedFile()
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build(),
+    )
     buktiArusKas: Express.Multer.File,
   ): Promise<WebResponse<ArusKasResponse>> {
     const result = await this.kasService.createArusKasKeluar(
@@ -254,16 +267,21 @@ export class KasController {
   @UseInterceptors(
     FileInterceptor('buktiArus', {
       dest: './uploads/arus-kas',
-      fileFilter(req, file, cb) {
-        validateFileType(allowedMimeTypes, file, cb);
-      },
     }),
   )
   async updateArusKasKeluar(
     @Req() request: any,
     @Body() payload: UpdateArusKasKeluarDto,
     @Param() param: ArusKasParamDto,
-    @UploadedFile()
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addValidator(
+          new FileTypesValidator({
+            mimeTypes: allowedMimeTypes,
+          }),
+        )
+        .build(),
+    )
     buktiArusKas: Express.Multer.File,
   ): Promise<WebResponse<ArusKasResponse>> {
     const result = await this.kasService.updateArusKasKeluar(
