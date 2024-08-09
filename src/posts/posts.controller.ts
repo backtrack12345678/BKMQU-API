@@ -84,7 +84,7 @@ export class PostsController {
   @Get('/:id')
   async findOnePost(
     @Param('id') id: string,
-    request: Request,
+    @Req() request: Request,
   ): Promise<WebResponse<PostResponse>> {
     const result = await this.postsService.findOnePost(id, request);
     return {
