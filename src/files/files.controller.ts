@@ -10,27 +10,30 @@ export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @Get('/users/:filename')
-  getUserPhoto(@Param('filename') filename: string, @Res() response: Response) {
-    const { fileStream, mimeType } = this.filesService.serveFiles(
+  async etUserPhoto(
+    @Param('filename') filename: string,
+    @Res() response: Response,
+  ) {
+    const { fileStream, mime } = await this.filesService.serveFiles(
       filename,
       'users',
     );
-    response.setHeader('Content-Type', mimeType);
+    response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
   }
 
   @Get('/bukti/mesjid/:filename')
   @Auth()
   @Roles(Role.ADMIN)
-  getMesjidBukti(
+  async getMesjidBukti(
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mimeType } = this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.serveFiles(
       filename,
       'bukti/mesjid',
     );
-    response.setHeader('Content-Type', mimeType);
+    response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
   }
 
@@ -42,60 +45,65 @@ export class FilesController {
     @Res() response: Response,
   ) {
     await this.filesService.checkBuktiPengurusOwner(request.user.id, filename);
-    const { fileStream, mimeType } = this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.serveFiles(
       filename,
       'bukti/pengurus',
     );
-    response.setHeader('Content-Type', mimeType);
+    response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
   }
 
   @Get('/posts/:filename')
-  getPostsMedia(
+  async getPostsMedia(
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mimeType } = this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.serveFiles(
       filename,
       'posts',
     );
-    response.setHeader('Content-Type', mimeType);
+    console.log(mime);
+
+    response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
   }
 
   @Get('/aktivitas/:filename')
-  getAktivitasMedia(
+  async getAktivitasMedia(
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mimeType } = this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.serveFiles(
       filename,
       'aktivitas',
     );
-    response.setHeader('Content-Type', mimeType);
+    response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
   }
 
   @Get('/kajian/:filename')
-  getKajianMedia(
+  async getKajianMedia(
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mimeType } = this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.serveFiles(
       filename,
       'kajian',
     );
-    response.setHeader('Content-Type', mimeType);
+    response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
   }
 
   @Get('/infaq/:filename')
-  getInfaqFile(@Param('filename') filename: string, @Res() response: Response) {
-    const { fileStream, mimeType } = this.filesService.serveFiles(
+  async getInfaqFile(
+    @Param('filename') filename: string,
+    @Res() response: Response,
+  ) {
+    const { fileStream, mime } = await this.filesService.serveFiles(
       filename,
       'infaq',
     );
-    response.setHeader('Content-Type', mimeType);
+    response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
   }
 }
