@@ -72,8 +72,8 @@ export class PostsService {
     payload: CreatePostDto,
     media: Express.Multer.File[] | undefined,
   ): Promise<PostResponse> {
-    if (Object.keys(request).length === 0 && !media) {
-      throw new BadRequestException('Tidak Boleh Kosong');
+    if (Object.keys(payload).length === 0 && !media) {
+      throw new BadRequestException(['Payload Cannot Be Empty']);
     }
 
     const post: PostResult = await this.prismaService.posts.create({
