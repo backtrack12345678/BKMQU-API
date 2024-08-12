@@ -62,8 +62,6 @@ export class FilesController {
       filename,
       'posts',
     );
-    console.log(mime);
-
     response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
   }

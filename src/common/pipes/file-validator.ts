@@ -6,8 +6,6 @@ export async function validateFileType(
   file: Express.Multer.File | any,
   cb: (error: Error | null, acceptFile: boolean) => void,
 ): Promise<void> {
-  console.log(file);
-
   const { mime } = await fromFile(file.path);
   allowedMimeTypes[file.fieldname].includes(mime)
     ? cb(null, true)
