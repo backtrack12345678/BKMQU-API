@@ -19,6 +19,7 @@ export class LiveService {
   liveSelectCondition = {
     id: true,
     userId: true,
+    judul: true,
     link: true,
     mulai: true,
     selesai: true,
@@ -31,14 +32,15 @@ export class LiveService {
     },
   };
 
-  toLiveResponse(live, request): LiveResponse {
+  toLiveResponse(live: LiveResult, request): LiveResponse {
     return {
       id: live.id,
       userId: live.userId,
+      judul: live.judul,
       link: live.link,
       mulai: live.mulai,
       selesai: live.selesai,
-      thumbnail: `${getHost(request)}/api/files/kajian/${live.thumbnail.nama}`,
+      thumbnail: `${getHost(request)}/api/files/live/${live.thumbnail.nama}`,
       createdAt: live.createdAt,
     };
   }
@@ -121,7 +123,7 @@ export class LiveService {
     return this.toLiveResponse(live, request);
   }
 
-  updateLive(id: number, updateLiveDto: UpdateLiveDto) {
+  async updateLive(id: number, updateLiveDto: UpdateLiveDto) {
     return `This action updates a #${id} live`;
   }
 

@@ -1,6 +1,7 @@
 export class Live {
   id: string;
   userId: string;
+  judul: string;
   link: string;
   mulai: Date;
   selesai: Date;
