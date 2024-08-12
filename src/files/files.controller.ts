@@ -106,4 +106,17 @@ export class FilesController {
     response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
   }
+
+  @Get('/live/:filename')
+  async getLiveThumbnail(
+    @Param('filename') filename: string,
+    @Res() response: Response,
+  ) {
+    const { fileStream, mime } = await this.filesService.serveFiles(
+      filename,
+      'live',
+    );
+    response.setHeader('Content-Type', mime);
+    fileStream.pipe(response);
+  }
 }
