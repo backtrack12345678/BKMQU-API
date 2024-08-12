@@ -7,6 +7,7 @@ import { PrismaService } from '../common/prisma.service';
 import { getHost } from '../common/utils/utils';
 import { GetLiveQueryDto } from './dto/query..dto';
 import { FilesService } from '../files/files.service';
+import { LiveResponse, LiveResult } from './dto/response.dto';
 
 @Injectable()
 export class LiveService {
@@ -30,7 +31,7 @@ export class LiveService {
     },
   };
 
-  toLiveResponse(live, request) {
+  toLiveResponse(live, request): LiveResponse {
     return {
       id: live.id,
       userId: live.userId,
@@ -65,9 +66,9 @@ export class LiveService {
     request: any,
     payload: CreateLiveDto,
     thumbnail: Express.Multer.File,
-  ) {
+  ): Promise<LiveResponse> {
     const user: Auth = request.user;
-    const live = await this.prismaService.live.create({
+    const live: LiveResult = await this.prismaService.live.create({
       data: {
         id: `live-${uuid().toString()}`,
         userId: user.id,
@@ -90,8 +91,8 @@ export class LiveService {
     query: GetLiveQueryDto,
     type: string,
     userId?: string,
-  ) {
-    const lives = await this.prismaService.live.findMany({
+  ): Promise<LiveResponse[] | []> {
+    const lives: LiveResult[] | [] = await this.prismaService.live.findMany({
       where: {
         userId: userId || undefined, // jika ada userId atau kredensial
       },
@@ -105,8 +106,8 @@ export class LiveService {
     return lives.map((live) => this.toLiveResponse(live, request));
   }
 
-  async findOneLive(request: any, liveId: string) {
-    const live = await this.prismaService.live.findUnique({
+  async findOneLive(request: any, liveId: string): Promise<LiveResponse> {
+    const live: LiveResult = await this.prismaService.live.findUnique({
       where: {
         id: liveId,
       },
@@ -124,7 +125,7 @@ export class LiveService {
     return `This action updates a #${id} live`;
   }
 
-  async removeLive(user: Auth, liveId: string) {
+  async removeLive(user: Auth, liveId: string): Promise<void> {
     await this.checkLiveOwner(user.id, liveId);
 
     const live = await this.prismaService.live.delete({
