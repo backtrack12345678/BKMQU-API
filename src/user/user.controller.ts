@@ -428,7 +428,7 @@ export class UserController {
   @Auth()
   async findAllUserPrivatelives(
     @Req() request: any,
-    @Query() query: GetKajianQueryDto,
+    @Query() query: GetLiveQueryDto,
   ): Promise<WebResponse<LiveResponse[] | []>> {
     const userId: string = request.user?.id;
     const result = await this.liveService.findAllLives(
