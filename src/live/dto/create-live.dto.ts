@@ -33,9 +33,12 @@ export class CreateLiveDto {
 
   @IsNotEmpty()
   @IsString()
-  @Matches(/^(https?:\/\/)?(www\.youtube\.com|m\.youtube\.com)\/.*$/, {
-    message:
-      'Link must be a valid YouTube URL (www.youtube.com or m.youtube.com)',
-  })
+  @Matches(
+    /^(https?:\/\/)?(www\.youtube\.com|m\.youtube\.com|youtu\.be)\/.*$/,
+    {
+      message:
+        'Link must be a valid YouTube URL (www.youtube.com, m.youtube.com, or youtu.be)',
+    },
+  )
   link: string;
 }
