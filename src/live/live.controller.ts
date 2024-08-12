@@ -22,6 +22,8 @@ import { Role } from '../common/role/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { GetLiveQueryDto } from './dto/query..dto';
 import { FileTypesValidator } from '../common/pipes/file-types.validator';
+import { WebResponse } from '../model/web.model';
+import { LiveResponse } from './dto/response.dto';
 
 const allowedMimeTypes = {
   thumbnail: ['image/png', 'image/jpg', 'image/jpeg'],
@@ -53,7 +55,7 @@ export class LiveController {
         .build(),
     )
     thumbnail: Express.Multer.File,
-  ) {
+  ): Promise<WebResponse<LiveResponse>> {
     const result = await this.liveService.createLive(
       request,
       payload,
@@ -67,7 +69,10 @@ export class LiveController {
   }
 
   @Get('/')
-  async findAllLives(@Req() request: any, @Query() query?: GetLiveQueryDto) {
+  async findAllLives(
+    @Req() request: any,
+    @Query() query?: GetLiveQueryDto,
+  ): Promise<WebResponse<LiveResponse[] | []>> {
     const result = await this.liveService.findAllLives(
       request,
       query,
@@ -80,7 +85,10 @@ export class LiveController {
   }
 
   @Get('/:liveId')
-  async findOneLive(@Req() request: any, @Param('liveId') liveId: string) {
+  async findOneLive(
+    @Req() request: any,
+    @Param('liveId') liveId: string,
+  ): Promise<WebResponse<LiveResponse>> {
     const result = await this.liveService.findOneLive(request, liveId);
     return {
       status: 'success',
@@ -89,6 +97,8 @@ export class LiveController {
   }
 
   @Patch('/:liveId')
+  @Auth()
+  @Roles(Role.PENCERAMAH)
   updateLive(@Param('id') id: string, @Body() updateLiveDto: UpdateLiveDto) {
     return this.liveService.updateLive(+id, updateLiveDto);
   }
@@ -96,7 +106,10 @@ export class LiveController {
   @Delete('/:liveId')
   @Auth()
   @Roles(Role.PENCERAMAH)
-  async removeLive(@Req() request: any, @Param('liveId') liveId: string) {
+  async removeLive(
+    @Req() request: any,
+    @Param('liveId') liveId: string,
+  ): Promise<WebResponse<boolean>> {
     await this.liveService.removeLive(request.user, liveId);
     return {
       status: 'success',
