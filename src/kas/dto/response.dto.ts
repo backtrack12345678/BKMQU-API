@@ -15,13 +15,6 @@ export class KasArusResponse {
   createdAt: Date;
 }
 
-export class BankMutasi {
-  jenis: string;
-  namaBank: string;
-  namaRekening: string;
-  nomorRekening: string;
-}
-
 export class KasMutasiResponse {
   id: number;
   jumlah: number;
@@ -30,8 +23,9 @@ export class KasMutasiResponse {
   createdAt: Date;
 }
 
-export class TotalKasResponse {
+export class KasArusDashboardResponse {
   totalMasuk: number;
   totalKeluar: number;
-  totalInitial: number;
+  saldo: number;
+  kasArus: KasArusResponse[];
 }

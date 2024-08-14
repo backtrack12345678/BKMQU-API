@@ -257,7 +257,6 @@ export class Helper {
     }
   }
 
-
   async getOldArusKasFoto(arusKasId: number): Promise<{ path: string }> {
     const arusKas = await this.prismaService.kas_Arus_Dokumen.findUnique({
       where: {
@@ -268,5 +267,42 @@ export class Helper {
       },
     });
     return arusKas;
+  }
+
+  async getKasArusTotal(mesjidUserId: string) {
+    const groupKasArus = await this.prismaService.kas_Arus.groupBy({
+      by: ['tipe'],
+      _sum: {
+        jumlah: true,
+      },
+      where: {
+        kas: {
+          mesjidUserId: mesjidUserId,
+        },
+        tipe: {
+          in: ['Masuk', 'Keluar'],
+        },
+      },
+    })
+
+    const kasSaldo = await this.prismaService.kas.aggregate({
+      where: {
+        mesjidUserId: mesjidUserId,
+      },
+      _sum: {
+        saldo: true,
+      }
+    })
+
+    const [masuk, keluar] = groupKasArus.map(({ tipe, _sum }) => ({
+      tipe: tipe,
+      jumlah: _sum.jumlah,
+    }));
+
+    return {
+      masuk: masuk.jumlah,
+      keluar: keluar.jumlah,
+      saldo: Number(kasSaldo._sum.saldo),
+    }
   }
 }

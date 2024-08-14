@@ -8,9 +8,7 @@ import {
   Max,
   Min,
   MaxLength,
-  Matches,
   NotEquals,
-  IsOptional,
 } from 'class-validator';
 export class CreateKasDto {
   @IsNotEmpty()

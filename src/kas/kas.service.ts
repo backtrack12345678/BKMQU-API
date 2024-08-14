@@ -1,37 +1,26 @@
-import {
-  BadRequestException,
-  HttpException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import {
   ConnectKasBankDto,
   CreateKasArusDto,
   CreateKasDto,
   CreateKasMutasiDto,
 } from './dto/create-kas.dto';
-// import { UpdateKaDto } from './dto/update-ka.dto';
 import { Auth } from '../model/user.model';
 import { PrismaService } from '../common/prisma.service';
 import { MesjidService } from '../mesjid/mesjid.service';
 import {
+  KasArusDashboardResponse,
   KasArusResponse,
   KasMutasiResponse,
   KasResponse,
-  TotalKasResponse,
 } from './dto/response.dto';
 import {
-  GetArusKasDashboardDto,
   GetKasArusDto,
   GetKasQueryDto,
-  GetKasTotalDto,
   GetMutasiQueryDto,
 } from './dto/get.dto';
 import { FilesService } from '../files/files.service';
-import {
-  UpdateKasArusDto,
-  UpdateKasDto,
-} from './dto/update-kas.dto';
+import { UpdateKasArusDto, UpdateKasDto } from './dto/update-kas.dto';
 import { Helper } from './helper/helper';
 import { KasArusParamDto } from './dto/params.dto';
 
@@ -183,9 +172,6 @@ export class KasService {
     kasId: string,
     query: GetKasArusDto,
   ): Promise<KasArusResponse[] | []> {
-    const user: Auth = request.user;
-    const mesjidUserId: string = user.id;
-    await this.kasHelper.checkKasOwner(mesjidUserId, kasId);
     const kasArus = await this.prismaService.kas_Arus.findMany({
       where: {
         kasId: kasId,
@@ -306,109 +292,32 @@ export class KasService {
 
   //
   async getDashboardArusKas(
+    request: any,
     userId: string,
-    query: GetArusKasDashboardDto,
-  ): Promise<ArusKasResponse[]> {
+    query: GetKasQueryDto,
+  ): Promise<KasArusDashboardResponse> {
     const mesjidUserId: string = userId;
-    const kas = await this.prismaService.kas.findMany({
+    const kasArus = await this.prismaService.kas.findMany({
       where: {
-        mesjidId,
-        ...((query.bulan || query.tahun) && {
-          arusKas: {
-            some: {
-              bulan: query.bulan,
-              tahun: query.tahun,
-            },
-          },
-        }),
+        mesjidUserId: mesjidUserId,
+      },
+      take: query.takeCount || undefined,
+      skip: (query.page - 1) * query.takeCount || undefined,
+      orderBy: {
+        createdAt: 'desc',
       },
       select: {
-        arusKas: {
-          take: query.takeCount,
-          skip: query.page ? (query.page - 1) * query.takeCount : undefined,
-          orderBy: {
-            createdAt: 'desc',
-          },
-          select: this.kasHelper.arusKasSelectCondition('Keluar'),
+        kasArus: {
+          select: this.kasHelper.kasArusSelectCondition(),
         },
       },
     });
-    return kas.flatMap((item) =>
-      item.arusKas.map((arusKasItem) =>
-        this.kasHelper.toArusKasResponse(arusKasItem, arusKasItem.status),
-      ),
-    );
-  }
-
-  async getTotalKas(
-    userId: string,
-    query: GetKasTotalDto,
-  ): Promise<TotalKasResponse> {
-    const mesjidUserId: string = userId;
-    const mesjidId: number =
-      await this.mesjidService.getMesjidIdByUserId(mesjidUserId);
-
-    const { bulan, tahun } = query;
-    const kas = await this.prismaService.kas.findMany({
-      where: {
-        mesjidId,
-      },
-      select: {
-        arusKas: {
-          where: {
-            bulan,
-            tahun,
-          },
-          select: {
-            status: true,
-            jumlah: true,
-          },
-        },
-        rekapKasBulanan: {
-          where: {
-            bulan,
-            tahun,
-          },
-          select: {
-            totalKeluar: true,
-            totalMasuk: true,
-            // initialSaldo: true,
-          },
-        },
-      },
-    });
-    const { totalKeluar, totalMasuk } = kas.reduce(
-      (totals, item) => ({
-        totalKeluar:
-          totals.totalKeluar +
-          item.arusKas.reduce(
-            (acc, arus) =>
-              acc + (arus.status === 'Keluar' ? Number(arus.jumlah) : 0),
-            0,
-          ) +
-          item.rekapKasBulanan.reduce(
-            (acc, rekap) => acc + Number(rekap.totalKeluar),
-            0,
-          ),
-        totalMasuk:
-          totals.totalMasuk +
-          item.arusKas.reduce(
-            (acc, arus) =>
-              acc + (arus.status === 'Masuk' ? Number(arus.jumlah) : 0),
-            0,
-          ) +
-          item.rekapKasBulanan.reduce(
-            (acc, rekap) => acc + Number(rekap.totalMasuk),
-            0,
-          ),
-      }),
-      { totalKeluar: 0, totalMasuk: 0 },
-    );
-
+    const kasTotal = await this.kasHelper.getKasArusTotal(mesjidUserId);
     return {
-      totalMasuk,
-      totalKeluar,
-      totalInitial: totalMasuk - totalKeluar,
-    };
+      totalMasuk: kasTotal.masuk,
+      totalKeluar: kasTotal.keluar,
+      saldo: kasTotal.saldo,
+      kasArus: kasArus.map((kas) => this.kasHelper.toKasArusResponse(kas, request)),
+    }
   }
 }

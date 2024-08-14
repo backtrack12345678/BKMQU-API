@@ -38,11 +38,9 @@ import { AktivitasService } from '../aktivitas/aktivitas.service';
 import { AktivitasResponse } from '../aktivitas/dto/response.dto';
 import { KasService } from '../kas/kas.service';
 import {
-  GetArusKasDashboardDto,
   GetKasQueryDto,
-  GetKasTotalDto,
 } from '../kas/dto/get.dto';
-import { ArusKasResponse, TotalKasResponse } from '../kas/dto/response.dto';
+import { KasArusDashboardResponse } from '../kas/dto/response.dto';
 import { CharityService } from '../charity/charity.service';
 import { GetKajianQueryDto } from '../kajian/dto/query.dto';
 import { KajianService } from '../kajian/kajian.service';
@@ -68,7 +66,7 @@ export class UserController {
     private liveService: LiveService,
     private kasService: KasService,
     private charityService: CharityService,
-  ) {}
+  ) { }
 
   @Post('/register/mesjid')
   @HttpCode(201)
@@ -464,22 +462,11 @@ export class UserController {
 
   @Get('/:userId/arus-kas')
   async getDashboardArusKas(
+    @Req() request: any,
     @Param('userId') userId: string,
-    @Query() query: GetArusKasDashboardDto,
-  ): Promise<WebResponse<ArusKasResponse[]>> {
-    const result = await this.kasService.getDashboardArusKas(userId, query);
-    return {
-      status: 'success',
-      data: result,
-    };
-  }
-
-  @Get('/:userId/arus-kas/total')
-  async getTotalKas(
-    @Param('userId') userId: string,
-    @Query() query: GetKasTotalDto,
-  ): Promise<WebResponse<TotalKasResponse>> {
-    const result = await this.kasService.getTotalKas(userId, query);
+    @Query() query: GetKasQueryDto,
+  ): Promise<WebResponse<KasArusDashboardResponse>> {
+    const result = await this.kasService.getDashboardArusKas(request, userId, query);
     return {
       status: 'success',
       data: result,
