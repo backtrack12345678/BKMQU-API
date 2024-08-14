@@ -290,7 +290,6 @@ export class KasService {
     return kasMutasi.map((kasMutasi) => this.kasHelper.toKasMutasiResponse(kasMutasi));
   }
 
-  //
   async getDashboardArusKas(
     request: any,
     userId: string,
@@ -313,11 +312,6 @@ export class KasService {
       },
     });
     const kasTotal = await this.kasHelper.getKasArusTotal(mesjidUserId);
-    return {
-      totalMasuk: kasTotal.masuk,
-      totalKeluar: kasTotal.keluar,
-      saldo: kasTotal.saldo,
-      kasArus: kasArus.map((kas) => this.kasHelper.toKasArusResponse(kas, request)),
-    }
+    return this.kasHelper.toKasDashboardResponse(kasArus, kasTotal, request);
   }
 }

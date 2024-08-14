@@ -7,6 +7,7 @@ import {
 import { createId } from '@paralleldrive/cuid2';
 import { PrismaService } from '../../common/prisma.service';
 import {
+  KasArusDashboardResponse,
   KasArusResponse,
   KasMutasiResponse,
   KasResponse,
@@ -37,7 +38,7 @@ export class Helper {
       id: kas.id,
       nama: kas.nama,
       saldo: parseInt(kas.saldo),
-      bank: kas.kasBank.userBank.bank.nama,
+      bank: kas.kasBank?.userBank.bank.nama || null,
     };
   }
 
@@ -64,6 +65,17 @@ export class Helper {
       createdAt: kasArus.createdAt,
     };
   }
+
+  toKasDashboardResponse(kasArus, kasTotal, request: Request): KasArusDashboardResponse {
+    return {
+      totalMasuk: kasTotal.masuk,
+      totalKeluar: kasTotal.keluar,
+      saldo: kasTotal.saldo,
+      kasArus: kasArus.map((kas) => this.toKasArusResponse(kas, request)),
+    }
+  }
+
+  toKasArus
 
   kasSelectionCondition() {
     return {
@@ -117,6 +129,8 @@ export class Helper {
       createdAt: true,
     }
   }
+
+
 
   async updateKasSaldo(kasId: string, jumlah: number, tipe: string): Promise<void> {
     await this.prismaService.kas.update({
@@ -300,8 +314,8 @@ export class Helper {
     }));
 
     return {
-      masuk: masuk.jumlah,
-      keluar: keluar.jumlah,
+      masuk: masuk?.jumlah || 0,
+      keluar: keluar?.jumlah || 0,
       saldo: Number(kasSaldo._sum.saldo),
     }
   }
