@@ -46,7 +46,7 @@ import { FileTypesValidator } from '../common/pipes/file-types.validator';
 
 const allowedMimeTypes = {
   fotoRek: ['image/png', 'image/jpg', 'image/jpeg', 'application/pdf'],
-  buktiArus: ['image/png', 'image/jpg', 'image/jpeg', 'application/pdf'],
+  buktiKasArus: ['image/png', 'image/jpg', 'image/jpeg', 'application/pdf'],
 };
 
 @Controller('/api/kas')
