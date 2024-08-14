@@ -50,6 +50,7 @@ import { KajianResponse } from '../kajian/dto/response.dto';
 import { GetLiveQueryDto } from '../live/dto/query..dto';
 import { LiveService } from '../live/live.service';
 import { FileTypesValidator } from '../common/pipes/file-types.validator';
+import { LiveResponse } from '../live/dto/response.dto';
 
 const allowedMimeTypes = {
   bukti: ['application/pdf', 'image/jpg', 'image/jpeg', 'image/png'],
@@ -422,6 +423,27 @@ export class UserController {
     };
   }
 
+  // live privat
+  @Get('/live')
+  @Auth()
+  async findAllUserPrivatelives(
+    @Req() request: any,
+    @Query() query: GetLiveQueryDto,
+  ): Promise<WebResponse<LiveResponse[] | []>> {
+    const userId: string = request.user?.id;
+    const result = await this.liveService.findAllLives(
+      request,
+      query,
+      'private',
+      userId,
+    );
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
+  //live public
   @Get('/:userId/live')
   async findAllUserPublicLive(
     @Req() request: any,

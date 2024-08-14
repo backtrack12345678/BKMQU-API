@@ -62,8 +62,6 @@ export class FilesController {
       filename,
       'posts',
     );
-    console.log(mime);
-
     response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
   }
@@ -107,6 +105,7 @@ export class FilesController {
     fileStream.pipe(response);
   }
 
+
   @Get('/arus-kas/:filename')
   async getArusKasPhoto(
     @Param('filename') filename: string,
@@ -115,6 +114,19 @@ export class FilesController {
     const { fileStream, mime } = await this.filesService.serveFiles(
       filename,
       'arus-kas',
+    );
+    response.setHeader('Content-Type', mime);
+    fileStream.pipe(response);
+  }
+
+  @Get('/live/:filename')
+  async getLiveThumbnail(
+    @Param('filename') filename: string,
+    @Res() response: Response,
+  ) {
+    const { fileStream, mime } = await this.filesService.serveFiles(
+      filename,
+      'live',
     );
     response.setHeader('Content-Type', mime);
     fileStream.pipe(response);
