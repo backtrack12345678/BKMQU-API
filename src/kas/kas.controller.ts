@@ -210,7 +210,7 @@ export class KasController {
     buktiKasArus?: Express.Multer.File,
   ): Promise<WebResponse<KasArusResponse>> {
     const result = await this.kasService.updateKasArus(
-      request.user,
+      request,
       payload,
       param,
       buktiKasArus,
@@ -229,7 +229,7 @@ export class KasController {
     @Req() request: any,
     @Param() param: KasArusParamDto,
   ): Promise<WebResponse<boolean>> {
-    await this.kasService.deleteKasArus(request.user, param);
+    await this.kasService.deleteKasArus(request, param);
     return {
       status: 'success',
       message: 'Arus Kas Berhasil Dihapus',

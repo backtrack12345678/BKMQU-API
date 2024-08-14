@@ -146,34 +146,34 @@ export class Helper {
     });
   }
 
-  async updateExistingArusKasSaldo(kasId: string, arusKasId: number, tipe: String) {
+  async updateExistingArusKasSaldo(kasId: string, arusKasId: number, tipe: string) {
     let saldoUpdate;
     const result = await this.prismaService.kas_Arus.findUnique({
       where: {
-        id: arusKasId,
+        id: arusKasId
       },
       select: {
         jumlah: true,
         tipe: true,
-      }
-    })
-
-    if (tipe === 'Masuk' && result.tipe === 'Keluar') {
-      saldoUpdate = { increment: result.jumlah };
-    } else if (tipe === 'Keluar' && result.tipe === 'Masuk') {
-      saldoUpdate = { decrement: result.jumlah };
-    } else if (tipe === result.tipe) {
-      saldoUpdate = tipe === 'Keluar' ? { increment: result.jumlah } : { decrement: result.jumlah };
+      },
+    });
+    if (tipe === 'Masuk') {
+      saldoUpdate = result.tipe === 'Masuk' ? { decrement: result.jumlah } : { increment: result.jumlah };
     }
+    if (tipe === 'Keluar') {
+      saldoUpdate = result.tipe === 'Keluar' ? { increment: result.jumlah } : { decrement: result.jumlah };
+    }
+
     await this.prismaService.kas.update({
       where: {
-        id: kasId,
+        id: kasId
       },
       data: {
-        saldo: saldoUpdate,
+        saldo: saldoUpdate
       },
-    })
+    });
   }
+
 
   async updateKasSaldoDelete(kasId: string, tipe: string, jumlah: number) {
     await this.prismaService.kas.update({

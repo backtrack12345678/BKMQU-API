@@ -181,6 +181,9 @@ export class KasService {
           lte: query.toDate,
         }
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
       select: this.kasHelper.kasArusSelectCondition(),
     });
     return kasArus.map((kasArus) => this.kasHelper.toKasArusResponse(kasArus, request));
@@ -195,6 +198,8 @@ export class KasService {
     const user: Auth = request.user;
     const mesjidUserId: string = user.id;
     await this.kasHelper.checkKasOwner(mesjidUserId, param.kasId);
+    await this.kasHelper.updateExistingArusKasSaldo(param.kasId, param.arusKasId, payload.tipe)
+    await this.kasHelper.updateKasSaldo(param.kasId, payload.jumlah, payload.tipe);
     const oldBukti = await this.kasHelper.getOldArusKasFoto(param.arusKasId);
     const arusKas = await this.prismaService.kas_Arus.update({
       where: {
@@ -213,8 +218,7 @@ export class KasService {
       },
       select: this.kasHelper.kasArusSelectCondition(),
     });
-    await this.kasHelper.updateExistingArusKasSaldo(param.kasId, param.arusKasId, payload.tipe)
-    await this.kasHelper.updateKasSaldo(param.kasId, payload.jumlah, payload.tipe);
+
     if (oldBukti) {
       this.filesService.deleteSingleFile(oldBukti);
     }
