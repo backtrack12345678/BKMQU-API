@@ -6,35 +6,26 @@ import {
   IsPositive,
   IsString,
   MaxLength,
+  Min,
 } from 'class-validator';
 import {
-  CreateArusKasKeluarDto,
-  CreateArusKasMasukDto,
+
+  CreateKasArusDto,
 } from './create-kas.dto';
-import { Transform } from 'class-transformer';
 
-export class UpdateKasBankDto {
+export class UpdateKasDto {
   @IsOptional()
   @IsNotEmpty()
   @IsString()
-  @MaxLength(150)
-  namaRek: string;
+  @MaxLength(200)
+  nama: string;
 
   @IsOptional()
   @IsNotEmpty()
-  @IsString()
-  @MaxLength(150)
-  namaBank: string;
-
-  @IsOptional()
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(150)
-  nomorRek: string;
+  @IsNumber()
+  @IsPositive()
+  @Min(1)
+  userBankId: number;
 }
 
-export class UpdateArusKasMasukDto extends PartialType(CreateArusKasMasukDto) {}
-
-export class UpdateArusKasKeluarDto extends PartialType(
-  CreateArusKasKeluarDto,
-) {}
+export class UpdateKasArusDto extends PartialType(CreateKasArusDto) { }

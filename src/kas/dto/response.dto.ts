@@ -1,40 +1,19 @@
 export class KasResponse {
   id: string;
-  jenis: string;
-  namaBank?: string;
-  namaRek?: string;
-  nomorRek?: string;
-  saldoAwal: number;
-  bulan: string;
-  tahun: number;
+  nama: string;
+  saldo: number;
+  bank?: string;
 }
-
-export class GetAllKasResponse {
-  namaMesjid: string;
-  kas: KasResponse[];
-}
-
-export class ArusKasResult {
-  id?: number;
-  status: string;
+export class KasArusResponse {
+  id: number;
+  tipe: string;
   kategori: string;
-  uraian: string;
   metode: string;
-  jumlah?: bigint;
-  namaPenerimaKeluar?: string;
-  tanggal: number;
-  bulan: string;
-  tahun: number;
+  keterangan: string;
+  jumlah: number;
+  dokumen?: string;
+  createdAt: Date;
 }
-
-export class ArusKasResponse extends ArusKasResult {
-  nama?: string;
-  debit: number;
-  kredit: number;
-  initialSaldo?: number;
-}
-
-export class KasMutasiResponse extends ArusKasResponse {}
 
 export class BankMutasi {
   jenis: string;
@@ -43,13 +22,12 @@ export class BankMutasi {
   nomorRekening: string;
 }
 
-export class GetKasMutasiResponse {
+export class KasMutasiResponse {
+  id: number;
   jumlah: number;
-  tanggal: number;
-  bulan: string;
-  tahun: number;
-  pengirim?: BankMutasi;
-  penerima?: BankMutasi;
+  fromKas: KasResponse;
+  toKas: KasResponse;
+  createdAt: Date;
 }
 
 export class TotalKasResponse {

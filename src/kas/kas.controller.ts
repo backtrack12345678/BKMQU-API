@@ -12,14 +12,14 @@ import {
   HttpCode,
   Query,
   ParseFilePipeBuilder,
+  Put,
 } from '@nestjs/common';
 import { KasService } from './kas.service';
 import {
-  CreateArusKasKeluarDto,
-  CreateArusKasMasukDto,
-  CreateKasBankDto,
+  ConnectKasBankDto,
+  CreateKasArusDto,
+  CreateKasDto,
   CreateKasMutasiDto,
-  CreateKasTunaiDto,
 } from './dto/create-kas.dto';
 // import { UpdateKaDto } from './dto/update-ka.dto';
 import { Auth } from '../common/auth.decorator';
@@ -28,23 +28,20 @@ import { Roles } from '../common/role/role.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { WebResponse } from '../model/web.model';
 import {
-  ArusKasResponse,
-  GetKasMutasiResponse,
-  KasMutasiResponse,
+  KasArusResponse,
   KasResponse,
+  KasMutasiResponse,
 } from './dto/response.dto';
 import {
-  GetArusKasDto,
+  GetKasArusDto,
   GetKasQueryDto,
   GetMutasiQueryDto,
 } from './dto/get.dto';
 import {
-  UpdateArusKasKeluarDto,
-  UpdateArusKasMasukDto,
-  UpdateKasBankDto,
+  UpdateKasArusDto,
+  UpdateKasDto,
 } from './dto/update-kas.dto';
-import { ArusKasParamDto } from './dto/params.dto';
-import { DeleteArusKasDto } from './dto/delete.dto';
+import { KasArusParamDto } from './dto/params.dto';
 import { FileTypesValidator } from '../common/pipes/file-types.validator';
 
 const allowedMimeTypes = {
@@ -54,82 +51,98 @@ const allowedMimeTypes = {
 
 @Controller('/api/kas')
 export class KasController {
-  constructor(private readonly kasService: KasService) {}
+  constructor(private readonly kasService: KasService) { }
 
-  @Post('/bank')
+  @Post()
   @Auth()
   @Roles(Role.MESJID)
   @HttpCode(201)
-  @UseInterceptors(
-    FileInterceptor('fotoRek', {
-      dest: './uploads/rekening',
-    }),
-  )
-  async createKasBank(
+  async createKas(
     @Req() request,
-    @Body() payload: CreateKasBankDto,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addValidator(
-          new FileTypesValidator({
-            mimeTypes: allowedMimeTypes,
-          }),
-        )
-        .build(),
-    )
-    fotoRek: Express.Multer.File,
+    @Body() payload: CreateKasDto,
   ): Promise<WebResponse<KasResponse>> {
-    const result = await this.kasService.createKasBank(
-      request.user,
-      payload,
-      fotoRek,
-    );
+    const data = await this.kasService.createKas(request.user, payload);
     return {
       status: 'success',
       message: 'Kas Berhasil Dibuat',
-      data: result,
+      data: data,
     };
   }
 
-  @Post('/tunai')
+  @Put('/:kasId')
   @Auth()
   @Roles(Role.MESJID)
-  @HttpCode(201)
-  async createKasTunai(
+  async connectKasBank(
     @Req() request,
-    @Body() payload: CreateKasTunaiDto,
-  ): Promise<WebResponse<KasResponse>> {
-    const result = await this.kasService.createKasTunai(request.user, payload);
+    @Param('kasId') kasId: string,
+    @Body() payload: ConnectKasBankDto,
+  ): Promise<WebResponse<boolean>> {
+    await this.kasService.connectKasBank(request.user, payload, kasId);
     return {
       status: 'success',
-      message: 'Kas Berhasil Dibuat',
-      data: result,
+      message: 'Kas Berhasil Dihubungkan Dengan Bank',
+      data: true,
     };
   }
 
   @Get()
   @Auth()
   @Roles(Role.MESJID)
-  async getKas(@Query() query: GetKasQueryDto, @Req() request: any) {
-    const result = await this.kasService.getKas(request.user, query);
+  async getKas(
+    @Query() query: GetKasQueryDto,
+    @Req() request: any,
+  ): Promise<WebResponse<KasResponse[] | []>> {
+    const data = await this.kasService.getKas(request.user, query);
     return {
       status: 'success',
-      data: result,
+      data: data,
     };
   }
 
   @Patch('/:kasId')
   @Auth()
   @Roles(Role.MESJID)
+  async updateKas(
+    @Req() request: any,
+    @Body() payload: UpdateKasDto,
+    @Param('kasId') kasId: string,
+  ): Promise<WebResponse<KasResponse>> {
+    const data = await this.kasService.updateKas(request.user, payload, kasId);
+    return {
+      status: 'success',
+      message: 'Kas Berhasil Diperbarui',
+      data: data,
+    };
+  }
+
+  @Delete('/:kasId')
+  @Auth()
+  @Roles(Role.MESJID)
+  async removeKas(
+    @Req() request: any,
+    @Param('kasId') kasId: string,
+  ): Promise<WebResponse<KasResponse>> {
+    const data = await this.kasService.removeKas(request.user, kasId);
+    return {
+      status: 'success',
+      message: 'Kas Berhasil Dihapus',
+      data: data,
+    };
+  }
+
+  @Post('/:kasId/arus')
+  @Auth()
+  @Roles(Role.MESJID)
+  @HttpCode(201)
   @UseInterceptors(
-    FileInterceptor('fotoRek', {
-      dest: './uploads/rekening',
+    FileInterceptor('buktiKasArus', {
+      dest: './uploads/arus-kas',
     }),
   )
-  async updateKasBank(
+  async createKasArus(
     @Req() request: any,
-    @Body() payload: UpdateKasBankDto,
     @Param('kasId') kasId: string,
+    @Body() payload: CreateKasArusDto,
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addValidator(
@@ -141,65 +154,48 @@ export class KasController {
           fileIsRequired: false,
         }),
     )
-    fotoRek?: Express.Multer.File,
-  ): Promise<WebResponse<boolean>> {
-    await this.kasService.updateKasBank(request.user, payload, kasId, fotoRek);
-    return {
-      status: 'success',
-      message: 'Kas Bank Berhasil Diperbarui',
-      data: true,
-    };
-  }
-
-  @Delete('/:kasId')
-  @Auth()
-  @Roles(Role.MESJID)
-  async removeKas(
-    @Req() request: any,
-    @Param('kasId') kasId: string,
-  ): Promise<WebResponse<boolean>> {
-    await this.kasService.removeKas(request.user, kasId);
-    return {
-      status: 'success',
-      message: 'Kas Berhasil Dihapus',
-      data: true,
-    };
-  }
-
-  @Post('/:kasId/arus-kas/masuk')
-  @Auth()
-  @Roles(Role.MESJID)
-  @HttpCode(201)
-  async createArusKasMasuk(
-    @Req() request: any,
-    @Param('kasId') kasId: string,
-    @Body() payload: CreateArusKasMasukDto,
-  ): Promise<WebResponse<ArusKasResponse>> {
-    const result = await this.kasService.createArusKasMasuk(
-      request.user,
+    buktiKasArus?: Express.Multer.File,
+  ): Promise<WebResponse<KasArusResponse>> {
+    const result = await this.kasService.createKasArus(
+      request,
       kasId,
       payload,
+      buktiKasArus,
     );
     return {
       status: 'success',
-      message: 'Arus Kas Masuk Berhasil Dibuat',
+      message: 'Arus Kas Berhasil Dibuat',
       data: result,
     };
   }
 
-  @Post('/:kasId/arus-kas/keluar')
+  @Get('/:kasId/arus')
   @Auth()
   @Roles(Role.MESJID)
-  @HttpCode(201)
+  async getKasArus(
+    @Req() request: any,
+    @Param('kasId') kasId: string,
+    @Query() query: GetKasArusDto,
+  ): Promise<WebResponse<KasArusResponse[] | []>> {
+    const result = await this.kasService.getKasArus(request, kasId, query);
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
+  @Patch('/:kasId/arus/:arusKasId')
+  @Auth()
+  @Roles(Role.MESJID)
   @UseInterceptors(
-    FileInterceptor('buktiArus', {
+    FileInterceptor('buktiKasArus', {
       dest: './uploads/arus-kas',
     }),
   )
-  async createArusKasKeluar(
+  async updateKasArus(
     @Req() request: any,
-    @Param('kasId') kasId: string,
-    @Body() payload: CreateArusKasKeluarDto,
+    @Body() payload: UpdateKasArusDto,
+    @Param() param: KasArusParamDto,
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addValidator(
@@ -207,52 +203,17 @@ export class KasController {
             mimeTypes: allowedMimeTypes,
           }),
         )
-        .build(),
+        .build({
+          fileIsRequired: false,
+        }),
     )
-    buktiArusKas: Express.Multer.File,
-  ): Promise<WebResponse<ArusKasResponse>> {
-    const result = await this.kasService.createArusKasKeluar(
-      request.user,
-      kasId,
-      payload,
-      buktiArusKas,
-    );
-    return {
-      status: 'success',
-      message: 'Arus Kas Keluar Berhasil Dibuat',
-      data: result,
-    };
-  }
-
-  @Get('/:kasId/arus-kas')
-  @Auth()
-  @Roles(Role.MESJID)
-  @UseInterceptors()
-  async getArusKas(
-    @Req() request: any,
-    @Param('kasId') kasId: string,
-    @Query() query: GetArusKasDto,
-  ): Promise<WebResponse<ArusKasResponse[] | []>> {
-    const result = await this.kasService.getArusKas(request.user, kasId, query);
-    return {
-      status: 'success',
-      data: result,
-    };
-  }
-
-  @Patch('/:kasId/arus-kas/:arusKasId/masuk')
-  @Auth()
-  @Roles(Role.MESJID)
-  @UseInterceptors()
-  async updateArusKasMasuk(
-    @Req() request: any,
-    @Body() payload: UpdateArusKasMasukDto,
-    @Param() param: ArusKasParamDto,
-  ): Promise<WebResponse<ArusKasResponse>> {
-    const result = await this.kasService.updateArusKasMasuk(
+    buktiKasArus?: Express.Multer.File,
+  ): Promise<WebResponse<KasArusResponse>> {
+    const result = await this.kasService.updateKasArus(
       request.user,
       payload,
       param,
+      buktiKasArus,
     );
     return {
       status: 'success',
@@ -261,55 +222,18 @@ export class KasController {
     };
   }
 
-  @Patch('/:kasId/arus-kas/:arusKasId/keluar')
+  @Delete('/:kasId/arus/:arusKasId')
   @Auth()
   @Roles(Role.MESJID)
-  @UseInterceptors(
-    FileInterceptor('buktiArus', {
-      dest: './uploads/arus-kas',
-    }),
-  )
-  async updateArusKasKeluar(
+  async deleteKasArus(
     @Req() request: any,
-    @Body() payload: UpdateArusKasKeluarDto,
-    @Param() param: ArusKasParamDto,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addValidator(
-          new FileTypesValidator({
-            mimeTypes: allowedMimeTypes,
-          }),
-        )
-        .build(),
-    )
-    buktiArusKas: Express.Multer.File,
-  ): Promise<WebResponse<ArusKasResponse>> {
-    const result = await this.kasService.updateArusKasKeluar(
-      request.user,
-      payload,
-      param,
-      buktiArusKas,
-    );
-    return {
-      status: 'success',
-      message: 'Arus Kas Berhasil Diperbarui',
-      data: result,
-    };
-  }
-
-  @Delete('/:kasId/arus-kas/:arusKasId')
-  @Auth()
-  @Roles(Role.MESJID)
-  async deleteArusKas(
-    @Req() request: any,
-    @Param() param: ArusKasParamDto,
-    @Body() payload: DeleteArusKasDto,
-  ): Promise<WebResponse<true>> {
-    await this.kasService.deleteArusKas(request.user, payload, param);
+    @Param() param: KasArusParamDto,
+  ): Promise<WebResponse<KasArusResponse>> {
+    const data = await this.kasService.deleteKasArus(request.user, param);
     return {
       status: 'success',
       message: 'Arus Kas Berhasil Dihapus',
-      data: true,
+      data: data,
     };
   }
 
@@ -335,7 +259,7 @@ export class KasController {
   async getKasMutasi(
     @Req() request: any,
     @Query() query: GetMutasiQueryDto,
-  ): Promise<WebResponse<GetKasMutasiResponse[] | []>> {
+  ): Promise<WebResponse<KasMutasiResponse[] | []>> {
     const result = await this.kasService.getKasMutasi(request.user, query);
     return {
       status: 'success',

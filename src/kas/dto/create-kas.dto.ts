@@ -10,73 +10,34 @@ import {
   MaxLength,
   Matches,
   NotEquals,
+  IsOptional,
 } from 'class-validator';
+export class CreateKasDto {
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(200)
+  nama: string;
 
-export class ValidOptions {
-  static MONTH: string[] = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-}
-
-export class CreateKasTunaiDto {
   @IsNotEmpty()
   @IsNumber()
   @Min(0)
   @Max(999999999999999)
   @Transform(({ value }) => parseInt(value, 10))
-  saldoAwal: number;
-
-  @IsNotEmpty()
-  @IsString()
-  @IsIn(ValidOptions.MONTH)
-  bulan: string;
-
+  saldo: number;
+}
+export class ConnectKasBankDto {
   @IsNotEmpty()
   @IsNumber()
   @IsPositive()
-  @Min(new Date().getFullYear() - 1)
-  @Max(new Date().getFullYear() + 1)
-  @Transform(({ value }) => parseInt(value, 10))
-  tahun: number;
+  @Min(1)
+  userBankId: number;
 }
-
-export class CreateKasBankDto extends CreateKasTunaiDto {
+export class CreateKasArusDto {
   @IsNotEmpty()
   @IsString()
-  @MaxLength(150)
-  namaRek: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(150)
-  namaBank: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(150)
-  nomorRek: string;
-}
-
-export class ArusKas {
-  @IsNotEmpty()
-  @IsString()
-  uraian: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(30)
-  metode: string;
+  @MaxLength(10)
+  @IsIn(['Masuk', 'Keluar'])
+  tipe: string;
 
   @IsNotEmpty()
   @IsNumber()
@@ -87,55 +48,28 @@ export class ArusKas {
   jumlah: number;
 
   @IsNotEmpty()
+  @IsString()
+  @MaxLength(30)
+  kategori: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(50)
+  metode: string;
+
+  @IsNotEmpty()
+  @IsString()
+  keterangan: string;
+}
+export class CreateKasMutasiDto {
+  @IsNotEmpty()
   @IsNumber()
   @IsPositive()
   @Min(1)
-  @Max(31)
+  @Max(999999999999999)
   @Transform(({ value }) => parseInt(value, 10))
-  tanggal: number;
-
-  @IsNotEmpty()
-  @IsString()
-  @IsIn(ValidOptions.MONTH)
-  bulan: string;
-
-  @IsNotEmpty()
-  @IsNumber()
-  @IsPositive()
-  @Min(new Date().getFullYear() - 1)
-  @Max(new Date().getFullYear() + 1)
-  @Transform(({ value }) => parseInt(value, 10))
-  tahun: number;
-}
-
-export class CreateArusKasMasukDto extends ArusKas {
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(30)
-  @IsIn(['Infaq', 'Sadaqah'])
-  kategori: string;
-}
-
-export class CreateArusKasKeluarDto extends ArusKas {
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(30)
-  @Matches(/^(?!.*Mutasi).*$/, { message: 'Kategori cannot contain Mutasi' })
-  kategori: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(150)
-  nama: string;
-}
-
-export class CreateKasMutasiDto extends ArusKas {
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(30)
-  @IsIn(['Mutasi'])
-  kategori: string;
-
+  jumlah: number;
+  
   @IsNotEmpty()
   @IsString()
   fromKasId: string;

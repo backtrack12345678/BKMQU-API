@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsPositive, IsString } from 'class-validator';
 
-export class ArusKasParamDto {
+export class KasArusParamDto {
   @IsNotEmpty()
   @IsString()
   kasId: string;

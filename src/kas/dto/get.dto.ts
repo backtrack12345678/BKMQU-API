@@ -1,5 +1,7 @@
 import { Transform } from 'class-transformer';
 import {
+  IsDate,
+  IsDateString,
   IsIn,
   IsNotEmpty,
   IsNumber,
@@ -8,8 +10,10 @@ import {
   IsString,
   Max,
   Min,
+  MinDate,
+  ValidateIf,
 } from 'class-validator';
-import { ValidOptions } from './create-kas.dto';
+// import { ValidOptions } from './create-kas.dto';
 
 export class GetKasQueryDto {
   @IsOptional()
@@ -25,26 +29,24 @@ export class GetKasQueryDto {
   page?: number = 1;
 }
 
-export class GetArusKasDto {
-  @IsNotEmpty()
-  @IsString()
-  @IsIn(ValidOptions.MONTH)
-  bulan: string;
+export class GetKasArusDto {
+  @IsOptional()
+  @Transform(({ value }) => value ? new Date(value) : new Date(value).setMonth(value.getMont() - 1))
+  @IsDateString()
+  @IsDate()
+  fromDate: Date;
 
   @IsOptional()
-  @IsNotEmpty()
-  @IsNumber()
-  @IsPositive()
-  @Min(new Date().getFullYear() - 1)
-  @Max(new Date().getFullYear() + 1)
-  @Transform(({ value }) => parseInt(value, 10))
-  tahun?: number;
+  @Transform(({ value }) => new Date(value))
+  @IsDateString()
+  @IsDate()
+  // @ValidateIf((o) => o.toDate > o.fromDate)
+  toDate: Date;
 }
 
 export class GetArusKasDashboardDto extends GetKasQueryDto {
   @IsOptional()
   @IsString()
-  @IsIn(ValidOptions.MONTH)
   bulan?: string;
 
   @IsOptional()
@@ -60,7 +62,6 @@ export class GetArusKasDashboardDto extends GetKasQueryDto {
 export class GetKasTotalDto {
   @IsNotEmpty()
   @IsString()
-  @IsIn(ValidOptions.MONTH)
   bulan: string;
 
   @IsNotEmpty()
@@ -72,4 +73,4 @@ export class GetKasTotalDto {
   tahun: number;
 }
 
-export class GetMutasiQueryDto extends GetKasQueryDto {}
+export class GetMutasiQueryDto extends GetKasQueryDto { }

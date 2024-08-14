@@ -7,10 +7,10 @@ import { Role } from '../common/role/role.enum';
 
 @Controller('/api/files')
 export class FilesController {
-  constructor(private readonly filesService: FilesService) {}
+  constructor(private readonly filesService: FilesService) { }
 
   @Get('/users/:filename')
-  async etUserPhoto(
+  async getUserPhoto(
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
@@ -102,6 +102,19 @@ export class FilesController {
     const { fileStream, mime } = await this.filesService.serveFiles(
       filename,
       'infaq',
+    );
+    response.setHeader('Content-Type', mime);
+    fileStream.pipe(response);
+  }
+
+  @Get('/arus-kas/:filename')
+  async getArusKasPhoto(
+    @Param('filename') filename: string,
+    @Res() response: Response,
+  ) {
+    const { fileStream, mime } = await this.filesService.serveFiles(
+      filename,
+      'arus-kas',
     );
     response.setHeader('Content-Type', mime);
     fileStream.pipe(response);

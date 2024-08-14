@@ -5,41 +5,35 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
-  CreateArusKasMasukDto,
-  CreateKasBankDto,
+  ConnectKasBankDto,
+  CreateKasArusDto,
+  CreateKasDto,
   CreateKasMutasiDto,
-  CreateKasTunaiDto,
 } from './dto/create-kas.dto';
 // import { UpdateKaDto } from './dto/update-ka.dto';
 import { Auth } from '../model/user.model';
 import { PrismaService } from '../common/prisma.service';
 import { MesjidService } from '../mesjid/mesjid.service';
 import {
-  ArusKasResponse,
-  ArusKasResult,
-  GetAllKasResponse,
-  GetKasMutasiResponse,
+  KasArusResponse,
   KasMutasiResponse,
   KasResponse,
   TotalKasResponse,
 } from './dto/response.dto';
 import {
   GetArusKasDashboardDto,
-  GetArusKasDto,
+  GetKasArusDto,
   GetKasQueryDto,
   GetKasTotalDto,
   GetMutasiQueryDto,
 } from './dto/get.dto';
 import { FilesService } from '../files/files.service';
 import {
-  UpdateArusKasKeluarDto,
-  UpdateArusKasMasukDto,
-  UpdateKasBankDto,
+  UpdateKasArusDto,
+  UpdateKasDto,
 } from './dto/update-kas.dto';
-import { CreateArusKasKeluarDto } from './dto/create-kas.dto';
 import { Helper } from './helper/helper';
-import { ArusKasParamDto } from './dto/params.dto';
-import { DeleteArusKasDto } from './dto/delete.dto';
+import { KasArusParamDto } from './dto/params.dto';
 
 @Injectable()
 export class KasService {
@@ -48,282 +42,274 @@ export class KasService {
     private mesjidService: MesjidService,
     private filesService: FilesService,
     private kasHelper: Helper,
-  ) {}
+  ) { }
 
-  async createKasTunai(
+  async createKas(
     user: Auth,
-    payload: CreateKasTunaiDto,
+    payload: CreateKasDto,
   ): Promise<KasResponse> {
     const mesjidUserId: string = user.id;
-    const mesjidId: number =
-      await this.mesjidService.getMesjidIdByUserId(mesjidUserId);
-
     const kas = await this.prismaService.kas.create({
-      data: this.kasHelper.createKasData(payload, mesjidId, 'Tunai'),
-      select: {
-        ...this.kasHelper.kasSelectConditions(),
-        rekapKasBulanan: {
-          select: {
-            initialSaldo: true,
-            bulan: true,
-            tahun: true,
-          },
-        },
-      },
+      data: this.kasHelper.createKasData(payload, mesjidUserId),
+      select: this.kasHelper.kasSelectionCondition(),
     });
-
     if (!kas) {
       throw new HttpException('Kas Gagal Dibuat', 500);
     }
-
     return this.kasHelper.toKasResponse(kas);
   }
 
-  async createKasBank(
+  async connectKasBank(
     user: Auth,
-    payload: CreateKasBankDto,
-    fotoRek: Express.Multer.File,
-  ): Promise<KasResponse> {
-    const mesjidUserId: string = user.id;
-    const mesjidId: number =
-      await this.mesjidService.getMesjidIdByUserId(mesjidUserId);
-    await this.kasHelper.verifyRekeningBank(payload.nomorRek);
-
-    const kas = await this.prismaService.kas.create({
-      data: this.kasHelper.createKasData(payload, mesjidId, 'Bank', fotoRek),
-      select: {
-        ...this.kasHelper.kasSelectConditions(),
-        rekapKasBulanan: {
-          select: {
-            initialSaldo: true,
-            bulan: true,
-            tahun: true,
-          },
-        },
-      },
-    });
-
-    if (!kas) {
-      throw new HttpException('Kas Gagal Dibuat', 500);
-    }
-
-    return this.kasHelper.toKasResponse(kas);
-  }
-
-  async getKas(user: Auth, query: GetKasQueryDto): Promise<GetAllKasResponse> {
-    const mesjidUserId = user.id;
-    const result = await this.prismaService.user.findUnique({
-      where: {
-        id: mesjidUserId,
-      },
-      select: {
-        detailUser: {
-          select: {
-            nama: true,
-          },
-        },
-        mesjid: {
-          select: {
-            kas: {
-              take: query.takeCount || undefined,
-              skip: (query.page - 1) * query.takeCount || undefined,
-              orderBy: {
-                jenis: 'asc',
-              },
-              select: {
-                ...this.kasHelper.kasSelectConditions(),
-                rekapKasBulanan: {
-                  select: {
-                    initialSaldo: true,
-                    bulan: true,
-                    tahun: true,
-                  },
-                  orderBy: {
-                    createdAt: 'desc',
-                  },
-                  take: 1,
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return {
-      namaMesjid: result.detailUser['nama'],
-      kas: result.mesjid.kas.map((kas) => this.kasHelper.toKasResponse(kas)),
-    };
-  }
-
-  async updateKasBank(
-    user: Auth,
-    payload: UpdateKasBankDto,
+    payload: ConnectKasBankDto,
     kasId: string,
-    fotoRek?: Express.Multer.File,
   ): Promise<void> {
     const mesjidUserId: string = user.id;
-    const mesjidId: number =
-      await this.mesjidService.getMesjidIdByUserId(mesjidUserId);
-    await this.kasHelper.checkKasOwner(mesjidId, kasId);
-
-    const oldFotoRek = fotoRek ? await this.kasHelper.getOldFotoRek(kasId) : '';
-
-    this.prismaService.$transaction(async (p) => {
-      const kas = await p.kas.update({
-        where: {
-          id: kasId,
-        },
-        data: {
-          namaBank: payload.namaBank || '',
-          namaRekening: payload.namaRek || '',
-          nomorRekening: payload.nomorRek || '',
-          fotoRekening: fotoRek.filename || undefined,
-          path: fotoRek.path || undefined,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!kas) {
-        throw new HttpException('Kas Gagal Diperbaruri', 500);
-      }
-
-      if (oldFotoRek) {
-        this.filesService.deleteSingleFile(oldFotoRek);
+    await this.kasHelper.checkKasOwner(mesjidUserId, kasId);
+    await this.kasHelper.verifyUserBank(mesjidUserId, payload.userBankId);
+    await this.kasHelper.verifyKasBank(kasId, payload.userBankId);
+    const kasBank = await this.prismaService.kas_Bank.create({
+      data: {
+        userBankId: payload.userBankId,
+        kasId: kasId,
+      },
+      select: {
+        id: true,
       }
     });
-  }
-
-  async removeKas(user: Auth, kasId: string): Promise<void> {
-    const mesjidUserId: string = user.id;
-    const mesjidId: number =
-      await this.mesjidService.getMesjidIdByUserId(mesjidUserId);
-    await this.kasHelper.checkKasOwner(mesjidId, kasId);
-
-    const fotoRek = await this.kasHelper.getOldFotoRek(kasId);
-
-    const result = await this.prismaService.$transaction([
-      this.prismaService
-        .$executeRaw`DELETE FROM arus_kas WHERE kas_id = ${kasId};`,
-      this.prismaService
-        .$executeRaw`DELETE FROM rekap_kas_bulanan WHERE kas_id = ${kasId};`,
-      this.prismaService
-        .$executeRaw`DELETE FROM mutasi WHERE sender_kas_id = ${kasId} OR recipient_kas_id = ${kasId};`,
-      this.prismaService.$executeRaw`DELETE FROM kas WHERE id = ${kasId};`,
-    ]);
-    if (!result[3]) {
-      throw new NotFoundException('Kas Tidak Ditemukan');
-    }
-
-    if (fotoRek) {
-      this.filesService.deleteSingleFile(fotoRek);
+    if (!kasBank) {
+      throw new HttpException('Kas Gagal Dihubungkan', 500);
     }
   }
 
-  async createArusKasMasuk(
+  async getKas(
     user: Auth,
-    kasId: string,
-    payload: CreateArusKasMasukDto,
-  ): Promise<ArusKasResponse> {
-    await this.kasHelper.createArusKasHelper(user.id, kasId, payload);
-    const arusKas: ArusKasResult = await this.prismaService.arus_Kas.create({
-      data: {
-        kasId: kasId,
-        status: 'Masuk',
-        ...payload,
+    query: GetKasQueryDto
+  ): Promise<KasResponse[] | []> {
+    const mesjidUserId = user.id;
+    const kas = await this.prismaService.kas.findMany({
+      where: {
+        mesjidUserId: mesjidUserId,
       },
-      select: this.kasHelper.arusKasSelectCondition('Masuk'),
-    });
-
-    if (!arusKas) {
-      throw new HttpException('Arus Kas Masuk Gagal Dibuat', 500);
-    }
-
-    return this.kasHelper.toArusKasResponse(arusKas, 'Masuk');
-  }
-
-  async createArusKasKeluar(
-    user: Auth,
-    kasId: string,
-    payload: CreateArusKasKeluarDto,
-    buktiArusKas: Express.Multer.File,
-  ): Promise<ArusKasResponse> {
-    await this.kasHelper.createArusKasHelper(user.id, kasId, payload);
-    const { nama, ...dataPayload } = payload;
-    const arusKas: ArusKasResult = await this.prismaService.arus_Kas.create({
-      data: {
-        kasId: kasId,
-        status: 'Keluar',
-        ...dataPayload,
-        namaPenerimaKeluar: nama,
-        bukti: buktiArusKas.filename,
-        path: buktiArusKas.path,
+      orderBy: {
+        createdAt: "desc",
       },
-
-      select: this.kasHelper.arusKasSelectCondition('Keluar'),
+      take: query.takeCount || undefined,
+      skip: (query.page - 1) * query.takeCount || undefined,
+      select: this.kasHelper.kasSelectionCondition(),
     });
-
-    if (!arusKas) {
-      throw new HttpException('Arus Kas Keluar Gagal Dibuat', 500);
-    }
-
-    return this.kasHelper.toArusKasResponse(arusKas, 'Keluar');
+    return kas.map((kas) => this.kasHelper.toKasResponse(kas));
   }
 
-  async getArusKas(
+  async updateKas(
     user: Auth,
+    payload: UpdateKasDto,
     kasId: string,
-    query: GetArusKasDto,
-  ): Promise<ArusKasResponse[] | []> {
+  ): Promise<KasResponse> {
     const mesjidUserId: string = user.id;
-    const mesjidId: number =
-      await this.mesjidService.getMesjidIdByUserId(mesjidUserId);
-    await this.kasHelper.checkKasOwner(mesjidId, kasId);
-
-    const filters = {
-      bulan: query.bulan,
-      tahun: query.tahun || new Date().getFullYear(),
-    };
-
-    const kas = await this.prismaService.kas.findUnique({
+    await this.kasHelper.checkKasOwner(mesjidUserId, kasId);
+    if (payload.userBankId) {
+      await this.kasHelper.verifyUserBank(mesjidUserId, payload.userBankId);
+    }
+    const kas = await this.prismaService.kas.update({
       where: {
         id: kasId,
       },
-      select: {
-        arusKas: {
-          where: filters,
-          select: this.kasHelper.arusKasSelectCondition('Keluar'),
-        },
-        rekapKasBulanan: {
-          where: filters,
-          select: {
-            initialSaldo: true,
-          },
-        },
+      data: {
+        nama: payload.nama || undefined,
+        kasBank: {
+          update: {
+            userBankId: payload.userBankId || undefined,
+          }
+        }
       },
+      select: this.kasHelper.kasSelectionCondition(),
     });
-
-    let saldoAwal = parseInt(String(kas.rekapKasBulanan[0]?.initialSaldo)) || 0;
-    return kas.arusKas.map((item) => {
-      const jumlah = parseInt(String(item.jumlah));
-      saldoAwal += item.status === 'Masuk' ? jumlah : -jumlah;
-      return {
-        ...this.kasHelper.toArusKasResponse(item, item.status),
-        initialSaldo: saldoAwal,
-      };
-    });
+    if (!kas) {
+      throw new HttpException('Kas Gagal Dibuat', 500);
+    }
+    return this.kasHelper.toKasResponse(kas);
   }
 
+  async removeKas(user: Auth, kasId: string): Promise<KasResponse> {
+    const mesjidUserId: string = user.id;
+    await this.kasHelper.checkKasOwner(mesjidUserId, kasId);
+    const kas = await this.prismaService.kas.delete({
+      where: {
+        id: kasId,
+      },
+      select: this.kasHelper.kasSelectionCondition(),
+    });
+    if (!kas) {
+      throw new HttpException('Kas Gagal Dihapus', 500);
+    }
+    return this.kasHelper.toKasResponse(kas);
+  }
+
+  async createKasArus(
+    request: any,
+    kasId: string,
+    payload: CreateKasArusDto,
+    buktiKasArus?: Express.Multer.File,
+  ): Promise<KasArusResponse> {
+    const user: Auth = request.user;
+    const mesjidUserId: string = user.id;
+    await this.kasHelper.checkKasOwner(mesjidUserId, kasId);
+    const kasArus = await this.prismaService.kas_Arus.create({
+      data: {
+        kasId: kasId,
+        ...payload,
+        ...(buktiKasArus && {
+          kasArusDokumen: {
+            create: {
+              nama: buktiKasArus.filename,
+              path: buktiKasArus.path
+            }
+          }
+        }),
+      },
+      select: this.kasHelper.kasArusSelectCondition(),
+    });
+    await this.kasHelper.updateKasSaldo(kasId, payload.jumlah, payload.tipe);
+    if (!kasArus) {
+      throw new HttpException('Arus Kas Gagal Dibuat', 500);
+    }
+
+    return this.kasHelper.toKasArusResponse(kasArus, request);
+  }
+
+  async getKasArus(
+    request: any,
+    kasId: string,
+    query: GetKasArusDto,
+  ): Promise<KasArusResponse[] | []> {
+    const user: Auth = request.user;
+    const mesjidUserId: string = user.id;
+    await this.kasHelper.checkKasOwner(mesjidUserId, kasId);
+    const kasArus = await this.prismaService.kas_Arus.findMany({
+      where: {
+        kasId: kasId,
+        createdAt: {
+          gte: query.fromDate,
+          lte: query.toDate,
+        }
+      },
+      select: this.kasHelper.kasArusSelectCondition(),
+    });
+    return kasArus.map((kasArus) => this.kasHelper.toKasArusResponse(kasArus, request));
+  }
+
+  async updateKasArus(
+    request: any,
+    payload: UpdateKasArusDto,
+    param: KasArusParamDto,
+    buktiKasArus?: Express.Multer.File,
+  ): Promise<KasArusResponse> {
+    const user: Auth = request.user;
+    const mesjidUserId: string = user.id;
+    await this.kasHelper.checkKasOwner(mesjidUserId, param.kasId);
+    const oldBukti = await this.kasHelper.getOldArusKasFoto(param.arusKasId);
+    const arusKas = await this.prismaService.kas_Arus.update({
+      where: {
+        id: param.arusKasId,
+      },
+      data: {
+        ...payload,
+        ...(buktiKasArus && {
+          kasArusDokumen: {
+            update: {
+              nama: buktiKasArus.filename,
+              path: buktiKasArus.path
+            }
+          }
+        }),
+      },
+      select: this.kasHelper.kasArusSelectCondition(),
+    });
+    await this.kasHelper.updateExistingArusKasSaldo(param.kasId, param.arusKasId, payload.tipe)
+    await this.kasHelper.updateKasSaldo(param.kasId, payload.jumlah, payload.tipe);
+    if (oldBukti) {
+      this.filesService.deleteSingleFile(oldBukti);
+    }
+
+    if (!arusKas) {
+      throw new HttpException('Arus Kas Gagal Diperbaruri', 500);
+    }
+
+    return this.kasHelper.toKasArusResponse(arusKas, request);
+  }
+
+  async deleteKasArus(
+    request: any,
+    param: KasArusParamDto,
+  ): Promise<KasArusResponse> {
+    const user: Auth = request.user;
+    const mesjidUserId: string = user.id;
+    await this.kasHelper.checkKasOwner(mesjidUserId, param.kasId);
+    const arusKas = await this.prismaService.kas_Arus.delete({
+      where: {
+        id: param.arusKasId,
+      },
+      select: this.kasHelper.kasArusSelectCondition(),
+    });
+
+    if (!arusKas) {
+      throw new HttpException('Arus Kas Gagal Dihapus', 500);
+    }
+    await this.kasHelper.updateKasSaldoDelete(param.kasId, arusKas.tipe, arusKas.jumlah)
+    if (arusKas.kasArusDokumen) {
+      this.filesService.deleteSingleFile(arusKas.kasArusDokumen);
+    }
+    return this.kasHelper.toKasArusResponse(arusKas, request);
+  }
+
+  async createKasMutasi(
+    user: Auth,
+    payload: CreateKasMutasiDto,
+  ): Promise<KasMutasiResponse> {
+    const mesjidUserId: string = user.id;
+    await this.kasHelper.checkKasOwner(mesjidUserId, payload.fromKasId);
+    await this.kasHelper.checkKasOwner(mesjidUserId, payload.toKasId);
+    await this.kasHelper.checkKasSaldo(mesjidUserId, payload.fromKasId, payload.jumlah);
+    const kasMutasi = await this.prismaService.kas_Mutasi.create({
+      data: {
+        mesjidUserId: mesjidUserId,
+        kasSenderId: payload.fromKasId,
+        kasRecipientId: payload.toKasId,
+        jumlah: payload.jumlah,
+      },
+      select: this.kasHelper.kasMutasiSelectionCondition(),
+    })
+    await this.kasHelper.updateKasSaldo(payload.toKasId, payload.jumlah, "Masuk")
+    await this.kasHelper.updateKasSaldo(payload.fromKasId, payload.jumlah, "Keluar")
+    return this.kasHelper.toKasMutasiResponse(kasMutasi);
+  }
+
+  async getKasMutasi(
+    user: Auth,
+    query: GetMutasiQueryDto,
+  ): Promise<KasMutasiResponse[] | []> {
+    const mesjidUserId: string = user.id;
+    const kasMutasi = await this.prismaService.kas_Mutasi.findMany({
+      where: {
+        mesjidUserId: mesjidUserId,
+      },
+      take: query.takeCount || undefined,
+      skip: (query.page - 1) * query.takeCount || undefined,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: this.kasHelper.kasMutasiSelectionCondition(),
+    });
+    return kasMutasi.map((kasMutasi) => this.kasHelper.toKasMutasiResponse(kasMutasi));
+  }
+
+  //
   async getDashboardArusKas(
     userId: string,
     query: GetArusKasDashboardDto,
   ): Promise<ArusKasResponse[]> {
     const mesjidUserId: string = userId;
-    const mesjidId: number =
-      await this.mesjidService.getMesjidIdByUserId(mesjidUserId);
-
     const kas = await this.prismaService.kas.findMany({
       where: {
         mesjidId,
@@ -424,226 +410,5 @@ export class KasService {
       totalKeluar,
       totalInitial: totalMasuk - totalKeluar,
     };
-  }
-
-  async updateArusKasMasuk(
-    user: Auth,
-    payload: UpdateArusKasMasukDto,
-    param: ArusKasParamDto,
-  ): Promise<ArusKasResponse> {
-    const data = await this.kasHelper.updateArusKasHelper(
-      payload,
-      user.id,
-      param,
-    );
-
-    const arusKas = await this.prismaService.arus_Kas.update({
-      where: {
-        id: param.arusKasId,
-      },
-      data: data.updatePayload,
-      select: this.kasHelper.arusKasSelectCondition('Masuk'),
-    });
-
-    if (!arusKas) {
-      throw new HttpException('Arus Kas Gagal Diperbaruri', 500);
-    }
-
-    return this.kasHelper.toArusKasResponse(arusKas, 'Masuk');
-  }
-
-  async updateArusKasKeluar(
-    user: Auth,
-    payload: UpdateArusKasKeluarDto,
-    param: ArusKasParamDto,
-    buktiArusKas: Express.Multer.File,
-  ): Promise<ArusKasResponse> {
-    const data = await this.kasHelper.updateArusKasHelper(
-      payload,
-      user.id,
-      param,
-    );
-    const oldBukti = await this.kasHelper.getOldArusKasFoto(param.arusKasId);
-
-    return this.prismaService.$transaction(async (p) => {
-      const arusKas = await p.arus_Kas.update({
-        where: {
-          id: param.arusKasId,
-        },
-        data: {
-          ...data.updatePayload,
-          namaPenerimaKeluar: data.nama,
-          bukti: buktiArusKas.filename,
-          path: buktiArusKas.path,
-        },
-        select: this.kasHelper.arusKasSelectCondition('Keluar'),
-      });
-
-      if (!arusKas) {
-        throw new HttpException('Arus Kas Gagal Diperbaruri', 500);
-      }
-
-      if (oldBukti) {
-        this.filesService.deleteSingleFile(oldBukti);
-      }
-
-      return this.kasHelper.toArusKasResponse(arusKas, 'Keluar');
-    });
-  }
-
-  async deleteArusKas(
-    user: Auth,
-    payload: DeleteArusKasDto,
-    param: ArusKasParamDto,
-  ): Promise<void> {
-    const mesjidUserId: string = user.id;
-    const mesjidId: number =
-      await this.mesjidService.getMesjidIdByUserId(mesjidUserId);
-    const date = {
-      bulan: payload.bulan,
-      tahun: payload.tahun,
-    };
-
-    await this.kasHelper.checkKasOwner(mesjidId, param.kasId);
-    await this.kasHelper.checkArusKasOwner(param.kasId, param.arusKasId);
-    await this.kasHelper.verifyKategoriKas(param.arusKasId);
-    await this.kasHelper.verifyTimeLineKas(date, param.arusKasId, param.kasId);
-
-    const arusKas = await this.prismaService.arus_Kas.delete({
-      where: {
-        id: param.arusKasId,
-      },
-      select: {
-        path: true,
-      },
-    });
-
-    if (!arusKas) {
-      throw new HttpException('Arus Kas Gagal Dihapus', 500);
-    }
-
-    if (arusKas.path) {
-      this.filesService.deleteSingleFile(arusKas);
-    }
-  }
-
-  async createKasMutasi(
-    user: Auth,
-    payload: CreateKasMutasiDto,
-  ): Promise<KasMutasiResponse> {
-    const { fromKasId, toKasId, jumlah, ...data } = payload;
-    const mesjidUserId: string = user.id;
-    const mesjidId: number =
-      await this.mesjidService.getMesjidIdByUserId(mesjidUserId);
-    const date = {
-      bulan: data.bulan,
-      tahun: data.tahun,
-    };
-
-    await this.kasHelper.checkKasOwner(mesjidId, fromKasId);
-    await this.kasHelper.checkKasOwner(mesjidId, toKasId);
-
-    const getArusKas = await this.getArusKas(user, fromKasId, date);
-    const checkSaldo: number = getArusKas[getArusKas.length - 1]?.initialSaldo;
-    const initialSaldo = await this.kasHelper.checkInitialSaldo(
-      fromKasId,
-      date,
-    );
-
-    if (
-      (checkSaldo !== undefined ? checkSaldo : initialSaldo) - payload.jumlah <
-      0
-    ) {
-      throw new BadRequestException('Saldo Tidak Cukup');
-    }
-
-    await this.prismaService.arus_Kas.createMany({
-      data: [
-        {
-          kasId: fromKasId,
-          status: 'Keluar',
-          jumlah: jumlah,
-          ...data,
-        },
-        {
-          kasId: toKasId,
-          status: 'Masuk',
-          jumlah: jumlah,
-          ...data,
-        },
-      ],
-    });
-
-    await this.prismaService.mutasi.create({
-      data: {
-        mesjidId,
-        senderKasId: fromKasId,
-        recipientKasId: toKasId,
-        jumlah: jumlah,
-        tanggal: data.tanggal,
-        ...date,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    return {
-      status: 'Masuk',
-      ...data,
-      nama: '',
-      debit: jumlah,
-      kredit: 0,
-    };
-  }
-
-  async getKasMutasi(
-    user: Auth,
-    query: GetMutasiQueryDto,
-  ): Promise<GetKasMutasiResponse[] | []> {
-    const mesjidUserId: string = user.id;
-    const mesjidId: number =
-      await this.mesjidService.getMesjidIdByUserId(mesjidUserId);
-
-    const mutasi = await this.prismaService.mutasi.findMany({
-      where: {
-        mesjidId,
-      },
-      take: query.takeCount || undefined,
-      skip: (query.page - 1) * query.takeCount || undefined,
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: {
-        jumlah: true,
-        tanggal: true,
-        bulan: true,
-        tahun: true,
-        senderKas: {
-          select: {
-            jenis: true,
-            namaBank: true,
-            namaRekening: true,
-            nomorRekening: true,
-          },
-        },
-        recipientKas: {
-          select: {
-            jenis: true,
-            namaBank: true,
-            namaRekening: true,
-            nomorRekening: true,
-          },
-        },
-      },
-    });
-    return mutasi.map((data) => ({
-      jumlah: parseInt(String(data.jumlah)),
-      tanggal: data.tanggal,
-      bulan: data.bulan,
-      tahun: data.tahun,
-      pengirim: data.senderKas,
-      penerima: data.recipientKas,
-    }));
   }
 }
