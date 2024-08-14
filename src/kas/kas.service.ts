@@ -120,19 +120,20 @@ export class KasService {
     return this.kasHelper.toKasResponse(kas);
   }
 
-  async removeKas(user: Auth, kasId: string): Promise<KasResponse> {
+  async removeKas(user: Auth, kasId: string): Promise<void> {
     const mesjidUserId: string = user.id;
     await this.kasHelper.checkKasOwner(mesjidUserId, kasId);
     const kas = await this.prismaService.kas.delete({
       where: {
         id: kasId,
       },
-      select: this.kasHelper.kasSelectionCondition(),
+      select: {
+        id: true,
+      }
     });
     if (!kas) {
       throw new HttpException('Kas Gagal Dihapus', 500);
     }
-    return this.kasHelper.toKasResponse(kas);
   }
 
   async createKasArus(
@@ -228,7 +229,7 @@ export class KasService {
   async deleteKasArus(
     request: any,
     param: KasArusParamDto,
-  ): Promise<KasArusResponse> {
+  ): Promise<void> {
     const user: Auth = request.user;
     const mesjidUserId: string = user.id;
     await this.kasHelper.checkKasOwner(mesjidUserId, param.kasId);
@@ -246,7 +247,6 @@ export class KasService {
     if (arusKas.kasArusDokumen) {
       this.filesService.deleteSingleFile(arusKas.kasArusDokumen);
     }
-    return this.kasHelper.toKasArusResponse(arusKas, request);
   }
 
   async createKasMutasi(

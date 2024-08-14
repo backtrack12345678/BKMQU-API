@@ -196,7 +196,7 @@ export class Helper {
       }
     });
 
-    if (!userBank.userId) {
+    if (!userBank) {
       throw new NotFoundException('Akun Bank Tidak Ditemukan');
     }
     if (userBank.userId !== mesjidUserId) {
@@ -250,24 +250,6 @@ export class Helper {
     const kas = await this.checkKasOwner(mesjidUserId, kasId)
     if (kas.saldo < jumlah) {
       throw new BadRequestException('Saldo Tidak Cukup');
-    }
-  }
-
-  async checkArusKas(kasId: string): Promise<void> {
-    const kas = await this.prismaService.kas.findFirst({
-      where: {
-        id: kasId,
-      },
-      select: {
-        kasArus: {
-          select: {
-            id: true,
-          }
-        }
-      }
-    })
-    if (kas.kasArus.id) {
-      throw new BadRequestException("Kas Sudah Memiliki Transaksi");
     }
   }
 

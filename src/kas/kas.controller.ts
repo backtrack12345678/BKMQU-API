@@ -61,15 +61,15 @@ export class KasController {
     @Req() request,
     @Body() payload: CreateKasDto,
   ): Promise<WebResponse<KasResponse>> {
-    const data = await this.kasService.createKas(request.user, payload);
+    const result = await this.kasService.createKas(request.user, payload);
     return {
       status: 'success',
       message: 'Kas Berhasil Dibuat',
-      data: data,
+      data: result,
     };
   }
 
-  @Put('/:kasId')
+  @Patch('/:kasId/bank')
   @Auth()
   @Roles(Role.MESJID)
   async connectKasBank(
@@ -92,10 +92,10 @@ export class KasController {
     @Query() query: GetKasQueryDto,
     @Req() request: any,
   ): Promise<WebResponse<KasResponse[] | []>> {
-    const data = await this.kasService.getKas(request.user, query);
+    const result = await this.kasService.getKas(request.user, query);
     return {
       status: 'success',
-      data: data,
+      data: result,
     };
   }
 
@@ -107,11 +107,11 @@ export class KasController {
     @Body() payload: UpdateKasDto,
     @Param('kasId') kasId: string,
   ): Promise<WebResponse<KasResponse>> {
-    const data = await this.kasService.updateKas(request.user, payload, kasId);
+    const result = await this.kasService.updateKas(request.user, payload, kasId);
     return {
       status: 'success',
       message: 'Kas Berhasil Diperbarui',
-      data: data,
+      data: result,
     };
   }
 
@@ -121,12 +121,12 @@ export class KasController {
   async removeKas(
     @Req() request: any,
     @Param('kasId') kasId: string,
-  ): Promise<WebResponse<KasResponse>> {
-    const data = await this.kasService.removeKas(request.user, kasId);
+  ): Promise<WebResponse<boolean>> {
+    await this.kasService.removeKas(request.user, kasId);
     return {
       status: 'success',
       message: 'Kas Berhasil Dihapus',
-      data: data,
+      data: true,
     };
   }
 
@@ -228,12 +228,12 @@ export class KasController {
   async deleteKasArus(
     @Req() request: any,
     @Param() param: KasArusParamDto,
-  ): Promise<WebResponse<KasArusResponse>> {
-    const data = await this.kasService.deleteKasArus(request.user, param);
+  ): Promise<WebResponse<boolean>> {
+    await this.kasService.deleteKasArus(request.user, param);
     return {
       status: 'success',
       message: 'Arus Kas Berhasil Dihapus',
-      data: data,
+      data: true,
     };
   }
 

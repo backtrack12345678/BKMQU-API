@@ -431,7 +431,7 @@ model Kas {
   createdAt    DateTime     @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
   updatedAt    DateTime?    @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
   kasBank      Kas_Bank?
-  kasArus      Kas_Arus?
+  kasArus      Kas_Arus[]
   kasSender    Kas_Mutasi[] @relation("kasSender")
   kasRecipient Kas_Mutasi[] @relation("kasRecipient")
 
@@ -453,7 +453,7 @@ model Kas_Bank {
 
 model Kas_Arus {
   id         Int    @id @default(autoincrement())
-  kasId      String @unique @map("kas_id")
+  kasId      String @map("kas_id")
   kas        Kas    @relation(fields: [kasId], references: [id], onDelete: Cascade)
   tipe       String @db.VarChar(10)
   jumlah     Int    @db.Int
