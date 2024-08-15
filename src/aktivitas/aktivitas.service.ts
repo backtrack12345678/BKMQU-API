@@ -8,12 +8,14 @@ import { getHost } from '../common/utils/utils';
 import { Request } from 'express';
 import { FilesService } from '../files/files.service';
 import { GetAktivitasQueryDto } from './dto/query.dto';
+import { NotificationService } from '../common/notification/notification.service';
 
 @Injectable()
 export class AktivitasService {
   constructor(
     private prismaService: PrismaService,
     private filesService: FilesService,
+    private notificationService: NotificationService
   ) {}
 
   toAktivitasResponse(
@@ -105,8 +107,51 @@ export class AktivitasService {
           create: dokumen,
         },
       },
-      select: this.aktivitasSelectCondition(),
+      select: {
+        ...this.aktivitasSelectCondition(),
+        user: {
+          select: {
+            detailUser: {
+              select: {
+                nama: true,
+              }
+            },
+            mesjid: {
+              select: {
+                jamaah: {
+                  select: {
+                    user: {
+                      select: {
+                        refreshToken: {
+                          select: {
+                            notificationToken: true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
     });
+
+    const jamaahNotifToken = aktivitas.user.mesjid.jamaah.length === 0 ? [] 
+    : aktivitas.user.mesjid.jamaah
+      .filter((j) => j.user.refreshToken !== null)
+      .map((j) => j.user.refreshToken.notificationToken)
+      .filter((token) => token !== null);
+  
+    if (jamaahNotifToken.length > 0) {
+      const notificationOptions = {
+        aktivitasId: aktivitas.id,
+        mesjid: aktivitas.user.detailUser.nama
+      }
+      await this.notificationService.aktivitas(jamaahNotifToken, notificationOptions)
+    }
+    
 
     return this.toAktivitasResponse(aktivitas, getHost(request));
   }
