@@ -261,6 +261,8 @@ export class KasService {
     await this.kasHelper.checkKasOwner(mesjidUserId, payload.fromKasId);
     await this.kasHelper.checkKasOwner(mesjidUserId, payload.toKasId);
     await this.kasHelper.checkKasSaldo(mesjidUserId, payload.fromKasId, payload.jumlah);
+    await this.kasHelper.updateKasSaldo(payload.toKasId, payload.jumlah, "Masuk")
+    await this.kasHelper.updateKasSaldo(payload.fromKasId, payload.jumlah, "Keluar")
     const kasMutasi = await this.prismaService.kas_Mutasi.create({
       data: {
         mesjidUserId: mesjidUserId,
@@ -270,8 +272,6 @@ export class KasService {
       },
       select: this.kasHelper.kasMutasiSelectionCondition(),
     })
-    await this.kasHelper.updateKasSaldo(payload.toKasId, payload.jumlah, "Masuk")
-    await this.kasHelper.updateKasSaldo(payload.fromKasId, payload.jumlah, "Keluar")
     return this.kasHelper.toKasMutasiResponse(kasMutasi);
   }
 
@@ -304,13 +304,13 @@ export class KasService {
       where: {
         mesjidUserId: mesjidUserId,
       },
-      take: query.takeCount || undefined,
-      skip: (query.page - 1) * query.takeCount || undefined,
-      orderBy: {
-        createdAt: 'desc',
-      },
       select: {
         kasArus: {
+          take: query.takeCount || undefined,
+          skip: (query.page - 1) * query.takeCount || undefined,
+          orderBy: {
+            createdAt: 'desc',
+          },
           select: this.kasHelper.kasArusSelectCondition(),
         },
       },

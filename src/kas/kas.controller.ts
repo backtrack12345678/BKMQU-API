@@ -242,8 +242,8 @@ export class KasController {
   @Roles(Role.MESJID)
   @HttpCode(201)
   async createKasMutasi(
-    @Body() payload: CreateKasMutasiDto,
     @Req() request: any,
+    @Body() payload: CreateKasMutasiDto,
   ): Promise<WebResponse<KasMutasiResponse>> {
     const result = await this.kasService.createKasMutasi(request.user, payload);
     return {

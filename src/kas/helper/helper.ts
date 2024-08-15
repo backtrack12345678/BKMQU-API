@@ -38,7 +38,7 @@ export class Helper {
       id: kas.id,
       nama: kas.nama,
       saldo: parseInt(kas.saldo),
-      bank: kas.kasBank?.userBank.bank.nama || null,
+      bank: kas.kasBank?.userBank.bank.nama || undefined,
     };
   }
 
@@ -71,7 +71,9 @@ export class Helper {
       totalMasuk: kasTotal.masuk,
       totalKeluar: kasTotal.keluar,
       saldo: kasTotal.saldo,
-      kasArus: kasArus.map((kas) => this.toKasArusResponse(kas, request)),
+      kasArus: kasArus.map(({ kasArus }) =>
+        kasArus.map((kas) => this.toKasArusResponse(kas, request))
+      ).flat(),
     }
   }
 
@@ -249,7 +251,7 @@ export class Helper {
   async checkKasSaldo(mesjidUserId: string, kasId: string, jumlah: number) {
     const kas = await this.checkKasOwner(mesjidUserId, kasId)
     if (kas.saldo < jumlah) {
-      throw new BadRequestException('Saldo Tidak Cukup');
+      throw new BadRequestException('Saldo Kas Tidak Cukup');
     }
   }
 
@@ -280,7 +282,6 @@ export class Helper {
         },
       },
     })
-
     const kasSaldo = await this.prismaService.kas.aggregate({
       where: {
         mesjidUserId: mesjidUserId,
@@ -289,8 +290,7 @@ export class Helper {
         saldo: true,
       }
     })
-
-    const [masuk, keluar] = groupKasArus.map(({ tipe, _sum }) => ({
+    const [keluar, masuk] = groupKasArus.map(({ tipe, _sum }) => ({
       tipe: tipe,
       jumlah: _sum.jumlah,
     }));
