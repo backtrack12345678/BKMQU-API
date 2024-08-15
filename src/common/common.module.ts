@@ -10,6 +10,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { RoleGuard } from './role/role.guard';
 import { FilesModule } from '../files/files.module';
 import { AxiosService } from './axios/axios.service';
+import { NotificationService } from './notification/notification.service';
 
 export const AXIOS_INSTANCE_TOKEN = 'AXIOS_INSTANCE_TOKEN';
 
@@ -43,7 +44,8 @@ export const AXIOS_INSTANCE_TOKEN = 'AXIOS_INSTANCE_TOKEN';
       useClass: ErrorFilter,
     },
     Token,
+    NotificationService,
   ],
-  exports: [PrismaService, ValidationService, Token, AxiosService],
+  exports: [PrismaService, ValidationService, Token, AxiosService, NotificationService],
 })
 export class CommonModule {}
