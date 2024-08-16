@@ -37,4 +37,18 @@ export class GetKasArusDto {
   toDate: Date;
 }
 
+export class GetDashboardKasArusDto extends GetKasArusDto {
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  @Transform(({ value }) => parseInt(value, 10))
+  takeCount?: number = 3;
+
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  @Transform(({ value }) => parseInt(value, 10))
+  page?: number = 1;
+}
+
 export class GetMutasiQueryDto extends GetKasQueryDto { }

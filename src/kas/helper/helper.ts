@@ -248,6 +248,17 @@ export class Helper {
     return kas;
   }
 
+  async checkKasArus(kasId: string) {
+    const kas = await this.prismaService.kas_Arus.count({
+      where: {
+        kasId: kasId,
+      },
+    });
+    if (kas > 0) {
+      throw new BadRequestException("Kas Yang Sudah Memiliki Transaksi Tidak Boleh Dihapus")
+    }
+  }
+
   async checkKasSaldo(mesjidUserId: string, kasId: string, jumlah: number) {
     const kas = await this.checkKasOwner(mesjidUserId, kasId)
     if (kas.saldo < jumlah) {
@@ -290,14 +301,10 @@ export class Helper {
         saldo: true,
       }
     })
-    const [keluar, masuk] = groupKasArus.map(({ tipe, _sum }) => ({
-      tipe: tipe,
-      jumlah: _sum.jumlah,
-    }));
 
     return {
-      masuk: masuk?.jumlah || 0,
-      keluar: keluar?.jumlah || 0,
+      masuk: groupKasArus.find((g) => g.tipe === 'Masuk')?._sum.jumlah || 0,
+      keluar: groupKasArus.find((g) => g.tipe === 'Keluar')?._sum.jumlah || 0,
       saldo: Number(kasSaldo._sum.saldo),
     }
   }

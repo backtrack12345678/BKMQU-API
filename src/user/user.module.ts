@@ -10,6 +10,7 @@ import { CharityModule } from '../charity/charity.module';
 import { KajianModule } from '../kajian/kajian.module';
 import { FilesModule } from '../files/files.module';
 import { LiveModule } from '../live/live.module';
+import { MidtransModule } from 'src/midtrans/midtrans.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { LiveModule } from '../live/live.module';
     KajianModule,
     FilesModule,
     LiveModule,
+    MidtransModule
   ],
   providers: [UserService, UserHelper],
   controllers: [UserController],

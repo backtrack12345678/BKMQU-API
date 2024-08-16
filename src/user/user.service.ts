@@ -22,6 +22,7 @@ import { UserResponse, UserResult } from './dto/response.dto';
 import { UpdateProfileDto, UpdateUserImageDto } from './dto/update.dto';
 import { FilesService } from '../files/files.service';
 import { getHost } from '../common/utils/utils';
+import { MidtransService } from 'src/midtrans/midtrans.service';
 
 @Injectable()
 export class UserService {
@@ -31,7 +32,8 @@ export class UserService {
     private tokenManager: Token,
     private userHelper: UserHelper,
     private filesService: FilesService,
-  ) {}
+    private midtransService: MidtransService,
+  ) { }
 
   async registerMesjid(
     payload: RegisterMesjidDto,
@@ -355,5 +357,9 @@ export class UserService {
     if (!deleteRefreshToken) {
       throw new HttpException('Gagal Logout', 500);
     }
+  }
+
+  async addUserBank(request: Auth, payload) {
+    await this.midtransService.verifyBankAccount(payload);
   }
 }

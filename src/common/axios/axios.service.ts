@@ -4,7 +4,7 @@ import Axios from 'axios';
 
 @Injectable()
 export class AxiosService {
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
   public midtransInstance = Axios.create({
     baseURL: this.configService.get<string>('MIDTRANS_BASE_URL'),
     timeout: 10000,
@@ -17,7 +17,7 @@ export class AxiosService {
     baseURL: this.configService.get<string>('IRIS_BASE_URL'),
     timeout: 10000,
     headers: {
-      Authorization: `Basic ${Buffer.from(`${process.env.MIDTRANS_SERVER_KEY}:`).toString('base64')}`,
+      Authorization: `Basic ${Buffer.from(`${process.env.IRIS_API_KEY}:`).toString('base64')}`,
     },
   });
 

@@ -38,6 +38,7 @@ import { AktivitasService } from '../aktivitas/aktivitas.service';
 import { AktivitasResponse } from '../aktivitas/dto/response.dto';
 import { KasService } from '../kas/kas.service';
 import {
+  GetDashboardKasArusDto,
   GetKasQueryDto,
 } from '../kas/dto/get.dto';
 import { KasArusDashboardResponse } from '../kas/dto/response.dto';
@@ -464,7 +465,7 @@ export class UserController {
   async getDashboardArusKas(
     @Req() request: any,
     @Param('userId') userId: string,
-    @Query() query: GetKasQueryDto,
+    @Query() query: GetDashboardKasArusDto,
   ): Promise<WebResponse<KasArusDashboardResponse>> {
     const result = await this.kasService.getDashboardArusKas(request, userId, query);
     return {
@@ -573,5 +574,18 @@ export class UserController {
       status: 'success',
       data: result,
     };
+  }
+
+  @Patch('/bank')
+  @Auth()
+  async addUserBank(
+    @Req() request: any,
+    @Body() payload,
+  ) {
+    await this.userService.addUserBank(request.user, payload);
+    return {
+      status: 'success',
+      data: true
+    }
   }
 }

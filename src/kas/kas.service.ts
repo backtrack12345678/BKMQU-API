@@ -15,6 +15,7 @@ import {
   KasResponse,
 } from './dto/response.dto';
 import {
+  GetDashboardKasArusDto,
   GetKasArusDto,
   GetKasQueryDto,
   GetMutasiQueryDto,
@@ -297,7 +298,7 @@ export class KasService {
   async getDashboardArusKas(
     request: any,
     userId: string,
-    query: GetKasQueryDto,
+    query: GetDashboardKasArusDto,
   ): Promise<KasArusDashboardResponse> {
     const mesjidUserId: string = userId;
     const kasArus = await this.prismaService.kas.findMany({
@@ -306,6 +307,12 @@ export class KasService {
       },
       select: {
         kasArus: {
+          where: {
+            createdAt: {
+              gte: query.fromDate,
+              lte: query.toDate,
+            }
+          },
           take: query.takeCount || undefined,
           skip: (query.page - 1) * query.takeCount || undefined,
           orderBy: {

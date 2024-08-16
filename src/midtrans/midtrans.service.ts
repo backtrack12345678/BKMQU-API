@@ -18,7 +18,7 @@ export class MidtransService {
   constructor(
     private axiosService: AxiosService,
     private prismaService: PrismaService,
-  ) {}
+  ) { }
 
   public snap = new Snap({
     isProduction: false,
@@ -110,9 +110,9 @@ export class MidtransService {
       .createHash('sha512')
       .update(
         payload.order_id +
-          payload.status_code +
-          payload.gross_amount +
-          process.env.MIDTRANS_SERVER_KEY,
+        payload.status_code +
+        payload.gross_amount +
+        process.env.MIDTRANS_SERVER_KEY,
       )
       .digest('hex');
     if (hash !== payload.signature_key) {
@@ -360,5 +360,16 @@ export class MidtransService {
       await this.addInfaqSaldoMasuk(paymentData, netAmount);
     }
     await this.pushNotification(paymentData);
+  }
+
+  async verifyBankAccount(payload) {
+    // const result = await this.axiosService.irisInstance.get(`api/v1/account_validation?bank=${BANK_NAME}&account=${BANK_ACCOUNT}`);
+    try {
+      const result = await this.axiosService.irisInstance.get(`api/v1/account_validation?bank=mandiri&account=1070019946575`);
+      console.log(result);
+    } catch (e) {
+      console.log(e.response);
+      throw new HttpException(e.message, 400);
+    }
   }
 }
