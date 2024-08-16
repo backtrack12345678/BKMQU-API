@@ -22,7 +22,7 @@ import { Request } from 'express';
 import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
 import { Role } from '../common/role/role.enum';
-import { FileTypesValidator } from '../common/pipes/file-types.validator';
+import { FilesTypeValidator } from '../common/pipes/files-type.validator';
 
 const allowedMimeTypes = {
   media: ['image/png', 'image/jpg', 'image/jpeg'],
@@ -48,7 +48,7 @@ export class AktivitasController {
     @UploadedFiles(
       new ParseFilePipeBuilder()
         .addValidator(
-          new FileTypesValidator({
+          new FilesTypeValidator({
             mimeTypes: allowedMimeTypes,
           }),
         )
