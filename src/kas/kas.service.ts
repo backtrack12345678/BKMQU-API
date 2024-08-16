@@ -124,6 +124,7 @@ export class KasService {
   async removeKas(user: Auth, kasId: string): Promise<void> {
     const mesjidUserId: string = user.id;
     await this.kasHelper.checkKasOwner(mesjidUserId, kasId);
+    await this.kasHelper.checkKasArus(kasId);
     const kas = await this.prismaService.kas.delete({
       where: {
         id: kasId,
