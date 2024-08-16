@@ -356,7 +356,7 @@ export class MidtransService {
     if (role === 'mesjid') {
       await this.createTransaksiMesjid(paymentData);
     }
-    if (paymentData.category === 'Infaq Target') {
+    if (paymentData.category === 'Program Infaq') {
       await this.addInfaqSaldoMasuk(paymentData, netAmount);
     }
     await this.pushNotification(paymentData);
