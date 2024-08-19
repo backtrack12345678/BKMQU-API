@@ -372,4 +372,14 @@ export class UserService {
     }
     return this.userHelper.toUserBankResponse(userBank);
   }
+
+  async getUserBank(user: Auth): Promise<UserBankResponse> {
+    const userBank = await this.prismaService.user_Bank.findUnique({
+      where: {
+        userId: user.id,
+      },
+      select: this.userHelper.userbankSelectCondition(),
+    });
+    return this.userHelper.toUserBankResponse(userBank);
+  }
 }

@@ -588,4 +588,16 @@ export class UserController {
       data: result
     }
   }
+
+  @Get('/bank')
+  @Auth()
+  async getUserBank(
+    @Req() request: any,
+  ): Promise<WebResponse<UserBankResponse>> {
+    const result = await this.userService.getUserBank(request.user);
+    return {
+      status: 'success',
+      data: result
+    }
+  }
 }
