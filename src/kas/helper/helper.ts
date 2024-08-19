@@ -249,12 +249,20 @@ export class Helper {
   }
 
   async checkKasArus(kasId: string) {
-    const kas = await this.prismaService.kas_Arus.count({
+    const kasArus = await this.prismaService.kas_Arus.count({
       where: {
         kasId: kasId,
       },
     });
-    if (kas > 0) {
+    const kasMutasi = await this.prismaService.kas_Mutasi.count({
+      where: {
+        AND: {
+          kasSenderId: kasId,
+          kasRecipientId: kasId,
+        }
+      }
+    });
+    if ((kasArus > 0) && (kasMutasi > 0)) {
       throw new BadRequestException("Kas Yang Sudah Memiliki Transaksi Tidak Boleh Dihapus")
     }
   }
