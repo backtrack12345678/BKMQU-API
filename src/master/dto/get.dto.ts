@@ -19,6 +19,8 @@ export class KecamatanQuery {
   // size?: number = 10;
 }
 
+export class BankQuery extends KecamatanQuery { }
+
 export class PenceramahQuery {
   @IsOptional()
   @IsString()

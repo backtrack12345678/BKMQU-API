@@ -2,6 +2,7 @@ import { Controller, Get, Query, Req } from '@nestjs/common';
 import { MasterService } from './master.service';
 import {
   AlquranQuery,
+  BankQuery,
   KecamatanQuery,
   MesjidQuery,
   PenceramahQuery,
@@ -18,7 +19,7 @@ import { WebResponse } from '../model/web.model';
 
 @Controller('/api/master')
 export class MasterController {
-  constructor(private readonly masterService: MasterService) {}
+  constructor(private readonly masterService: MasterService) { }
 
   // @Post()
   // create(@Body() createMasterDto: CreateMasterDto) {
@@ -60,8 +61,10 @@ export class MasterController {
   }
 
   @Get('/bank')
-  async getBank(): Promise<WebResponse<BankResponse[]>> {
-    const result = await this.masterService.getBank();
+  async getBank(
+    @Query() query: BankQuery,
+  ): Promise<WebResponse<BankResponse[]>> {
+    const result = await this.masterService.getBank(query);
     return {
       status: 'success',
       data: result,

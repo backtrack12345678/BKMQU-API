@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   AlquranQuery,
+  BankQuery,
   KecamatanQuery,
   MesjidQuery,
   PenceramahQuery,
@@ -19,7 +20,7 @@ import {
 
 @Injectable()
 export class MasterService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService) { }
 
   async getMesjid(
     request: Request,
@@ -27,25 +28,25 @@ export class MasterService {
   ): Promise<MesjidResponse[]> {
     const filters = query.location
       ? [
-          {
-            OR: [
-              {
-                kecamatan: {
-                  nama: {
-                    contains: query.location,
-                  },
+        {
+          OR: [
+            {
+              kecamatan: {
+                nama: {
+                  contains: query.location,
                 },
               },
-              {
-                kota_kab: {
-                  nama: {
-                    contains: query.location,
-                  },
+            },
+            {
+              kota_kab: {
+                nama: {
+                  contains: query.location,
                 },
               },
-            ],
-          },
-        ]
+            },
+          ],
+        },
+      ]
       : [];
     const mesjid = await this.prismaService.detail_User.findMany({
       where: {
@@ -177,8 +178,24 @@ export class MasterService {
     });
   }
 
-  async getBank(): Promise<BankResponse[]> {
+  async getBank(query: BankQuery): Promise<BankResponse[]> {
     return this.prismaService.bank.findMany({
+      ...(query.nama && {
+        where: {
+          OR: [
+            {
+              nama: {
+                contains: query?.nama,
+              }
+            },
+            {
+              kode: {
+                contains: query?.nama,
+              },
+            },
+          ],
+        },
+      }),
       select: {
         id: true,
         nama: true,
