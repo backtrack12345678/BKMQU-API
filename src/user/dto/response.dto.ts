@@ -72,3 +72,12 @@ export class UserResponse extends User {
   };
   penceramah?: PenceramahResult;
 }
+
+export class UserBankResponse {
+  id: number;
+  nama: string;
+  namaBank: string;
+  noRekening: string;
+  status: string;
+  createdAt: Date;
+}

@@ -18,11 +18,10 @@ import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { User } from '@prisma/client';
 import { Token } from '../common/token/token';
 import { UserHelper } from './helper/user.helper';
-import { UserResponse, UserResult } from './dto/response.dto';
-import { UpdateProfileDto, UpdateUserImageDto } from './dto/update.dto';
+import { UserBankResponse, UserResponse, UserResult } from './dto/response.dto';
+import { CreateUserBankDto, UpdateProfileDto, UpdateUserImageDto } from './dto/update.dto';
 import { FilesService } from '../files/files.service';
 import { getHost } from '../common/utils/utils';
-import { MidtransService } from 'src/midtrans/midtrans.service';
 
 @Injectable()
 export class UserService {
@@ -32,7 +31,6 @@ export class UserService {
     private tokenManager: Token,
     private userHelper: UserHelper,
     private filesService: FilesService,
-    private midtransService: MidtransService,
   ) { }
 
   async registerMesjid(
@@ -359,7 +357,19 @@ export class UserService {
     }
   }
 
-  async addUserBank(request: Auth, payload) {
-    await this.midtransService.verifyBankAccount(payload);
+  async addUserBank(user: Auth, payload: CreateUserBankDto): Promise<UserBankResponse> {
+    await this.userHelper.checkBank(payload.bankId);
+    await this.userHelper.checkUserBank(user.id, payload.noRekening);
+    const userBank = await this.prismaService.user_Bank.create({
+      data: {
+        userId: user.id,
+        ...payload,
+      },
+      select: this.userHelper.userbankSelectCondition(),
+    });
+    if (!userBank) {
+      throw new HttpException('Gagal Mendaftarkan Akun Bank', 500);
+    }
+    return this.userHelper.toUserBankResponse(userBank);
   }
 }

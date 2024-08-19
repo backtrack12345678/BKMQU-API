@@ -9,14 +9,14 @@ import { OtpService } from '../../otp/otp.service';
 import { v4 as uuid } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { getHost } from '../../common/utils/utils';
-import { UserResponse, UserResult } from '../dto/response.dto';
+import { UserBankResponse, UserResponse, UserResult } from '../dto/response.dto';
 
 @Injectable()
 export class UserHelper {
   constructor(
     private prismaService: PrismaService,
     private otpService: OtpService,
-  ) {}
+  ) { }
 
   async verifyEmailUser(email: string) {
     const countEmail: number = await this.prismaService.user.count({
@@ -247,6 +247,54 @@ export class UserHelper {
         where: whereConditions,
         select: selectConditions,
       });
+    }
+  }
+
+  userbankSelectCondition() {
+    return {
+      id: true,
+      nama: true,
+      noRekening: true,
+      status: true,
+      createdAt: true,
+      bank: {
+        select: {
+          nama: true,
+        }
+      }
+    }
+  }
+
+  toUserBankResponse(userbank): UserBankResponse {
+    return {
+      id: userbank.id,
+      nama: userbank.nama,
+      namaBank: userbank.bank.nama,
+      noRekening: userbank.noRekening,
+      status: userbank.status,
+      createdAt: userbank.createdAt,
+    }
+  }
+
+  async checkBank(bankId: number) {
+    const bank = await this.prismaService.bank.count({
+      where: { id: bankId }
+    });
+    if (bank < 1) {
+      throw new NotFoundException("Akun Bank Tidak Ditemukan");
+    }
+  }
+
+  async checkUserBank(userId: string, noRekening: string) {
+    const userBank = await this.prismaService.user_Bank.findUnique({
+      where: { userId: userId },
+      select: { noRekening: true }
+    });
+    if (userBank) {
+      throw new BadRequestException("Anda Sudah Memiliki Akun Bank");
+    }
+    if (userBank.noRekening == noRekening) {
+      throw new BadRequestException("Nomor Rekening Sudah Digunakan");
     }
   }
 }

@@ -1,9 +1,12 @@
 import {
   IsIn,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
   MaxLength,
+  Min,
 } from 'class-validator';
 
 export class UpdateProfileDto {
@@ -22,4 +25,21 @@ export class UpdateUserImageDto {
   @IsString()
   @IsIn(['Photo', 'Sampul'])
   type: string;
+}
+
+export class CreateUserBankDto {
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(200)
+  nama: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(50)
+  noRekening: string;
+
+  @IsNumber()
+  @IsPositive()
+  @Min(1)
+  bankId: number
 }

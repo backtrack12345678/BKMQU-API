@@ -28,8 +28,8 @@ import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { Auth } from '../common/auth.decorator';
 import { UserHelper } from './helper/user.helper';
-import { UpdateProfileDto, UpdateUserImageDto } from './dto/update.dto';
-import { UserResponse } from './dto/response.dto';
+import { CreateUserBankDto, UpdateProfileDto, UpdateUserImageDto } from './dto/update.dto';
+import { UserBankResponse, UserResponse } from './dto/response.dto';
 import { PostsService } from '../posts/posts.service';
 import { GetPostsQueryDto } from '../posts/dto/get.dto';
 import { PostResponse } from '../posts/dto/response.dto';
@@ -580,12 +580,12 @@ export class UserController {
   @Auth()
   async addUserBank(
     @Req() request: any,
-    @Body() payload,
-  ) {
-    await this.userService.addUserBank(request.user, payload);
+    @Body() payload: CreateUserBankDto,
+  ): Promise<WebResponse<UserBankResponse>> {
+    const result = await this.userService.addUserBank(request.user, payload);
     return {
       status: 'success',
-      data: true
+      data: result
     }
   }
 }

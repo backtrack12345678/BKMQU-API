@@ -22,7 +22,6 @@ import { MidtransModule } from 'src/midtrans/midtrans.module';
     KajianModule,
     FilesModule,
     LiveModule,
-    MidtransModule
   ],
   providers: [UserService, UserHelper],
   controllers: [UserController],

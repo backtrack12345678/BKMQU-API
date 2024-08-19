@@ -67,12 +67,14 @@ model Detail_User {
 
 model User_Bank {
   id         Int    @id @default(autoincrement())
-  userId     String @map("user_id") @db.VarChar(150)
+  userId     String @unique @map("user_id") @db.VarChar(150)
   user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   bankId     Int    @map("bank_id") @db.Int
   bank       Bank   @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  nama       String @db.VarChar(200)
   noRekening String @unique @db.VarChar(50)
-  accountId  String @map("account_id") @db.VarChar(100)
+  accountId  String @default("-") @map("account_id") @db.VarChar(200)
+  status     String @default("PENDING") @db.VarChar(10)
 
   createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
   updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
