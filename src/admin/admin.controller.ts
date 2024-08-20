@@ -1,17 +1,17 @@
-import { Controller, Get, Patch, Param, Query, Req } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Query, Req, ParseIntPipe } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { UpdateMesjidStatusParamDto } from './dto/update-admin.dto';
 import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
 import { Role } from '../common/role/role.enum';
-import { MesjidQueryDto } from './dto/get.dto';
+import { MesjidQueryDto, UserBankQueryDto } from './dto/get.dto';
 import { Request } from 'express';
 import { WebResponse } from '../model/web.model';
-import { GetMesjidResponse } from './dto/response.dto';
+import { GetMesjidResponse, GetUserBankResponse } from './dto/response.dto';
 
 @Controller('/api/admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService) { }
 
   @Get('/mesjid')
   @Auth()
@@ -40,6 +40,33 @@ export class AdminController {
     return {
       status: 'success',
       message: `Mesjid Berhasil ${formattedStatus}`,
+      data: true,
+    };
+  }
+
+  @Get('/user/bank')
+  @Auth()
+  @Roles(Role.ADMIN)
+  async findAllUserBank(
+    @Query() query: UserBankQueryDto,
+  ): Promise<WebResponse<GetUserBankResponse[] | []>> {
+    const result = await this.adminService.findAllUserBank(query);
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
+  @Patch('/user/bank/:userBankId')
+  @Auth()
+  @Roles(Role.ADMIN)
+  async updateUserBankStatus(
+    @Param('userBankId', ParseIntPipe) userBankId: number,
+  ): Promise<WebResponse<boolean>> {
+    await this.adminService.updateUserBankStatus(userBankId);
+    return {
+      status: 'success',
+      message: 'Akun Bank Berhasil Diterima',
       data: true,
     };
   }

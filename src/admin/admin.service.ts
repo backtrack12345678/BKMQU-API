@@ -1,14 +1,20 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { PrismaService } from '../common/prisma.service';
 import { getHost } from '../common/utils/utils';
-import { GetMesjidResponse } from './dto/response.dto';
-import { MesjidQueryDto } from './dto/get.dto';
+import { GetMesjidResponse, GetUserBankResponse } from './dto/response.dto';
+import { MesjidQueryDto, UserBankQueryDto } from './dto/get.dto';
 import { UpdateMesjidStatusParamDto } from './dto/update-admin.dto';
+import { MidtransService } from 'src/midtrans/midtrans.service';
+import { AdminHelper } from './helper/admin.helper';
 
 @Injectable()
 export class AdminService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private midtansService: MidtransService,
+    private adminHelper: AdminHelper,
+  ) { }
 
   async findAllMesjid(
     request: Request,
@@ -82,6 +88,32 @@ export class AdminService {
 
     if (!mesjid) {
       throw new HttpException('Gagal Memverifikasi Mesjid', 500);
+    }
+  }
+
+  async findAllUserBank(query: UserBankQueryDto): Promise<GetUserBankResponse[] | []> {
+    const userBank = await this.prismaService.user_Bank.findMany({
+      where: {
+        status: query?.status || undefined,
+      },
+      select: this.adminHelper.userbankSelectCondition(),
+      orderBy: {
+        createdAt: 'asc',
+      }
+    });
+    return userBank.map((userBank) => this.adminHelper.toUserBankResponse(userBank));
+  }
+
+  async updateUserBankStatus(userBankId: number): Promise<void> {
+    try {
+      const bankAccount = await this.adminHelper.getBankAccountData(userBankId);
+      const verifiedData = await this.midtansService.verifyBankAccount(bankAccount.kode, bankAccount.noRekening);
+      await this.adminHelper.updateUserBankData(userBankId, verifiedData)
+    } catch (e) {
+      if (e.message === 'Gagal Memverifikasi Akun Bank, Akun Bank Tidak Terdaftar') {
+        await this.adminHelper.updateUserBankData(userBankId)
+      }
+      throw new HttpException(e.message, e.status);
     }
   }
 }

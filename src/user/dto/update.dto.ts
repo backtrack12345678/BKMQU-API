@@ -8,6 +8,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -43,3 +44,5 @@ export class CreateUserBankDto {
   @Min(1)
   bankId: number
 }
+
+export class UpdateUserBankDto extends PartialType(CreateUserBankDto) { }

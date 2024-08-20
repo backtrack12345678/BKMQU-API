@@ -19,7 +19,7 @@ import { User } from '@prisma/client';
 import { Token } from '../common/token/token';
 import { UserHelper } from './helper/user.helper';
 import { UserBankResponse, UserResponse, UserResult } from './dto/response.dto';
-import { CreateUserBankDto, UpdateProfileDto, UpdateUserImageDto } from './dto/update.dto';
+import { CreateUserBankDto, UpdateProfileDto, UpdateUserBankDto, UpdateUserImageDto } from './dto/update.dto';
 import { FilesService } from '../files/files.service';
 import { getHost } from '../common/utils/utils';
 
@@ -367,9 +367,22 @@ export class UserService {
       },
       select: this.userHelper.userbankSelectCondition(),
     });
-    if (!userBank) {
-      throw new HttpException('Gagal Mendaftarkan Akun Bank', 500);
-    }
+    return this.userHelper.toUserBankResponse(userBank);
+  }
+
+  async updateUserBank(user: Auth, userBankId: number, payload: UpdateUserBankDto): Promise<UserBankResponse> {
+    await this.userHelper.checkBank(payload.bankId);
+    await this.userHelper.checkUserBankOwner(user.id, userBankId);
+    const userBank = await this.prismaService.user_Bank.update({
+      where: {
+        id: userBankId,
+      },
+      data: {
+        ...payload,
+        status: "PENDING",
+      },
+      select: this.userHelper.userbankSelectCondition(),
+    });
     return this.userHelper.toUserBankResponse(userBank);
   }
 

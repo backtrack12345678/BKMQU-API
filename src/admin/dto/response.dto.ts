@@ -8,3 +8,12 @@ export class GetMesjidResponse {
   kecamatan: string;
   SKM: string;
 }
+
+export class GetUserBankResponse {
+  id: number;
+  nama: string;
+  namaBank: string;
+  noRekening: string;
+  status: string;
+  createdAt: Date;
+}

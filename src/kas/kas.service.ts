@@ -7,7 +7,6 @@ import {
 } from './dto/create-kas.dto';
 import { Auth } from '../model/user.model';
 import { PrismaService } from '../common/prisma.service';
-import { MesjidService } from '../mesjid/mesjid.service';
 import {
   KasArusDashboardResponse,
   KasArusResponse,
@@ -29,7 +28,6 @@ import { KasArusParamDto } from './dto/params.dto';
 export class KasService {
   constructor(
     private prismaService: PrismaService,
-    private mesjidService: MesjidService,
     private filesService: FilesService,
     private kasHelper: Helper,
   ) { }
@@ -260,11 +258,7 @@ export class KasService {
     payload: CreateKasMutasiDto,
   ): Promise<KasMutasiResponse> {
     const mesjidUserId: string = user.id;
-    await this.kasHelper.checkKasOwner(mesjidUserId, payload.fromKasId);
-    await this.kasHelper.checkKasOwner(mesjidUserId, payload.toKasId);
-    await this.kasHelper.checkKasSaldo(mesjidUserId, payload.fromKasId, payload.jumlah);
-    await this.kasHelper.updateKasSaldo(payload.toKasId, payload.jumlah, "Masuk")
-    await this.kasHelper.updateKasSaldo(payload.fromKasId, payload.jumlah, "Keluar")
+    await this.kasHelper.verifyKasMutasi(mesjidUserId, payload);
     const kasMutasi = await this.prismaService.kas_Mutasi.create({
       data: {
         mesjidUserId: mesjidUserId,

@@ -362,14 +362,12 @@ export class MidtransService {
     await this.pushNotification(paymentData);
   }
 
-  async verifyBankAccount(payload) {
-    // const result = await this.axiosService.irisInstance.get(`api/v1/account_validation?bank=${BANK_NAME}&account=${BANK_ACCOUNT}`);
+  async verifyBankAccount(kode: string, noRekening: string) {
     try {
-      const result = await this.axiosService.irisInstance.get(`api/v1/account_validation?bank=mandiri&account=1070019946575`);
-      console.log(result);
+      const result = await this.axiosService.irisInstance.get(`api/v1/account_validation?bank=${kode}&account=${noRekening}`);
+      return result.data;
     } catch (e) {
-      console.log(e.response);
-      throw new HttpException(e.message, 400);
+      throw new BadRequestException('Gagal Memverifikasi Akun Bank, Akun Bank Tidak Terdaftar')
     }
   }
 }

@@ -12,16 +12,15 @@ import {
   KasMutasiResponse,
   KasResponse,
 } from '../dto/response.dto';
-import { MesjidService } from '../../mesjid/mesjid.service';
 import { getHost } from 'src/common/utils/utils';
 import { Request } from 'express';
+import { CreateKasMutasiDto } from '../dto/create-kas.dto';
 
 
 @Injectable()
 export class Helper {
   constructor(
     private prismaService: PrismaService,
-    private mesjidService: MesjidService,
   ) { }
 
   createKasData(payload, mesjidUserId) {
@@ -315,5 +314,13 @@ export class Helper {
       keluar: groupKasArus.find((g) => g.tipe === 'Keluar')?._sum.jumlah || 0,
       saldo: Number(kasSaldo._sum.saldo),
     }
+  }
+
+  async verifyKasMutasi(mesjidUserId: string, payload: CreateKasMutasiDto): Promise<void> {
+    await this.checkKasOwner(mesjidUserId, payload.fromKasId);
+    await this.checkKasOwner(mesjidUserId, payload.toKasId);
+    await this.checkKasSaldo(mesjidUserId, payload.fromKasId, payload.jumlah);
+    await this.updateKasSaldo(payload.toKasId, payload.jumlah, "Masuk")
+    await this.updateKasSaldo(payload.fromKasId, payload.jumlah, "Keluar")
   }
 }

@@ -6,3 +6,5 @@ export class MesjidQueryDto {
   @IsString()
   status?: string;
 }
+
+export class UserBankQueryDto extends MesjidQueryDto { }

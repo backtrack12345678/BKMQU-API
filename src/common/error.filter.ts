@@ -6,10 +6,9 @@ import {
   HttpException,
   NotFoundException,
 } from '@nestjs/common';
-import { ZodError } from 'zod';
 import { FilesService } from '../files/files.service';
 
-@Catch(ZodError, HttpException, BadRequestException, NotFoundException)
+@Catch()
 export class ErrorFilter implements ExceptionFilter {
   constructor(private filesService: FilesService) {}
 
@@ -66,7 +65,7 @@ export class ErrorFilter implements ExceptionFilter {
         message: exception.getResponse(),
       });
     } else {
-      // console.log(exception.getResponse());
+      console.log(exception.getResponse());
       response.status(500).json({
         status: 'error',
         message: 'Terjadi kegagalan pada server kami',

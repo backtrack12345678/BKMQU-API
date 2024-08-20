@@ -1,6 +1,7 @@
 import { RegisterDto } from './../dto/register.dto';
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -281,8 +282,27 @@ export class UserHelper {
       where: { id: bankId }
     });
     if (bank < 1) {
-      throw new NotFoundException("Akun Bank Tidak Ditemukan");
+      throw new NotFoundException("Bank Tidak Ditemukan");
     }
+  }
+
+  async checkUserBankOwner(userId: string, userBankId: number) {
+    const userBank = await this.prismaService.user_Bank.findUnique({
+      where: {
+        id: userBankId,
+      },
+      select: {
+        userId: true,
+      }
+    });
+
+    if (!userBank) {
+      throw new NotFoundException("Akun Bank Tidak Ditemukan");
+    };
+
+    if (userBank.userId !== userId) {
+      throw new HttpException("Akun Bank Ini Bukan Milik Anda", 403);
+    };
   }
 
   async checkUserBank(userId: string, noRekening: string) {
@@ -290,11 +310,13 @@ export class UserHelper {
       where: { userId: userId },
       select: { noRekening: true }
     });
+
     if (userBank) {
       throw new BadRequestException("Anda Sudah Memiliki Akun Bank");
-    }
-    if (userBank.noRekening == noRekening) {
+    };
+
+    if (userBank?.noRekening == noRekening) {
       throw new BadRequestException("Nomor Rekening Sudah Digunakan");
-    }
+    };
   }
 }

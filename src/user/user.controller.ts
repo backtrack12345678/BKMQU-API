@@ -28,7 +28,7 @@ import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { Auth } from '../common/auth.decorator';
 import { UserHelper } from './helper/user.helper';
-import { CreateUserBankDto, UpdateProfileDto, UpdateUserImageDto } from './dto/update.dto';
+import { CreateUserBankDto, UpdateProfileDto, UpdateUserBankDto, UpdateUserImageDto } from './dto/update.dto';
 import { UserBankResponse, UserResponse } from './dto/response.dto';
 import { PostsService } from '../posts/posts.service';
 import { GetPostsQueryDto } from '../posts/dto/get.dto';
@@ -576,7 +576,7 @@ export class UserController {
     };
   }
 
-  @Patch('/bank')
+  @Post('/bank')
   @Auth()
   async addUserBank(
     @Req() request: any,
@@ -585,6 +585,22 @@ export class UserController {
     const result = await this.userService.addUserBank(request.user, payload);
     return {
       status: 'success',
+      message: 'Akun Bank Berhasil Ditambahkan',
+      data: result
+    }
+  }
+
+  @Patch('/bank/:userBankId')
+  @Auth()
+  async updateUserBank(
+    @Param('userBankId', ParseIntPipe) userBankId: number,
+    @Req() request: any,
+    @Body() payload: UpdateUserBankDto,
+  ): Promise<WebResponse<UserBankResponse>> {
+    const result = await this.userService.updateUserBank(request.user, userBankId, payload);
+    return {
+      status: 'success',
+      message: 'Akun Bank Berhasil Diubah',
       data: result
     }
   }
