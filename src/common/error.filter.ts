@@ -10,7 +10,7 @@ import { FilesService } from '../files/files.service';
 
 @Catch()
 export class ErrorFilter implements ExceptionFilter {
-  constructor(private filesService: FilesService) {}
+  constructor(private filesService: FilesService) { }
 
   catch(exception: any, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse();
@@ -65,7 +65,7 @@ export class ErrorFilter implements ExceptionFilter {
         message: exception.getResponse(),
       });
     } else {
-      console.log(exception.getResponse());
+      console.log(exception);
       response.status(500).json({
         status: 'error',
         message: 'Terjadi kegagalan pada server kami',

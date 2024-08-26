@@ -4,6 +4,9 @@ export class KasResponse {
   saldo: number;
   bank?: string;
 }
+export class KuotaResponse {
+  kuota: number;
+}
 export class KasArusResponse {
   id: number;
   tipe: string;

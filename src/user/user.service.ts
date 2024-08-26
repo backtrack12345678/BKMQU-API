@@ -359,7 +359,7 @@ export class UserService {
 
   async addUserBank(user: Auth, payload: CreateUserBankDto): Promise<UserBankResponse> {
     await this.userHelper.checkBank(payload.bankId);
-    await this.userHelper.checkUserBank(user.id, payload.noRekening);
+    await this.userHelper.checkRekening(user.id, payload.noRekening);
     const userBank = await this.prismaService.user_Bank.create({
       data: {
         userId: user.id,
@@ -386,13 +386,13 @@ export class UserService {
     return this.userHelper.toUserBankResponse(userBank);
   }
 
-  async getUserBank(user: Auth): Promise<UserBankResponse> {
-    const userBank = await this.prismaService.user_Bank.findUnique({
+  async getUserBank(user: Auth): Promise<UserBankResponse[]> {
+    const userBank = await this.prismaService.user_Bank.findMany({
       where: {
         userId: user.id,
       },
       select: this.userHelper.userbankSelectCondition(),
     });
-    return this.userHelper.toUserBankResponse(userBank);
+    return userBank.map((userBank) => this.userHelper.toUserBankResponse(userBank));
   }
 }

@@ -609,7 +609,7 @@ export class UserController {
   @Auth()
   async getUserBank(
     @Req() request: any,
-  ): Promise<WebResponse<UserBankResponse>> {
+  ): Promise<WebResponse<UserBankResponse[]>> {
     const result = await this.userService.getUserBank(request.user);
     return {
       status: 'success',

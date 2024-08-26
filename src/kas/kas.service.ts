@@ -12,6 +12,7 @@ import {
   KasArusResponse,
   KasMutasiResponse,
   KasResponse,
+  KuotaResponse,
 } from './dto/response.dto';
 import {
   GetDashboardKasArusDto,
@@ -55,7 +56,7 @@ export class KasService {
     const mesjidUserId: string = user.id;
     await this.kasHelper.checkKasOwner(mesjidUserId, kasId);
     await this.kasHelper.verifyUserBank(mesjidUserId, payload.userBankId);
-    await this.kasHelper.verifyKasBank(kasId, payload.userBankId);
+    await this.kasHelper.verifyMaxKasBank(mesjidUserId);
     const kasBank = await this.prismaService.kas_Bank.create({
       data: {
         userBankId: payload.userBankId,
@@ -87,6 +88,17 @@ export class KasService {
       select: this.kasHelper.kasSelectionCondition(),
     });
     return kas.map((kas) => this.kasHelper.toKasResponse(kas));
+  }
+
+  async getKuotaKasBank(
+    user: Auth
+  ): Promise<KuotaResponse> {
+    const mesjidUserId = user.id;
+    const kasBankLimit = await this.kasHelper.getKasBankLimit(mesjidUserId);
+    const countKasBank = await this.kasHelper.countKasBank(mesjidUserId);
+    return {
+      kuota: kasBankLimit - countKasBank
+    }
   }
 
   async updateKas(

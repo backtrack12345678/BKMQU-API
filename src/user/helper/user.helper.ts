@@ -305,15 +305,11 @@ export class UserHelper {
     };
   }
 
-  async checkUserBank(userId: string, noRekening: string) {
-    const userBank = await this.prismaService.user_Bank.findUnique({
+  async checkRekening(userId: string, noRekening: string) {
+    const userBank = await this.prismaService.user_Bank.findFirst({
       where: { userId: userId },
       select: { noRekening: true }
     });
-
-    if (userBank) {
-      throw new BadRequestException("Anda Sudah Memiliki Akun Bank");
-    };
 
     if (userBank?.noRekening == noRekening) {
       throw new BadRequestException("Nomor Rekening Sudah Digunakan");

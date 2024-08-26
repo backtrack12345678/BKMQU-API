@@ -67,7 +67,7 @@ model Detail_User {
 
 model User_Bank {
   id         Int    @id @default(autoincrement())
-  userId     String @unique @map("user_id") @db.VarChar(150)
+  userId     String @map("user_id") @db.VarChar(150)
   user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   bankId     Int    @map("bank_id") @db.Int
   bank       Bank   @relation(fields: [bankId], references: [id], onDelete: Cascade)
@@ -113,6 +113,7 @@ model Mesjid {
   user            User               @relation(fields: [userId], references: [id])
   noRegister      String             @unique @map("no_register") @db.VarChar(200)
   imam            String?            @db.VarChar(200)
+  kasBankLimit    Int                @default(2) @db.Int
   pengurus        Pengurus[]
   jamaah          Jamaah[]
   kas             Kas[]

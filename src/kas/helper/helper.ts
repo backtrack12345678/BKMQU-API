@@ -205,16 +205,36 @@ export class Helper {
     }
   }
 
-  async verifyKasBank(kasId: string, userBankId: number): Promise<void> {
-    const kasBank = await this.prismaService.kas_Bank.count({
+  async verifyMaxKasBank(mesjidUserId: string): Promise<void> {
+    const kasBankLimit = await this.getKasBankLimit(mesjidUserId);
+    const countKasBank = await this.countKasBank(mesjidUserId);
+    if (countKasBank >= kasBankLimit) {
+      throw new BadRequestException("Jumlah Kas Bank Sudah Mencapai Maksimum!, Lakukan Pembayaran Terlebih Dahulu");
+    }
+  }
+
+  async getKasBankLimit(mesjidUserId: string): Promise<number> {
+    const kas = await this.prismaService.mesjid.findUnique({
       where: {
-        kasId: kasId,
-        userBankId: userBankId,
+        userId: mesjidUserId,
+      },
+      select: {
+        kasBankLimit: true,
       }
     });
-    if (kasBank > 0) {
-      throw new BadRequestException("Kas Sudah Terhubung Dengan Bank");
-    }
+    return kas.kasBankLimit;
+  }
+
+  async countKasBank(mesjidUserId: string) {
+    const countKasBank = await this.prismaService.kas.count({
+      where: {
+        mesjidUserId: mesjidUserId,
+        kasBank: {
+          isNot: null,
+        }
+      },
+    });
+    return countKasBank
   }
 
   async checkBank(bankId: number): Promise<void> {

@@ -31,6 +31,7 @@ import {
   KasArusResponse,
   KasResponse,
   KasMutasiResponse,
+  KuotaResponse,
 } from './dto/response.dto';
 import {
   GetKasArusDto,
@@ -73,7 +74,7 @@ export class KasController {
   @Auth()
   @Roles(Role.MESJID)
   async connectKasBank(
-    @Req() request,
+    @Req() request: any,
     @Param('kasId') kasId: string,
     @Body() payload: ConnectKasBankDto,
   ): Promise<WebResponse<boolean>> {
@@ -97,6 +98,19 @@ export class KasController {
       status: 'success',
       data: result,
     };
+  }
+
+  @Get('/kuota')
+  @Auth()
+  @Roles(Role.MESJID)
+  async getKuotaKasBank(
+    @Req() request: any,
+  ): Promise<WebResponse<KuotaResponse>> {
+    const result = await this.kasService.getKuotaKasBank(request.user);
+    return {
+      status: 'success',
+      data: result,
+    }
   }
 
   @Patch('/:kasId')
