@@ -36,6 +36,7 @@ import { GetKajianContentsQueryDto, GetKajianQueryDto } from './dto/query.dto';
 import { Request } from 'express';
 import { KajianContentParam } from './dto/param.dto';
 import { FileTypesValidator } from '../common/pipes/file-types.validator';
+import { FilesTypeValidator } from 'src/common/pipes/files-type.validator';
 
 const allowedMimeTypes = {
   thumbnail: ['image/png', 'image/jpg', 'image/jpeg'],
@@ -44,7 +45,7 @@ const allowedMimeTypes = {
 
 @Controller('/api/kajian')
 export class KajianController {
-  constructor(private readonly kajianService: KajianService) {}
+  constructor(private readonly kajianService: KajianService) { }
 
   @Post('/')
   @Auth()
@@ -187,7 +188,7 @@ export class KajianController {
     @UploadedFiles(
       new ParseFilePipeBuilder()
         .addValidator(
-          new FileTypesValidator({
+          new FilesTypeValidator({
             mimeTypes: allowedMimeTypes,
           }),
         )
@@ -261,7 +262,7 @@ export class KajianController {
     @UploadedFiles(
       new ParseFilePipeBuilder()
         .addValidator(
-          new FileTypesValidator({
+          new FilesTypeValidator({
             mimeTypes: allowedMimeTypes,
           }),
         )
