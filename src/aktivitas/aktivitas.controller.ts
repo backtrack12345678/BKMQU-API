@@ -11,6 +11,7 @@ import {
   UploadedFiles,
   Req,
   ParseFilePipeBuilder,
+  Query,
 } from '@nestjs/common';
 import { AktivitasService } from './aktivitas.service';
 import { CreateAktivitasDto } from './dto/create-aktivita.dto';
@@ -23,6 +24,7 @@ import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
 import { Role } from '../common/role/role.enum';
 import { FilesTypeValidator } from '../common/pipes/files-type.validator';
+import { GetAktivitasQueryDto } from './dto/query.dto';
 
 const allowedMimeTypes = {
   media: ['image/png', 'image/jpg', 'image/jpeg'],
@@ -67,10 +69,21 @@ export class AktivitasController {
     };
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.aktivitasService.findAll();
-  // }
+  @Get()
+  async findAllAktivitas(
+    @Req() request: Request,
+    @Query() query: GetAktivitasQueryDto,
+  ): Promise<WebResponse<AktivitasResponse[] | []>> {
+    const result = await this.aktivitasService.findAllAktivitas(
+      request,
+      query,
+      'public',
+    );
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
 
   @Get('/:id')
   async findOneAktivitas(
