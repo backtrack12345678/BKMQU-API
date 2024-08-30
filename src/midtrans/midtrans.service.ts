@@ -362,6 +362,10 @@ export class MidtransService {
     await this.pushNotification(paymentData);
   }
 
+  async disbursementWebHook(payload) {
+    console.log(payload);
+  }
+
   async verifyBankAccount(kode: string, noRekening: string) {
     try {
       const result = await this.axiosService.irisInstance.get(`api/v1/account_validation?bank=${kode}&account=${noRekening}`);

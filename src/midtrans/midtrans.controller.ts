@@ -16,7 +16,7 @@ import { MidtransInterceptor } from './midtrans.interceptor';
 
 @Controller('/api/midtrans')
 export class MidtransController {
-  constructor(private readonly midtransService: MidtransService) {}
+  constructor(private readonly midtransService: MidtransService) { }
 
   @Get('/transaction/:orderId')
   @Auth()
@@ -62,5 +62,17 @@ export class MidtransController {
       message: 'Saldo Berhasil Ditambahkan',
       data: true,
     };
+  }
+
+  @Post('/transaction/webhook/dibursement')
+  async disbursementWebHook(
+    @Body() payload,
+  ): Promise<WebResponse<true>> {
+    await this.midtransService.disbursementWebHook(payload);
+    return {
+      status: 'success',
+      message: 'Saldo Berhasil Ditambahkan',
+      data: true,
+    }
   }
 }
