@@ -10,7 +10,7 @@ import {
   MaxLength,
 } from 'class-validator';
 
-export class CreateCharityDto {}
+export class CreateCharityDto { }
 
 export class CreateDonasiInfaqDto {
   @IsOptional()
@@ -30,7 +30,9 @@ export class CreateDonasiInfaqDto {
   amount: number;
 }
 
-export class CreateDonasiSedekahDto extends CreateDonasiInfaqDto {}
+export class CreateDonasiSedekahDto extends CreateDonasiInfaqDto { }
+
+export class CreateDonasiPenceramahDto extends CreateDonasiInfaqDto { }
 
 export class CreateInfaqMesjidDto {
   @IsNotEmpty()

@@ -515,6 +515,19 @@ export class UserController {
     };
   }
 
+  @Get('kafalah/donatur')
+  @Auth()
+  async getDonaturKafalah(@Req() request: any, @Query() query: GetKasQueryDto) {
+    const result = await this.charityService.getDonaturKafalah(
+      request.user.id,
+      query,
+    );
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
   @Get('/:userId/sedekah/penerima')
   async getPenerimaSedekah(@Param('userId') userId: string) {
     const result = await this.charityService.getPenerimaSedekah(userId);

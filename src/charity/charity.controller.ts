@@ -15,6 +15,7 @@ import {
 import { CharityService } from './charity.service';
 import {
   CreateDonasiInfaqDto,
+  CreateDonasiPenceramahDto,
   CreateDonasiSedekahDto,
   CreateInfaqMesjidDto,
   CreatePenerimaSedekahDto,
@@ -33,7 +34,7 @@ const allowedMimeTypes = {
 
 @Controller('/api/charity')
 export class CharityController {
-  constructor(private readonly charityService: CharityService) {}
+  constructor(private readonly charityService: CharityService) { }
 
   @Post('/infaq')
   @Auth()
@@ -51,6 +52,24 @@ export class CharityController {
       message: 'Donasi Infaq Berhasil Dibuat',
       data: result,
     };
+  }
+
+  @Post('/kafalah')
+  @Auth()
+  @HttpCode(201)
+  async createDonasiKafalah(
+    @Req() request: any,
+    @Body() payload: CreateDonasiPenceramahDto,
+  ) {
+    const result = await this.charityService.createDonasiKafalah(
+      request.user,
+      payload,
+    );
+    return {
+      status: 'success',
+      message: 'Donasi Kafalah Berhasil Dibuat',
+      data: result,
+    }
   }
 
   @Post('/infaq/:infaqId')
