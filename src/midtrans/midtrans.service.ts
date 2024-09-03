@@ -315,9 +315,13 @@ export class MidtransService {
     const result: AxiosResponse = await this.axiosService.midtransInstance.get(
       `v2/${orderId}/status`,
     );
+    console.log(result);
+    
     if (!result.data.order_id) {
       throw new NotFoundException('Detail transaksi tidak ditemukan');
     }
+    console.log(result);
+    
     return {
       id: result.data.order_id,
       status: result.data.transaction_status,
