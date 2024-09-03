@@ -347,11 +347,15 @@ export class MidtransService {
   async updateSaldoWebhook(payload: UpdateWebhookDto) {
     this.verifySignature(payload);
     const paymentData = await this.getPaymentData(payload.order_id);
+    console.log(paymentData);
     const role: string = paymentData.recipientId.split('-')[0];
     const netAmount = this.calculateFeePayment(
       payload.payment_type,
       Number(payload.gross_amount),
     );
+    console.log(netAmount);
+    console.log(payload);
+
     await this.addSaldo(paymentData, netAmount);
     if (role === 'mesjid') {
       await this.createTransaksiMesjid(paymentData);
