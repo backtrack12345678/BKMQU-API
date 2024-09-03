@@ -21,7 +21,7 @@ export class MidtransService {
   ) { }
 
   public snap = new Snap({
-    isProduction: false,
+    isProduction: true,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY,
   });
@@ -315,13 +315,9 @@ export class MidtransService {
     const result: AxiosResponse = await this.axiosService.midtransInstance.get(
       `v2/${orderId}/status`,
     );
-    console.log(result);
-    
     if (!result.data.order_id) {
       throw new NotFoundException('Detail transaksi tidak ditemukan');
     }
-    console.log(result);
-    
     return {
       id: result.data.order_id,
       status: result.data.transaction_status,
