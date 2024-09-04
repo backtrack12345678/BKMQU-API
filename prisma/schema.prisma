@@ -14,33 +14,34 @@ datasource db {
 }
 
 model User {
-  id           String                  @id @db.VarChar(150)
-  phone        String                  @unique @db.VarChar(20)
-  password     String                  @db.VarChar(100)
-  email        String                  @unique @db.VarChar(200)
-  role         String                  @db.VarChar(10)
-  isVerified   Boolean                 @default(false) @map("is_verified")
-  acceptTerm   Boolean?                @map("accept_term")
-  createdAt    DateTime                @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt    DateTime?               @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
-  mesjid       Mesjid?
-  pengurus     Pengurus?
-  jamaah       Jamaah?
-  penceramah   Penceramah?
-  refreshToken Refresh_Token?
-  dokumenBukti Dokumen_Bukti?
-  detailUser   Detail_User?
-  posts        Posts[]
-  aktivitas    Aktivitas[]
-  recipient    Midtrans_Transactions[] @relation("recipient")
-  userInfaq    User_Infaq[]
-  userSedekah  User_Sedekah[]
-  kajian       Kajian[]
-  photo        Photo_User?
-  sampul       Sampul_User?
-  live         Live[]
-  userBank     User_Bank[]
-  User_Kafalah User_Kafalah[]
+  id                String                  @id @db.VarChar(150)
+  phone             String                  @unique @db.VarChar(20)
+  password          String                  @db.VarChar(100)
+  email             String                  @unique @db.VarChar(200)
+  role              String                  @db.VarChar(10)
+  isVerified        Boolean                 @default(false) @map("is_verified")
+  acceptTerm        Boolean?                @map("accept_term")
+  createdAt         DateTime                @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt         DateTime?               @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  mesjid            Mesjid?
+  pengurus          Pengurus?
+  jamaah            Jamaah?
+  penceramah        Penceramah?
+  refreshToken      Refresh_Token?
+  dokumenBukti      Dokumen_Bukti?
+  detailUser        Detail_User?
+  posts             Posts[]
+  aktivitas         Aktivitas[]
+  recipient         Midtrans_Transactions[] @relation("recipient")
+  userInfaq         User_Infaq[]
+  userSedekah       User_Sedekah[]
+  kajian            Kajian[]
+  photo             Photo_User?
+  sampul            Sampul_User?
+  live              Live[]
+  userBank          User_Bank[]
+  User_Kafalah      User_Kafalah[]
+  User_Deactivation User_Deactivation?
 
   @@map("user")
 }
@@ -666,4 +667,21 @@ model Transaksi_Mesjid {
   updatedAt    DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
 
   @@map("transaksi_mesjid")
+}
+
+model User_Deactivation {
+  id         Int     @id @default(autoincrement())
+  userId     String  @unique @map("user_id") @db.VarChar(150)
+  user       User    @relation(fields: [userId], references: [id])
+  nama       String  @db.VarChar(200)
+  email      String  @db.VarChar(100)
+  phone      String  @unique @db.VarChar(20)
+  role       String  @db.VarChar(10)
+  alasan     String  @db.Text
+  acceptTerm Boolean @default(false) @map("accept_term")
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("user_deactivation")
 }

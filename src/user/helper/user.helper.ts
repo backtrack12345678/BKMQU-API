@@ -315,4 +315,15 @@ export class UserHelper {
       throw new BadRequestException("Nomor Rekening Sudah Digunakan");
     };
   }
+
+  async checkUserDeactivation(userId: string) {
+    const result = await this.prismaService.user_Deactivation.count({
+      where: {
+        userId: userId,
+      },
+    })
+    if (result > 0) {
+      throw new BadRequestException("Anda sudah Mengajukan Permohonan Untuk Menonaktifkan Akun");
+    }
+  }
 }

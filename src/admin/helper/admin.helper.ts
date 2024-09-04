@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma.service';
 import { GetUserBankResponse } from '../dto/response.dto';
 
@@ -86,4 +86,20 @@ export class AdminHelper {
     });
   }
 
+  async checkUserDeactivation(userId: string) {
+    const result = await this.prismaService.user_Deactivation.findUnique({
+      where: {
+        userId: userId,
+      },
+      select: {
+        acceptTerm: true,
+      },
+    })
+    if (!result) {
+      throw new NotFoundException("User Tidak Ditemukan");
+    }
+    if (result.acceptTerm == true) {
+      throw new BadRequestException("User Sudah Dinonaktifkan");
+    }
+  }
 }

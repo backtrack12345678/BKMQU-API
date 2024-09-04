@@ -23,6 +23,7 @@ import {
   RegisterMesjidDto,
   RegisterPenceramahDto,
   RegisterPengurusDto,
+  UserDeactivationDto,
 } from './dto/register.dto';
 import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { Request, Response } from 'express';
@@ -627,6 +628,20 @@ export class UserController {
     return {
       status: 'success',
       data: result
+    }
+  }
+
+  @Post('/deactivate')
+  @Auth()
+  async userDeactivate(
+    @Req() request: any,
+    @Body() payload: UserDeactivationDto,
+  ): Promise<WebResponse<Boolean>> {
+    await this.userService.userDeactivate(request.user, payload);
+    return {
+      status: 'success',
+      message: 'Akun Berhasil Dinonaktifkan',
+      data: true,
     }
   }
 }

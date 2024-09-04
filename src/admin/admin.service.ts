@@ -2,8 +2,8 @@ import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { PrismaService } from '../common/prisma.service';
 import { getHost } from '../common/utils/utils';
-import { GetMesjidResponse, GetUserBankResponse } from './dto/response.dto';
-import { MesjidQueryDto, UserBankQueryDto } from './dto/get.dto';
+import { GetMesjidResponse, GetUserBankResponse, GetUserDeactivationResponse } from './dto/response.dto';
+import { MesjidQueryDto, UserBankQueryDto, UserDeactivationQueryDto } from './dto/get.dto';
 import { UpdateMesjidStatusParamDto } from './dto/update-admin.dto';
 import { MidtransService } from 'src/midtrans/midtrans.service';
 import { AdminHelper } from './helper/admin.helper';
@@ -102,6 +102,42 @@ export class AdminService {
       }
     });
     return userBank.map((userBank) => this.adminHelper.toUserBankResponse(userBank));
+  }
+
+  async findAllUserDeactivation(query: UserDeactivationQueryDto): Promise<GetUserDeactivationResponse[]> {
+    const userDeactivation = await this.prismaService.user_Deactivation.findMany({
+      where: {
+        ...(query.acceptTerm && {
+          acceptTerm: query.acceptTerm,
+        }),
+      }
+    });
+    return userDeactivation;
+  }
+
+  async acceptUserDeactivation(userId: string) {
+    await this.prismaService.user_Deactivation.update({
+      where: {
+        userId: userId,
+      },
+      data: {
+        user: {
+          update: {
+            acceptTerm: false,
+            isVerified: false,
+            detailUser: {
+              update: {
+                status: "DITOLAK",
+              }
+            }
+          },
+        },
+        acceptTerm: true,
+      },
+      select: {
+        id: true,
+      }
+    });
   }
 
   async updateUserBankStatus(userBankId: number): Promise<void> {

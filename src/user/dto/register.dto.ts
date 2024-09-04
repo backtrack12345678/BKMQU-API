@@ -72,6 +72,36 @@ export class RegisterMesjidDto extends RegisterDto {
   noRegister: string;
 }
 
+export class UserDeactivationDto {
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(200)
+  nama: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(100)
+  @IsEmail()
+  @Transform(({ value }) => value.toLowerCase())
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(20)
+  @Matches(/^[0-9]+$/, { message: 'phone must be digit' })
+  phone: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(10)
+  role: string;
+
+  @IsNotEmpty()
+  @IsString()
+  alasan: string;
+}
+
 export class RegisterPengurusDto extends RegisterDto {
   @IsNotEmpty()
   @IsString()
