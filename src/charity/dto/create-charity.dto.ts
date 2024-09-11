@@ -34,6 +34,8 @@ export class CreateDonasiSedekahDto extends CreateDonasiInfaqDto { }
 
 export class CreateDonasiPenceramahDto extends CreateDonasiInfaqDto { }
 
+export class CreateTransaksiEnchanceKasBank extends CreateDonasiInfaqDto { }
+
 export class CreateInfaqMesjidDto {
   @IsNotEmpty()
   @IsString()

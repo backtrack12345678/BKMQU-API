@@ -11,6 +11,7 @@ import {
   UploadedFile,
   HttpCode,
   ParseFilePipeBuilder,
+  UploadedFiles,
 } from '@nestjs/common';
 import { CharityService } from './charity.service';
 import {
@@ -19,9 +20,10 @@ import {
   CreateDonasiSedekahDto,
   CreateInfaqMesjidDto,
   CreatePenerimaSedekahDto,
+  CreateTransaksiEnchanceKasBank,
 } from './dto/create-charity.dto';
 import { UpdatePenerimaSedekahDto } from './dto/update-charity.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { WebResponse } from '../model/web.model';
 import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
@@ -117,14 +119,14 @@ export class CharityController {
   @Roles(Role.MESJID)
   @HttpCode(201)
   @UseInterceptors(
-    FileInterceptor('content', {
+    FilesInterceptor('content',Infinity, {
       dest: './uploads/infaq',
     }),
   )
   async createInfaqMesjid(
     @Req() request: any,
     @Body() payload: CreateInfaqMesjidDto,
-    @UploadedFile(
+    @UploadedFiles(
       new ParseFilePipeBuilder()
         .addValidator(
           new FileTypesValidator({
@@ -133,7 +135,7 @@ export class CharityController {
         )
         .build(),
     )
-    content: Express.Multer.File,
+    content: Express.Multer.File[],
   ) {
     const result = await this.charityService.createInfaq(
       request,
@@ -200,4 +202,21 @@ export class CharityController {
       data: true,
     };
   }
+
+
+  // @Post('/mesjid/kas/enchance')
+  // @Auth()
+  // @Roles(Role.MESJID)
+  // @HttpCode(201)
+  // async createKasBankEnchance(
+  //   @Req() request: any,
+  //   @Body() payload: CreateTransaksiEnchanceKasBank,
+  // ): Promise<WebResponse<true>> {
+  //   await this.charityService.createKasBankEnchance(request.user, payload);
+  //   return {
+  //     status: 'success',
+  //     message: 'Transaksi Penaikan Limit Kas Bank Berhasil',
+  //     data: true,
+  //   };
+  // }
 }

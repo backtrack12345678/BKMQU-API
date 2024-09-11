@@ -571,13 +571,26 @@ model Infaq {
   uraian        String         @db.Text
   targetNominal BigInt         @map("target_nominal") @db.BigInt
   saldoMasuk    BigInt         @default(0) @map("saldo_masuk") @db.BigInt
-  foto          String         @db.VarChar(150)
-  path          String         @db.VarChar(150)
   createdAt     DateTime       @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
   updatedAt     DateTime?      @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
   infaqTarget   Infaq_Target[]
+  infaqMedia    Infaq_Media[]
 
   @@map("infaq")
+}
+
+model Infaq_Media {
+  id      Int     @id @default(autoincrement())
+  infaqId String  @map("infaq_id") @db.VarChar(150)
+  infaq   Infaq   @relation(fields: [infaqId], references: [id], onDelete: Cascade)
+  nama    String  @db.VarChar(150)
+  path    String  @db.VarChar(150)
+  type    String? @db.VarChar(100)
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("infaq_media")
 }
 
 model User_Infaq {

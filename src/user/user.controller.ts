@@ -495,8 +495,18 @@ export class UserController {
   }
 
   @Get('/:userId/infaq')
-  async getInfaq(@Req() request: Request, @Param('userId') userId: string) {
-    const result = await this.charityService.getInfaq(userId, request);
+  async getInfaqByUserId(@Req() request: Request, @Param('userId') userId: string) {
+    const result = await this.charityService.getInfaqByUserId(userId, request);
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
+  @Get('infaq')
+  @Auth()
+  async getInfaqByKecamatan(@Req() request: any) {
+    const result = await this.charityService.getInfaqByKecamatan(request);
     return {
       status: 'success',
       data: result,
