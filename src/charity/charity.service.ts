@@ -464,6 +464,7 @@ export class CharityService {
         },
       },
       select: {
+        mesjidUserId: true,
         id: true,
         uraian: true,
         targetNominal: true,
@@ -482,6 +483,7 @@ export class CharityService {
     });
     return result.map((infaq) => ({
       id: infaq.id,
+      mesjidUserId: infaq.mesjidUserId,
       uraian: infaq.uraian,
       foto: infaq.infaqMedia.map((infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`),
       targetNominal: Number(infaq.targetNominal),
