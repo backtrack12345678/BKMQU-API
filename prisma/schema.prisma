@@ -42,6 +42,7 @@ model User {
   userBank          User_Bank[]
   User_Kafalah      User_Kafalah[]
   User_Deactivation User_Deactivation?
+  Withdraw          Withdraw[]
 
   @@map("user")
 }
@@ -78,9 +79,10 @@ model User_Bank {
   accountId  String @default("-") @map("account_id") @db.VarChar(200)
   status     String @default("PENDING") @db.VarChar(10)
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime   @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime?  @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
   kasBank   Kas_Bank?
+  withdraw  Withdraw[]
 
   @@map("user_bank")
 }
@@ -697,4 +699,20 @@ model User_Deactivation {
   updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
 
   @@map("user_deactivation")
+}
+
+model Withdraw {
+  id         String    @id @db.VarChar(150)
+  userId     String    @map("user_id") @db.VarChar(150)
+  user       User      @relation(fields: [userId], references: [id])
+  userBankId Int       @map("user_bank_id")
+  userBank   User_Bank @relation(fields: [userBankId], references: [id], onDelete: Cascade)
+  jumlah     BigInt    @db.BigInt
+  status     String    @default("PENDING") @db.VarChar(10)
+  pesan      String?   @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("withdraw")
 }

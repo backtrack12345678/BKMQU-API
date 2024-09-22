@@ -15,6 +15,7 @@ import { MidtransModule } from './midtrans/midtrans.module';
 import { KajianModule } from './kajian/kajian.module';
 import { CharityModule } from './charity/charity.module';
 import { LiveModule } from './live/live.module';
+import { WithdrawModule } from './withdraw/withdraw.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { LiveModule } from './live/live.module';
     KajianModule,
     CharityModule,
     LiveModule,
+    WithdrawModule,
   ],
   controllers: [AppController],
   providers: [AppService],
