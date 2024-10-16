@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, Req } from '@nestjs/common';
 import { WithdrawService } from './withdraw.service';
 import { CreateWithdrawDto } from './dto/create-withdraw.dto';
+import { UpdateWithdrawDto } from './dto/update-withdraw.dto';
 import { Auth } from 'src/common/auth.decorator';
 import { WebResponse } from 'src/model/web.model';
 import { WithdrawResponse } from './dto/response.dto';

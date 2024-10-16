@@ -1,6 +1,5 @@
 import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import {
-  CreateDonasi,
   CreateDonasiInfaqDto,
   CreateDonasiPenceramahDto,
   CreateDonasiSedekahDto,
@@ -23,13 +22,6 @@ export class CharityService {
     private prismaService: PrismaService,
     private midtransService: MidtransService,
   ) { }
-
-  async createDonasi(
-    user: Auth,
-    payload: CreateDonasi,
-  ) {
-    // const 
-  }
 
   async verifyInfaqId(infaqId: string, mesjidUserId?: string): Promise<void> {
     const infaq = await this.prismaService.infaq.findUnique({

@@ -1,11 +1,11 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { CreateWithdrawDto } from './dto/create-withdraw.dto';
+import { UpdateWithdrawDto } from './dto/update-withdraw.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { Auth } from 'src/model/user.model';
 import { v4 as uuid } from 'uuid';
 import { WithdrawHelper } from './helper/helper.service';
 import { WithdrawResponse } from './dto/response.dto';
-import { UserWithdrawQueryDto } from 'src/admin/dto/get.dto';
 
 @Injectable()
 export class WithdrawService {
@@ -57,18 +57,5 @@ export class WithdrawService {
         id: true,
       },
     });
-  }
-
-  async findWithdrawByQuery(query:UserWithdrawQueryDto): Promise<WithdrawResponse[]> {
-    const withdraw = await this.prismaService.withdraw.findMany({
-      where: {
-        status: query?.status || undefined,
-      },
-      select: this.withdrawHelper.withdrawSelectCondition(),
-      orderBy: {
-        createdAt: 'desc',
-      }
-    });
-    return withdraw.map((withdraw) => this.withdrawHelper.toWithdrawResponse(withdraw));
   }
 }

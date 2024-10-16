@@ -15,5 +15,3 @@ export class UserDeactivationQueryDto {
   @IsBoolean()
   acceptTerm: boolean;
 }
-
-export class UserWithdrawQueryDto extends MesjidQueryDto { }
