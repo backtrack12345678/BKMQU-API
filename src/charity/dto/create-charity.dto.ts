@@ -30,6 +30,20 @@ export class CreateDonasiInfaqDto {
   amount: number;
 }
 
+export class CreateDonasi {
+  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
+  @Min(10000)
+  @Max(50000000)
+  @Transform(({ value }) => parseInt(value, 10))
+  amount: number;
+
+  @IsOptional()
+  @IsString()
+  pesan?: string;
+}
+
 export class CreateDonasiSedekahDto extends CreateDonasiInfaqDto { }
 
 export class CreateDonasiPenceramahDto extends CreateDonasiInfaqDto { }
