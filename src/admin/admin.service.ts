@@ -3,19 +3,16 @@ import { Request } from 'express';
 import { PrismaService } from '../common/prisma.service';
 import { getHost } from '../common/utils/utils';
 import { GetMesjidResponse, GetUserBankResponse, GetUserDeactivationResponse } from './dto/response.dto';
-import { MesjidQueryDto, UserBankQueryDto, UserDeactivationQueryDto, UserWithdrawQueryDto } from './dto/get.dto';
+import { MesjidQueryDto, UserBankQueryDto, UserDeactivationQueryDto } from './dto/get.dto';
 import { UpdateMesjidStatusParamDto } from './dto/update-admin.dto';
 import { MidtransService } from 'src/midtrans/midtrans.service';
 import { AdminHelper } from './helper/admin.helper';
-import { WithdrawService } from 'src/withdraw/withdraw.service';
-import { WithdrawResponse } from 'src/withdraw/dto/response.dto';
 
 @Injectable()
 export class AdminService {
   constructor(
     private prismaService: PrismaService,
     private midtansService: MidtransService,
-    private withdrawService: WithdrawService,
     private adminHelper: AdminHelper,
   ) { }
 
@@ -143,23 +140,12 @@ export class AdminService {
     });
   }
 
-  async findAllUserWithdraw(query: UserWithdrawQueryDto): Promise<WithdrawResponse[]> {
-    return await this.withdrawService.findWithdrawByQuery(query);
-  }
-
-  async acceptUserWithdraw(withdrawId: string) {
-    // add accet withdraw logic here for admin
-    // make it from withdraw service
-  }
-
   async updateUserBankStatus(userBankId: number): Promise<void> {
     try {
       const bankAccount = await this.adminHelper.getBankAccountData(userBankId);
       const verifiedData = await this.midtansService.verifyBankAccount(bankAccount.kode, bankAccount.noRekening);
       await this.adminHelper.updateUserBankData(userBankId, verifiedData)
     } catch (e) {
-      console.log(e);
-      
       if (e.message === 'Gagal Memverifikasi Akun Bank, Akun Bank Tidak Terdaftar') {
         await this.adminHelper.updateUserBankData(userBankId)
       }
