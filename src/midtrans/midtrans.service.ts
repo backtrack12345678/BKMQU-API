@@ -375,8 +375,6 @@ export class MidtransService {
       const result = await this.axiosService.irisInstance.get(`api/v1/account_validation?bank=${kode}&account=${noRekening}`);
       return result.data;
     } catch (e) {
-      console.log(e);
-      
       throw new BadRequestException('Gagal Memverifikasi Akun Bank, Akun Bank Tidak Terdaftar')
     }
   }
