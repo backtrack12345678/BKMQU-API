@@ -43,6 +43,7 @@ model User {
   User_Kafalah      User_Kafalah[]
   User_Deactivation User_Deactivation?
   Withdraw          Withdraw[]
+  Donasi            Donasi[]
 
   @@map("user")
 }
@@ -562,6 +563,7 @@ model Midtrans_Transactions {
   userSedekah     User_Sedekah?
   transaksiMesjid Transaksi_Mesjid?
   User_Kafalah    User_Kafalah?
+  Donasi          Donasi?
 
   @@map("midtrans_transactions")
 }
@@ -670,6 +672,19 @@ model User_Kafalah {
   pesan      String?               @db.Text
   createdAt  DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
   updatedAt  DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+}
+
+model Donasi {
+  id         Int                   @id @default(autoincrement())
+  userId     String                @map("user_id") @db.VarChar(150)
+  user       User                  @relation(fields: [userId], references: [id])
+  midtransId String                @unique @map("midtrans_id") @db.VarChar(150)
+  midtrans   Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
+  pesan      String?               @db.Text
+  createdAt  DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt  DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("donasi")
 }
 
 model Transaksi_Mesjid {

@@ -3,10 +3,12 @@ import { Request } from 'express';
 import { PrismaService } from '../common/prisma.service';
 import { getHost } from '../common/utils/utils';
 import { GetMesjidResponse, GetUserBankResponse, GetUserDeactivationResponse } from './dto/response.dto';
-import { MesjidQueryDto, UserBankQueryDto, UserDeactivationQueryDto } from './dto/get.dto';
-import { UpdateMesjidStatusParamDto } from './dto/update-admin.dto';
+import { MesjidQueryDto, UserBankQueryDto, UserDeactivationQueryDto, UserWithdrawQueryDto } from './dto/get.dto';
+import { UpdateMesjidStatusParamDto, WithdrawParamDto } from './dto/update-admin.dto';
 import { MidtransService } from 'src/midtrans/midtrans.service';
 import { AdminHelper } from './helper/admin.helper';
+import { WithdrawService } from 'src/withdraw/withdraw.service';
+import { WithdrawResponse } from 'src/withdraw/dto/response.dto';
 
 @Injectable()
 export class AdminService {
@@ -14,6 +16,7 @@ export class AdminService {
     private prismaService: PrismaService,
     private midtansService: MidtransService,
     private adminHelper: AdminHelper,
+    private withdrawService: WithdrawService,
   ) { }
 
   async findAllMesjid(
@@ -138,6 +141,14 @@ export class AdminService {
         id: true,
       }
     });
+  }
+
+  async findAllUserWithdraw(query: UserWithdrawQueryDto): Promise<WithdrawResponse[]> {
+    return await this.withdrawService.findWithdrawByQuery(query);
+  }
+
+  async acceptUserWithdraw(param: WithdrawParamDto) {
+    await this.withdrawService.acceptWithdraw(param.withdrawId, param.status);
   }
 
   async updateUserBankStatus(userBankId: number): Promise<void> {

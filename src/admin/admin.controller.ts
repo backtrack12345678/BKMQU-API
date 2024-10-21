@@ -1,17 +1,46 @@
 import { Controller, Get, Patch, Param, Query, Req, ParseIntPipe } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { UpdateMesjidStatusParamDto } from './dto/update-admin.dto';
+import { UpdateMesjidStatusParamDto, WithdrawParamDto } from './dto/update-admin.dto';
 import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
 import { Role } from '../common/role/role.enum';
-import { MesjidQueryDto, UserBankQueryDto, UserDeactivationQueryDto } from './dto/get.dto';
+import { MesjidQueryDto, UserBankQueryDto, UserDeactivationQueryDto, UserWithdrawQueryDto } from './dto/get.dto';
 import { Request } from 'express';
 import { WebResponse } from '../model/web.model';
 import { GetMesjidResponse, GetUserBankResponse, GetUserDeactivationResponse } from './dto/response.dto';
+import { WithdrawResponse } from 'src/withdraw/dto/response.dto';
 
 @Controller('/api/admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) { }
+
+
+  @Get('/withdraw')
+  @Auth()
+  @Roles(Role.ADMIN)
+  async findAllUserWithdraw(
+    @Query() query: UserWithdrawQueryDto,
+  ): Promise<WebResponse<WithdrawResponse[]>> {
+    const result = await this.adminService.findAllUserWithdraw(query);
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
+  @Patch('/withdraw/:withdrawId')
+  @Auth()
+  @Roles(Role.ADMIN)
+  async acceptUserWithdraw(
+    @Param() param: WithdrawParamDto,
+  ): Promise<WebResponse<boolean>> {
+    await this.adminService.acceptUserWithdraw(param);
+    return {
+      status: 'success',
+      message: 'Permintaan Withdraw Berhasil Diterima',
+      data: true,
+    };
+  }
 
   @Get('/mesjid')
   @Auth()

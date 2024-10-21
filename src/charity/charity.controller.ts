@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { CharityService } from './charity.service';
 import {
+  CreateDonasi,
   CreateDonasiInfaqDto,
   CreateDonasiPenceramahDto,
   CreateDonasiSedekahDto,
@@ -37,6 +38,21 @@ const allowedMimeTypes = {
 @Controller('/api/charity')
 export class CharityController {
   constructor(private readonly charityService: CharityService) { }
+
+  @Post('/donasi')
+  @Auth()
+  @HttpCode(201)
+  async createDonasi(
+    @Req() request: any,
+    @Body() payload: CreateDonasi,
+  ) {
+    await this.charityService.createDonasi(request.user, payload);
+    return {
+      status: 'success',
+      message: 'Donasi Berhasil',
+      data: true,
+    };
+  }
 
   @Post('/infaq')
   @Auth()

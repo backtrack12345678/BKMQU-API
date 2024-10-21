@@ -10,3 +10,14 @@ export class UpdateMesjidStatusParamDto {
   })
   status: string;
 }
+
+export class WithdrawParamDto {
+  @IsString()
+  withdrawId: string;
+
+  @IsString()
+  @IsIn(['DITERIMA', 'DITOLAK'], {
+    message: 'Status harus "DITERIMA" atau "DITOLAK"',
+  })
+  status: string;
+}

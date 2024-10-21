@@ -8,6 +8,7 @@ export class MesjidQueryDto {
 }
 
 export class UserBankQueryDto extends MesjidQueryDto { }
+export class UserWithdrawQueryDto extends MesjidQueryDto{}
 
 export class UserDeactivationQueryDto {
   @IsOptional()
