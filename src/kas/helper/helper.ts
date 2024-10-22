@@ -306,12 +306,18 @@ export class Helper {
   }
 
   async getKasArusTotal(mesjidUserId: string) {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const groupKasArus = await this.prismaService.kas_Arus.groupBy({
       by: ['tipe'],
       _sum: {
         jumlah: true,
       },
       where: {
+        createdAt: {
+          gte: firstDayOfMonth,
+          lte: now,
+        },
         kas: {
           mesjidUserId: mesjidUserId,
         },
