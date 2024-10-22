@@ -63,6 +63,12 @@ export class CreateInfaqMesjidDto {
   targetNominal: number;
 }
 
+export class UpdateInfaqMesjidDto {
+  @IsNotEmpty()
+  @IsString()
+  uraian: string;
+}
+
 export class CreatePenerimaSedekahDto {
   @IsNotEmpty()
   @IsNumber()

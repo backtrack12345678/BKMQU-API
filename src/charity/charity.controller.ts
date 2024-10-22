@@ -22,6 +22,7 @@ import {
   CreateInfaqMesjidDto,
   CreatePenerimaSedekahDto,
   CreateTransaksiEnchanceKasBank,
+  UpdateInfaqMesjidDto,
 } from './dto/create-charity.dto';
 import { UpdatePenerimaSedekahDto } from './dto/update-charity.dto';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
@@ -135,7 +136,7 @@ export class CharityController {
   @Roles(Role.MESJID)
   @HttpCode(201)
   @UseInterceptors(
-    FilesInterceptor('content',Infinity, {
+    FilesInterceptor('content', Infinity, {
       dest: './uploads/infaq',
     }),
   )
@@ -160,8 +161,46 @@ export class CharityController {
     );
     return {
       status: 'success',
-      message: 'Infaq Berhasil Dibuat',
+      message: 'Program Infaq Berhasil Dibuat',
       data: result,
+    };
+  }
+
+  @Patch('/mesjid/infaq/:infaqId')
+  @Auth()
+  @Roles(Role.MESJID)
+  async updateInfaqMesjid(
+    @Req() request: any,
+    @Param('infaqId') infaqId: string,
+    @Body() payload: UpdateInfaqMesjidDto,
+  ) {
+    const result = await this.charityService.updateInfaq(
+      request,
+      infaqId,
+      payload
+    );
+    return {
+      status: 'success',
+      message: 'Program Infaq Berhasil Diupdate',
+      data: result,
+    };
+  }
+
+  @Delete('/mesjid/infaq/:infaqId')
+  @Auth()
+  @Roles(Role.MESJID)
+  async removeInfaqMesjid(
+    @Req() request: any,
+    @Param('infaqId') infaqId: string,
+  ) {
+    await this.charityService.removeInfaq(
+      request,
+      infaqId
+    );
+    return {
+      status: 'success',
+      message: 'Program Infaq Berhasil Dihapus',
+      data: true,
     };
   }
 

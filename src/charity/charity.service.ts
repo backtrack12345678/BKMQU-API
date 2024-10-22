@@ -6,7 +6,7 @@ import {
   CreateDonasiSedekahDto,
   CreateInfaqMesjidDto,
   CreatePenerimaSedekahDto,
-  CreateTransaksiEnchanceKasBank,
+  UpdateInfaqMesjidDto,
 } from './dto/create-charity.dto';
 import { UpdatePenerimaSedekahDto } from './dto/update-charity.dto';
 import { PrismaService } from '../common/prisma.service';
@@ -16,12 +16,14 @@ import { getHost } from '../common/utils/utils';
 import { MidtransService } from '../midtrans/midtrans.service';
 import { GetKasQueryDto } from '../kas/dto/get.dto';
 import { Request } from 'express';
+import { FilesService } from 'src/files/files.service';
 
 @Injectable()
 export class CharityService {
   constructor(
     private prismaService: PrismaService,
     private midtransService: MidtransService,
+    private filesService: FilesService,
   ) { }
 
   async createDonasi(
@@ -257,6 +259,85 @@ export class CharityService {
       createdAt: infaq.createdAt,
       updatedAt: infaq.updatedAt,
     };
+  }
+
+  async updateInfaq(
+    request: any,
+    infaqId: string,
+    payload: UpdateInfaqMesjidDto,
+  ) {
+    const user: Auth = request.user;
+    await this.validateInfaqOwner(user.id, infaqId);
+    const infaq = await this.prismaService.infaq.update({
+      where: { id: infaqId },
+      data: { uraian: payload.uraian },
+      select: {
+        id: true,
+        uraian: true,
+        targetNominal: true,
+        createdAt: true,
+        updatedAt: true,
+        infaqMedia: {
+          select: {
+            nama: true,
+          }
+        },
+      },
+    });
+
+    return {
+      id: infaq.id,
+      uraian: infaq.uraian,
+      foto: infaq.infaqMedia.map((infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`),
+      targetNominal: parseInt(String(infaq.targetNominal)),
+      createdAt: infaq.createdAt,
+      updatedAt: infaq.updatedAt,
+    };
+  }
+
+  async removeInfaq(
+    request: any,
+    infaqId: string,
+  ) {
+    const user: Auth = request.user;
+    await this.validateInfaqOwner(user.id, infaqId);
+    const infaq = await this.prismaService.infaq.delete({
+      where: {
+        id: infaqId,
+      },
+      select: {
+        infaqMedia: {
+          select: {
+            path: true,
+          }
+        }
+      }
+    });
+    if (infaq.infaqMedia.length > 0) {
+      this.filesService.deleteMultiFiles(infaq.infaqMedia);
+    }
+  }
+
+  async validateInfaqOwner(mesjidUserId: string, infaqId: string) {
+    const result = await this.prismaService.infaq.findUnique({
+      where: {
+        id: infaqId,
+      },
+      select: {
+        id: true,
+        mesjidUserId: true,
+        saldoMasuk: true,
+      },
+    });
+    if (!result) {
+      throw new NotFoundException("Program Infaq Tidak Ditemukan");
+    }
+    if (result.mesjidUserId !== mesjidUserId) {
+      throw new HttpException("Program Infaq Ini Bukan Milik Anda", 403);
+    }
+    if (result.saldoMasuk > 0) {
+      throw new BadRequestException("Program Tidak Dapat Diupdate");
+    }
   }
 
   async createPenerimaSedekah(user: Auth, payload: CreatePenerimaSedekahDto) {
