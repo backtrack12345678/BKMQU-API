@@ -322,10 +322,10 @@ export class Helper {
         },
         createdAt: {
           gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          lte: new Date(),
         },
       },
     })
+
     const kasSaldo = await this.prismaService.kas.aggregate({
       where: {
         mesjidUserId: mesjidUserId,
