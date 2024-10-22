@@ -58,16 +58,51 @@ export class AdminHelper {
           select: {
             kode: true,
           }
+        },
+        user: {
+          select: {
+            detailUser: {
+              select: {
+                saldo: true,
+              }
+            }
+          }
         }
       }
     });
     if (userBank.status == "DITERIMA") {
       throw new BadRequestException("Akun Bank Sudah Diterima");
     }
+    if (userBank.user.detailUser.saldo < 300) {
+      throw new BadRequestException("Akun Saldo tidak Cukup");
+    }
+
     return {
       kode: userBank.bank.kode,
       noRekening: userBank.noRekening,
     };
+  }
+
+  async decreaseUserSaldo(userBankId: number) {
+    await this.prismaService.user_Bank.update({
+      where: {
+        id: userBankId,
+      },
+      data: {
+        user: {
+          update: {
+            detailUser: {
+              update: {
+                saldo: {
+                  decrement: 300,
+                }
+              }
+            }
+          }
+        }
+      },
+      select: { id: true },
+    });
   }
 
   async updateUserBankData(userBankId: number, verifiedData?) {
