@@ -3,6 +3,7 @@ export class KasResponse {
   nama: string;
   saldo: number;
   bank?: string;
+  noRekening?: string;
 }
 export class KuotaResponse {
   kuota: number;

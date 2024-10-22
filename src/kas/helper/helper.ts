@@ -38,6 +38,7 @@ export class Helper {
       nama: kas.nama,
       saldo: parseInt(kas.saldo),
       bank: kas.kasBank?.userBank.bank.nama || undefined,
+      noRekening: kas.kasBank?.userBank.noRekening || undefined,
     };
   }
 
@@ -87,6 +88,7 @@ export class Helper {
         select: {
           userBank: {
             select: {
+              noRekening: true,
               bank: {
                 select: {
                   nama: true,
