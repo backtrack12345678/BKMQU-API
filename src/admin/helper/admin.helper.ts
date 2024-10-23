@@ -59,22 +59,10 @@ export class AdminHelper {
             kode: true,
           }
         },
-        user: {
-          select: {
-            detailUser: {
-              select: {
-                saldo: true,
-              }
-            }
-          }
-        }
       }
     });
     if (userBank.status == "DITERIMA") {
       throw new BadRequestException("Akun Bank Sudah Diterima");
-    }
-    if (userBank.user.detailUser.saldo < 300) {
-      throw new BadRequestException("Akun Saldo tidak Cukup");
     }
 
     return {

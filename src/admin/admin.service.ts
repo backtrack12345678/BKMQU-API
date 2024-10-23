@@ -156,7 +156,6 @@ export class AdminService {
       const bankAccount = await this.adminHelper.getBankAccountData(userBankId);
       const verifiedData = await this.midtansService.verifyBankAccount(bankAccount.kode, bankAccount.noRekening);
       await this.adminHelper.updateUserBankData(userBankId, verifiedData);
-      await this.adminHelper.decreaseUserSaldo(userBankId);
     } catch (e) {
       if (e.message === 'Gagal Memverifikasi Akun Bank, Akun Bank Tidak Terdaftar') {
         await this.adminHelper.updateUserBankData(userBankId)
