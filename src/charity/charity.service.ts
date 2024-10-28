@@ -31,7 +31,7 @@ export class CharityService {
     payload: CreateDonasi,
   ) {
     const snap = await this.midtransService.createAdminMitransTransaction(6, payload.amount);
-    await this.prismaService.donasi.create({
+    const donasi = await this.prismaService.donasi.create({
       data: {
         userId: user.id,
         midtransId: snap.id,
@@ -39,8 +39,19 @@ export class CharityService {
       },
       select: {
         id: true,
+        pesan: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
+    return {
+      id: snap.id,
+      pesan: donasi.pesan,
+      amount: snap.amount,
+      redirectUrl: snap.redirectUrl,
+      createdAt: donasi.createdAt,
+      updatedAt: donasi.updatedAt,
+    }
   }
 
   async verifyInfaqId(infaqId: string, mesjidUserId?: string): Promise<void> {

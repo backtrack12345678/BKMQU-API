@@ -119,6 +119,8 @@ export class MidtransService {
         },
         select: {
           id: true,
+          amount:true,
+          redirectUrl:true,
         }
       });
     return midtransTransaction;

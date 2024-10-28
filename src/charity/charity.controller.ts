@@ -47,11 +47,11 @@ export class CharityController {
     @Req() request: any,
     @Body() payload: CreateDonasi,
   ) {
-    await this.charityService.createDonasi(request.user, payload);
+    const result = await this.charityService.createDonasi(request.user, payload);
     return {
       status: 'success',
       message: 'Donasi Berhasil',
-      data: true,
+      data: result,
     };
   }
 
