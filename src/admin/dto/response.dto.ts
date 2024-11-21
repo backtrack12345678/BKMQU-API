@@ -17,3 +17,14 @@ export class GetUserBankResponse {
   status: string;
   createdAt: Date;
 }
+export class GetUserDeactivationResponse {
+  userId: string;
+  nama: string;
+  email: string;
+  phone: string;
+  role: string;
+  alasan: string;
+  acceptTerm: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}

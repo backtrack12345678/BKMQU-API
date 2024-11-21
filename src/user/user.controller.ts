@@ -23,6 +23,7 @@ import {
   RegisterMesjidDto,
   RegisterPenceramahDto,
   RegisterPengurusDto,
+  UserDeactivationDto,
 } from './dto/register.dto';
 import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { Request, Response } from 'express';
@@ -494,8 +495,18 @@ export class UserController {
   }
 
   @Get('/:userId/infaq')
-  async getInfaq(@Req() request: Request, @Param('userId') userId: string) {
-    const result = await this.charityService.getInfaq(userId, request);
+  async getInfaqByUserId(@Req() request: Request, @Param('userId') userId: string) {
+    const result = await this.charityService.getInfaqByUserId(userId, request);
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
+  @Get('infaq')
+  @Auth()
+  async getInfaqByKecamatan(@Req() request: any) {
+    const result = await this.charityService.getInfaqByKecamatan(request);
     return {
       status: 'success',
       data: result,
@@ -506,6 +517,19 @@ export class UserController {
   @Auth()
   async getDonaturInfaq(@Req() request: any, @Query() query: GetKasQueryDto) {
     const result = await this.charityService.getDonaturInfaq(
+      request.user.id,
+      query,
+    );
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
+  @Get('kafalah/donatur')
+  @Auth()
+  async getDonaturKafalah(@Req() request: any, @Query() query: GetKasQueryDto) {
+    const result = await this.charityService.getDonaturKafalah(
       request.user.id,
       query,
     );
@@ -614,6 +638,20 @@ export class UserController {
     return {
       status: 'success',
       data: result
+    }
+  }
+
+  @Post('/deactivate')
+  @Auth()
+  async userDeactivate(
+    @Req() request: any,
+    @Body() payload: UserDeactivationDto,
+  ): Promise<WebResponse<Boolean>> {
+    await this.userService.userDeactivate(request.user, payload);
+    return {
+      status: 'success',
+      message: 'Akun Berhasil Dinonaktifkan',
+      data: true,
     }
   }
 }

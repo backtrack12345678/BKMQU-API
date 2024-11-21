@@ -14,33 +14,37 @@ datasource db {
 }
 
 model User {
-  id           String                  @id @db.VarChar(150)
-  phone        String                  @unique @db.VarChar(20)
-  password     String                  @db.VarChar(100)
-  email        String                  @unique @db.VarChar(200)
-  role         String                  @db.VarChar(10)
-  isVerified   Boolean                 @default(false) @map("is_verified")
-  acceptTerm   Boolean?                @map("accept_term")
-  createdAt    DateTime                @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt    DateTime?               @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
-  mesjid       Mesjid?
-  pengurus     Pengurus?
-  jamaah       Jamaah?
-  penceramah   Penceramah?
-  refreshToken Refresh_Token?
-  dokumenBukti Dokumen_Bukti?
-  detailUser   Detail_User?
-  posts        Posts[]
-  aktivitas    Aktivitas[]
-  recipient    Midtrans_Transactions[] @relation("recipient")
-  userInfaq    User_Infaq[]
-  userSedekah  User_Sedekah[]
-  kajian       Kajian[]
-  photo        Photo_User?
-  sampul       Sampul_User?
-  live         Live[]
-  userBank     User_Bank[]
-  podcast      Podcast[]
+  id                String                  @id @db.VarChar(150)
+  phone             String                  @unique @db.VarChar(20)
+  password          String                  @db.VarChar(100)
+  email             String                  @unique @db.VarChar(200)
+  role              String                  @db.VarChar(10)
+  isVerified        Boolean                 @default(false) @map("is_verified")
+  acceptTerm        Boolean?                @map("accept_term")
+  createdAt         DateTime                @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt         DateTime?               @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  mesjid            Mesjid?
+  pengurus          Pengurus?
+  jamaah            Jamaah?
+  penceramah        Penceramah?
+  refreshToken      Refresh_Token?
+  dokumenBukti      Dokumen_Bukti?
+  detailUser        Detail_User?
+  posts             Posts[]
+  aktivitas         Aktivitas[]
+  recipient         Midtrans_Transactions[] @relation("recipient")
+  userInfaq         User_Infaq[]
+  userSedekah       User_Sedekah[]
+  kajian            Kajian[]
+  photo             Photo_User?
+  sampul            Sampul_User?
+  live              Live[]
+  userBank          User_Bank[]
+  User_Kafalah      User_Kafalah[]
+  User_Deactivation User_Deactivation?
+  Withdraw          Withdraw[]
+  Donasi            Donasi[]
+  podcast           Podcast[]
 
   @@map("user")
 }
@@ -77,9 +81,10 @@ model User_Bank {
   accountId  String @default("-") @map("account_id") @db.VarChar(200)
   status     String @default("PENDING") @db.VarChar(10)
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime   @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime?  @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
   kasBank   Kas_Bank?
+  withdraw  Withdraw[]
 
   @@map("user_bank")
 }
@@ -599,6 +604,8 @@ model Midtrans_Transactions {
   userInfaq       User_Infaq?
   userSedekah     User_Sedekah?
   transaksiMesjid Transaksi_Mesjid?
+  User_Kafalah    User_Kafalah?
+  Donasi          Donasi?
 
   @@map("midtrans_transactions")
 }
@@ -610,13 +617,26 @@ model Infaq {
   uraian        String         @db.Text
   targetNominal BigInt         @map("target_nominal") @db.BigInt
   saldoMasuk    BigInt         @default(0) @map("saldo_masuk") @db.BigInt
-  foto          String         @db.VarChar(150)
-  path          String         @db.VarChar(150)
   createdAt     DateTime       @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
   updatedAt     DateTime?      @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
   infaqTarget   Infaq_Target[]
+  infaqMedia    Infaq_Media[]
 
   @@map("infaq")
+}
+
+model Infaq_Media {
+  id      Int     @id @default(autoincrement())
+  infaqId String  @map("infaq_id") @db.VarChar(150)
+  infaq   Infaq   @relation(fields: [infaqId], references: [id], onDelete: Cascade)
+  nama    String  @db.VarChar(150)
+  path    String  @db.VarChar(150)
+  type    String? @db.VarChar(100)
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("infaq_media")
 }
 
 model User_Infaq {
@@ -685,6 +705,30 @@ model User_Sedekah {
   @@map("user_sedekah")
 }
 
+model User_Kafalah {
+  id         Int                   @id @default(autoincrement())
+  userId     String                @map("user_id") @db.VarChar(150)
+  user       User                  @relation(fields: [userId], references: [id])
+  midtransId String                @unique @map("midtrans_id") @db.VarChar(150)
+  midtrans   Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
+  pesan      String?               @db.Text
+  createdAt  DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt  DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+}
+
+model Donasi {
+  id         Int                   @id @default(autoincrement())
+  userId     String                @map("user_id") @db.VarChar(150)
+  user       User                  @relation(fields: [userId], references: [id])
+  midtransId String                @unique @map("midtrans_id") @db.VarChar(150)
+  midtrans   Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
+  pesan      String?               @db.Text
+  createdAt  DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt  DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("donasi")
+}
+
 model Transaksi_Mesjid {
   id           Int                   @id @default(autoincrement())
   mesjidUserId String                @map("mesjid_user_id") @db.VarChar(150)
@@ -695,4 +739,37 @@ model Transaksi_Mesjid {
   updatedAt    DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
 
   @@map("transaksi_mesjid")
+}
+
+model User_Deactivation {
+  id         Int     @id @default(autoincrement())
+  userId     String  @unique @map("user_id") @db.VarChar(150)
+  user       User    @relation(fields: [userId], references: [id])
+  nama       String  @db.VarChar(200)
+  email      String  @db.VarChar(100)
+  phone      String  @unique @db.VarChar(20)
+  role       String  @db.VarChar(10)
+  alasan     String  @db.Text
+  acceptTerm Boolean @default(false) @map("accept_term")
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("user_deactivation")
+}
+
+model Withdraw {
+  id         String    @id @db.VarChar(150)
+  userId     String    @map("user_id") @db.VarChar(150)
+  user       User      @relation(fields: [userId], references: [id])
+  userBankId Int       @map("user_bank_id")
+  userBank   User_Bank @relation(fields: [userBankId], references: [id], onDelete: Cascade)
+  jumlah     BigInt    @db.BigInt
+  status     String    @default("PENDING") @db.VarChar(10)
+  pesan      String?   @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("withdraw")
 }

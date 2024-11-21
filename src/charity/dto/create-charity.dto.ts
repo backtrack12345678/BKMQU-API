@@ -10,7 +10,7 @@ import {
   MaxLength,
 } from 'class-validator';
 
-export class CreateCharityDto {}
+export class CreateCharityDto { }
 
 export class CreateDonasiInfaqDto {
   @IsOptional()
@@ -30,7 +30,25 @@ export class CreateDonasiInfaqDto {
   amount: number;
 }
 
-export class CreateDonasiSedekahDto extends CreateDonasiInfaqDto {}
+export class CreateDonasi {
+  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
+  @Min(10000)
+  @Max(50000000)
+  @Transform(({ value }) => parseInt(value, 10))
+  amount: number;
+
+  @IsOptional()
+  @IsString()
+  pesan?: string;
+}
+
+export class CreateDonasiSedekahDto extends CreateDonasiInfaqDto { }
+
+export class CreateDonasiPenceramahDto extends CreateDonasiInfaqDto { }
+
+export class CreateTransaksiEnchanceKasBank extends CreateDonasiInfaqDto { }
 
 export class CreateInfaqMesjidDto {
   @IsNotEmpty()
@@ -43,6 +61,12 @@ export class CreateInfaqMesjidDto {
   @Min(1)
   @Transform(({ value }) => parseInt(value, 10))
   targetNominal: number;
+}
+
+export class UpdateInfaqMesjidDto {
+  @IsNotEmpty()
+  @IsString()
+  uraian: string;
 }
 
 export class CreatePenerimaSedekahDto {

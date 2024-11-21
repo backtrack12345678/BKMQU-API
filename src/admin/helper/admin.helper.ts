@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma.service';
 import { GetUserBankResponse } from '../dto/response.dto';
 
@@ -58,16 +58,39 @@ export class AdminHelper {
           select: {
             kode: true,
           }
-        }
+        },
       }
     });
     if (userBank.status == "DITERIMA") {
       throw new BadRequestException("Akun Bank Sudah Diterima");
     }
+
     return {
       kode: userBank.bank.kode,
       noRekening: userBank.noRekening,
     };
+  }
+
+  async decreaseUserSaldo(userBankId: number) {
+    await this.prismaService.user_Bank.update({
+      where: {
+        id: userBankId,
+      },
+      data: {
+        user: {
+          update: {
+            detailUser: {
+              update: {
+                saldo: {
+                  decrement: 300,
+                }
+              }
+            }
+          }
+        }
+      },
+      select: { id: true },
+    });
   }
 
   async updateUserBankData(userBankId: number, verifiedData?) {
@@ -86,4 +109,20 @@ export class AdminHelper {
     });
   }
 
+  async checkUserDeactivation(userId: string) {
+    const result = await this.prismaService.user_Deactivation.findUnique({
+      where: {
+        userId: userId,
+      },
+      select: {
+        acceptTerm: true,
+      },
+    })
+    if (!result) {
+      throw new NotFoundException("User Tidak Ditemukan");
+    }
+    if (result.acceptTerm == true) {
+      throw new BadRequestException("User Sudah Dinonaktifkan");
+    }
+  }
 }

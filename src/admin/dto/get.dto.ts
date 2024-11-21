@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class MesjidQueryDto {
   @IsOptional()
@@ -8,3 +8,11 @@ export class MesjidQueryDto {
 }
 
 export class UserBankQueryDto extends MesjidQueryDto { }
+export class UserWithdrawQueryDto extends MesjidQueryDto{}
+
+export class UserDeactivationQueryDto {
+  @IsOptional()
+  @IsNotEmpty()
+  @IsBoolean()
+  acceptTerm: boolean;
+}

@@ -1,9 +1,12 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import {
+  CreateDonasi,
   CreateDonasiInfaqDto,
+  CreateDonasiPenceramahDto,
   CreateDonasiSedekahDto,
   CreateInfaqMesjidDto,
   CreatePenerimaSedekahDto,
+  UpdateInfaqMesjidDto,
 } from './dto/create-charity.dto';
 import { UpdatePenerimaSedekahDto } from './dto/update-charity.dto';
 import { PrismaService } from '../common/prisma.service';
@@ -13,13 +16,43 @@ import { getHost } from '../common/utils/utils';
 import { MidtransService } from '../midtrans/midtrans.service';
 import { GetKasQueryDto } from '../kas/dto/get.dto';
 import { Request } from 'express';
+import { FilesService } from 'src/files/files.service';
 
 @Injectable()
 export class CharityService {
   constructor(
     private prismaService: PrismaService,
     private midtransService: MidtransService,
-  ) {}
+    private filesService: FilesService,
+  ) { }
+
+  async createDonasi(
+    user: Auth,
+    payload: CreateDonasi,
+  ) {
+    const snap = await this.midtransService.createAdminMitransTransaction(6, payload.amount);
+    const donasi = await this.prismaService.donasi.create({
+      data: {
+        userId: user.id,
+        midtransId: snap.id,
+        pesan: payload.pesan,
+      },
+      select: {
+        id: true,
+        pesan: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    return {
+      id: snap.id,
+      pesan: donasi.pesan,
+      amount: snap.amount,
+      redirectUrl: snap.redirectUrl,
+      createdAt: donasi.createdAt,
+      updatedAt: donasi.updatedAt,
+    }
+  }
 
   async verifyInfaqId(infaqId: string, mesjidUserId?: string): Promise<void> {
     const infaq = await this.prismaService.infaq.findUnique({
@@ -123,6 +156,33 @@ export class CharityService {
     };
   }
 
+  async createDonasiKafalah(
+    user: Auth,
+    payload: CreateDonasiPenceramahDto,
+  ) {
+    const snap = await this.midtransService.createMidtransTransaction(4, payload);
+    const userKafalah = await this.prismaService.user_Kafalah.create({
+      data: {
+        midtransId: snap.id,
+        userId: user.id,
+        pesan: payload.pesan,
+      },
+      select: {
+        pesan: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    return {
+      id: snap.id,
+      pesan: userKafalah.pesan,
+      amount: snap.amount,
+      redirectUrl: snap.redirectUrl,
+      createdAt: userKafalah.createdAt,
+      updatedAt: userKafalah.updatedAt,
+    }
+  }
+
   async createDonasiSedekah(
     user: Auth,
     payload: CreateDonasiSedekahDto,
@@ -168,36 +228,127 @@ export class CharityService {
   async createInfaq(
     request: any,
     payload: CreateInfaqMesjidDto,
-    content: Express.Multer.File,
+    content: Express.Multer.File[],
   ) {
+    if (!content || content.length < 1) {
+      throw new BadRequestException(['Photos Cannot Be Empty']);
+    }
     const user: Auth = request.user;
     const infaq = await this.prismaService.infaq.create({
       data: {
         id: `infaq-${uuid()}`,
         mesjidUserId: user.id,
         uraian: payload.uraian,
-        foto: content.filename,
-        path: content.path,
         targetNominal: payload.targetNominal,
+        infaqMedia: {
+          create: content.map((c) => ({
+            nama: c.filename,
+            path: c.path,
+            type: c.mimetype,
+          })),
+        }
       },
       select: {
         id: true,
         uraian: true,
-        foto: true,
         targetNominal: true,
         createdAt: true,
         updatedAt: true,
+        infaqMedia: {
+          select: {
+            nama: true,
+          }
+        },
       },
     });
 
     return {
       id: infaq.id,
       uraian: infaq.uraian,
-      foto: `${getHost(request)}/api/files/infaq/${infaq.foto}`,
+      foto: infaq.infaqMedia.map((infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`),
       targetNominal: parseInt(String(infaq.targetNominal)),
       createdAt: infaq.createdAt,
       updatedAt: infaq.updatedAt,
     };
+  }
+
+  async updateInfaq(
+    request: any,
+    infaqId: string,
+    payload: UpdateInfaqMesjidDto,
+  ) {
+    const user: Auth = request.user;
+    await this.validateInfaqOwner(user.id, infaqId);
+    const infaq = await this.prismaService.infaq.update({
+      where: { id: infaqId },
+      data: { uraian: payload.uraian },
+      select: {
+        id: true,
+        uraian: true,
+        targetNominal: true,
+        createdAt: true,
+        updatedAt: true,
+        infaqMedia: {
+          select: {
+            nama: true,
+          }
+        },
+      },
+    });
+
+    return {
+      id: infaq.id,
+      uraian: infaq.uraian,
+      foto: infaq.infaqMedia.map((infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`),
+      targetNominal: parseInt(String(infaq.targetNominal)),
+      createdAt: infaq.createdAt,
+      updatedAt: infaq.updatedAt,
+    };
+  }
+
+  async removeInfaq(
+    request: any,
+    infaqId: string,
+  ) {
+    const user: Auth = request.user;
+    await this.validateInfaqOwner(user.id, infaqId);
+    const infaq = await this.prismaService.infaq.delete({
+      where: {
+        id: infaqId,
+      },
+      select: {
+        infaqMedia: {
+          select: {
+            path: true,
+          }
+        }
+      }
+    });
+    if (infaq.infaqMedia.length > 0) {
+      this.filesService.deleteMultiFiles(infaq.infaqMedia);
+    }
+  }
+
+  async validateInfaqOwner(mesjidUserId: string, infaqId: string) {
+    const result = await this.prismaService.infaq.findUnique({
+      where: {
+        id: infaqId,
+      },
+      select: {
+        id: true,
+        mesjidUserId: true,
+        saldoMasuk: true,
+      },
+    });
+    if (!result) {
+      throw new NotFoundException("Program Infaq Tidak Ditemukan");
+    }
+    if (result.mesjidUserId !== mesjidUserId) {
+      throw new HttpException("Program Infaq Ini Bukan Milik Anda", 403);
+    }
+    if (result.saldoMasuk > 0) {
+      throw new BadRequestException("Program Tidak Dapat Diupdate");
+    }
   }
 
   async createPenerimaSedekah(user: Auth, payload: CreatePenerimaSedekahDto) {
@@ -290,6 +441,21 @@ export class CharityService {
     }
   }
 
+  // async createKasBankEnchance(user: Auth, payload: CreateTransaksiEnchanceKasBank) {
+  //   // recipient id to admin (add new table that only admin can access)
+  //   const snap = await this.midtransService.createMidtransTransaction(5, payload);
+  //   const userKafalah = await this.prismaService.user_Kafalah.create({
+  //     data: {
+  //       midtransId: snap.id,
+  //       userId: user.id,
+  //       pesan: payload.pesan,
+  //     },
+  //     select: {
+  //       id: true,
+  //     },
+  //   });
+  // }
+
   async getTotalMesjidTransaction(userId: string): Promise<number> {
     const midtransTransaction =
       await this.prismaService.midtrans_Transactions.groupBy({
@@ -348,7 +514,7 @@ export class CharityService {
     }));
   }
 
-  async getInfaq(mesjidUserId: string, request: Request) {
+  async getInfaqByUserId(mesjidUserId: string, request: Request) {
     const result = await this.prismaService.infaq.findMany({
       where: {
         mesjidUserId,
@@ -359,11 +525,15 @@ export class CharityService {
       select: {
         id: true,
         uraian: true,
-        foto: true,
         targetNominal: true,
         saldoMasuk: true,
         createdAt: true,
         updatedAt: true,
+        infaqMedia: {
+          select: {
+            nama: true,
+          }
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -372,7 +542,60 @@ export class CharityService {
     return result.map((infaq) => ({
       id: infaq.id,
       uraian: infaq.uraian,
-      foto: `${getHost(request)}/api/files/infaq/${infaq.foto}`,
+      foto: infaq.infaqMedia.map((infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`),
+      targetNominal: Number(infaq.targetNominal),
+      saldoMasuk: Number(infaq.saldoMasuk),
+      createdAt: infaq.createdAt,
+      updatedAt: infaq.updatedAt,
+    }));
+  }
+
+  async getInfaqByKecamatan(request: any) {
+    const userId = request.user.id;
+    const kotaKabId = await this.prismaService.detail_User.findUnique({
+      where: {
+        userId: userId,
+      },
+      select: {
+        kotaKabId: true,
+      }
+    });
+    const result = await this.prismaService.infaq.findMany({
+      where: {
+        mesjid: {
+          user: {
+            detailUser: {
+              kotaKabId: kotaKabId.kotaKabId,
+            },
+          },
+        },
+        createdAt: {
+          gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+        },
+      },
+      select: {
+        mesjidUserId: true,
+        id: true,
+        uraian: true,
+        targetNominal: true,
+        saldoMasuk: true,
+        createdAt: true,
+        updatedAt: true,
+        infaqMedia: {
+          select: {
+            nama: true,
+          }
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    return result.map((infaq) => ({
+      id: infaq.id,
+      mesjidUserId: infaq.mesjidUserId,
+      uraian: infaq.uraian,
+      foto: infaq.infaqMedia.map((infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`),
       targetNominal: Number(infaq.targetNominal),
       saldoMasuk: Number(infaq.saldoMasuk),
       createdAt: infaq.createdAt,
@@ -381,6 +604,53 @@ export class CharityService {
   }
 
   async getDonaturInfaq(userId: string, query: GetKasQueryDto) {
+    const result = await this.prismaService.user_Infaq.findMany({
+      where: {
+        userId,
+      },
+      take: query.takeCount,
+      skip: query.page ? (query.page - 1) * query.takeCount : undefined,
+      select: {
+        pesan: true,
+        midtrans: {
+          select: {
+            id: true,
+            amount: true,
+            netAmount: true,
+            isInserted: true,
+            redirectUrl: true,
+            createdAt: true,
+            updatedAt: true,
+            recipient: {
+              select: {
+                detailUser: {
+                  select: {
+                    nama: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    return result.map((donatur) => ({
+      id: donatur.midtrans.id,
+      pesan: donatur.pesan,
+      amount: donatur.midtrans.amount,
+      netAmount: donatur.midtrans.netAmount,
+      paidStatus: donatur.midtrans.isInserted,
+      recipient: donatur.midtrans.recipient.detailUser.nama,
+      redirectUrl: donatur.midtrans.redirectUrl,
+      createdAt: donatur.midtrans.createdAt,
+      updatedAt: donatur.midtrans.updatedAt,
+    }));
+  }
+
+  async getDonaturKafalah(userId: string, query: GetKasQueryDto) {
     const result = await this.prismaService.user_Infaq.findMany({
       where: {
         userId,

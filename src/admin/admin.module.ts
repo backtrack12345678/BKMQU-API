@@ -3,9 +3,10 @@ import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
 import { MidtransModule } from 'src/midtrans/midtrans.module';
 import { AdminHelper } from './helper/admin.helper';
+import { WithdrawModule } from 'src/withdraw/withdraw.module';
 
 @Module({
-  imports: [MidtransModule],
+  imports: [MidtransModule, WithdrawModule],
   controllers: [AdminController],
   providers: [AdminService, AdminHelper],
 })

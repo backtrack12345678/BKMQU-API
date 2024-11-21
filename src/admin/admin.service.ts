@@ -2,11 +2,13 @@ import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { PrismaService } from '../common/prisma.service';
 import { getHost } from '../common/utils/utils';
-import { GetMesjidResponse, GetUserBankResponse } from './dto/response.dto';
-import { MesjidQueryDto, UserBankQueryDto } from './dto/get.dto';
-import { UpdateMesjidStatusParamDto } from './dto/update-admin.dto';
+import { GetMesjidResponse, GetUserBankResponse, GetUserDeactivationResponse } from './dto/response.dto';
+import { MesjidQueryDto, UserBankQueryDto, UserDeactivationQueryDto, UserWithdrawQueryDto } from './dto/get.dto';
+import { UpdateMesjidStatusParamDto, WithdrawParamDto } from './dto/update-admin.dto';
 import { MidtransService } from 'src/midtrans/midtrans.service';
 import { AdminHelper } from './helper/admin.helper';
+import { WithdrawService } from 'src/withdraw/withdraw.service';
+import { WithdrawResponse } from 'src/withdraw/dto/response.dto';
 
 @Injectable()
 export class AdminService {
@@ -14,6 +16,7 @@ export class AdminService {
     private prismaService: PrismaService,
     private midtansService: MidtransService,
     private adminHelper: AdminHelper,
+    private withdrawService: WithdrawService,
   ) { }
 
   async findAllMesjid(
@@ -104,11 +107,55 @@ export class AdminService {
     return userBank.map((userBank) => this.adminHelper.toUserBankResponse(userBank));
   }
 
+  async findAllUserDeactivation(query: UserDeactivationQueryDto): Promise<GetUserDeactivationResponse[]> {
+    const userDeactivation = await this.prismaService.user_Deactivation.findMany({
+      where: {
+        ...(query.acceptTerm && {
+          acceptTerm: query.acceptTerm,
+        }),
+      }
+    });
+    return userDeactivation;
+  }
+
+  async acceptUserDeactivation(userId: string) {
+    await this.prismaService.user_Deactivation.update({
+      where: {
+        userId: userId,
+      },
+      data: {
+        user: {
+          update: {
+            acceptTerm: false,
+            isVerified: false,
+            detailUser: {
+              update: {
+                status: "DITOLAK",
+              }
+            }
+          },
+        },
+        acceptTerm: true,
+      },
+      select: {
+        id: true,
+      }
+    });
+  }
+
+  async findAllUserWithdraw(query: UserWithdrawQueryDto): Promise<WithdrawResponse[]> {
+    return await this.withdrawService.findWithdrawByQuery(query);
+  }
+
+  async acceptUserWithdraw(param: WithdrawParamDto) {
+    await this.withdrawService.acceptWithdraw(param.withdrawId, param.status);
+  }
+
   async updateUserBankStatus(userBankId: number): Promise<void> {
     try {
       const bankAccount = await this.adminHelper.getBankAccountData(userBankId);
       const verifiedData = await this.midtansService.verifyBankAccount(bankAccount.kode, bankAccount.noRekening);
-      await this.adminHelper.updateUserBankData(userBankId, verifiedData)
+      await this.adminHelper.updateUserBankData(userBankId, verifiedData);
     } catch (e) {
       if (e.message === 'Gagal Memverifikasi Akun Bank, Akun Bank Tidak Terdaftar') {
         await this.adminHelper.updateUserBankData(userBankId)

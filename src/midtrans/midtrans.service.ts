@@ -21,7 +21,7 @@ export class MidtransService {
   ) { }
 
   public snap = new Snap({
-    isProduction: false,
+    isProduction: true,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY,
   });
@@ -105,6 +105,42 @@ export class MidtransService {
     return midtransTransaction;
   }
 
+  async createAdminTransactionToDb(orderId, categoryId, amount) {
+    const transaction = await this.createSnap(orderId, amount);
+    const adminId = await this.findAdminId();
+    const midtransTransaction =
+      await this.prismaService.midtrans_Transactions.create({
+        data: {
+          id: orderId,
+          amount: amount,
+          recipientId: adminId,
+          redirectUrl: transaction.redirect_url,
+          categoryId,
+        },
+        select: {
+          id: true,
+          amount:true,
+          redirectUrl:true,
+        }
+      });
+    return midtransTransaction;
+  }
+
+  async findAdminId() {
+    const adminId = await this.prismaService.user.findFirst({
+      where: {
+        id: { contains: "admin" },
+      },
+      select: { id: true }
+    });
+
+    if (!adminId) {
+      throw new NotFoundException("Id Admin Tidak Ditemukan");
+    }
+
+    return adminId.id;
+  }
+
   verifySignature(payload: UpdateWebhookDto) {
     const hash = crypto
       .createHash('sha512')
@@ -186,7 +222,43 @@ export class MidtransService {
     return Math.floor(grossAmount - (fee + fee * (11 / 100)));
   }
 
-  async addSaldo(paymentData, netAmount: number) {
+  async addSaldo(paymentData, netAmount: number, role: string) {
+    if (role === "admin") {
+      await this.addAdminSaldo(paymentData, netAmount);
+    }
+    else {
+      await this.addUserSaldo(paymentData, netAmount);
+    }
+  }
+
+  async addAdminSaldo(paymentData, netAmount: number) {
+    await this.prismaService.midtrans_Transactions.update({
+      where: {
+        id: paymentData.id,
+        recipientId: paymentData.recipientId
+      },
+      data: {
+        isInserted: true,
+        netAmount,
+      },
+      select: { id: true }
+    });
+
+    await this.prismaService.detail_User.updateMany({
+      where: {
+        userId: {
+          contains: "admin",
+        },
+      },
+      data: {
+        saldo: {
+          increment: netAmount,
+        }
+      },
+    });
+  }
+
+  async addUserSaldo(paymentData: any, netAmount: number) {
     const result = await this.prismaService.midtrans_Transactions.update({
       where: {
         id: paymentData.id,
@@ -290,7 +362,12 @@ export class MidtransService {
   async createMidtransTransaction(categoryId, payload) {
     const orderId = `payment-${uuid()}`;
     await this.validateUserId(payload.recipientId);
-    return this.createTransactiontoDb(orderId, categoryId, payload);
+    return await this.createTransactiontoDb(orderId, categoryId, payload);
+  }
+
+  async createAdminMitransTransaction(categoryId: number, amount: number) {
+    const orderId = `payment-${uuid()}`;
+    return await this.createAdminTransactionToDb(orderId, categoryId, amount);
   }
 
   async deleteMidtransTransaction(orderId: string): Promise<void> {
@@ -352,7 +429,8 @@ export class MidtransService {
       payload.payment_type,
       Number(payload.gross_amount),
     );
-    await this.addSaldo(paymentData, netAmount);
+    await this.addSaldo(paymentData, netAmount, role);
+
     if (role === 'mesjid') {
       await this.createTransaksiMesjid(paymentData);
     }

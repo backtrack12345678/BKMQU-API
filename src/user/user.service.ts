@@ -12,6 +12,7 @@ import {
   RegisterMesjidDto,
   RegisterPenceramahDto,
   RegisterPengurusDto,
+  UserDeactivationDto,
 } from './dto/register.dto';
 import { OtpService } from '../otp/otp.service';
 import { LoginRequest, LoginResponse } from './dto/login.dto';
@@ -137,10 +138,13 @@ export class UserService {
   }
 
   async login(payload: LoginRequest): Promise<LoginResponse> {
-    const user: User = await this.prismaService.user.findUnique({
+    const user = await this.prismaService.user.findUnique({
       where: {
         phone: payload.phone,
       },
+      include: {
+        detailUser: true
+      }
     });
 
     if (!user) {
@@ -156,9 +160,10 @@ export class UserService {
       throw new HttpException('Kredensial Tidak Valid', 401);
     }
 
-    if (!user.isVerified) {
+    if (!user.isVerified || user.detailUser.status !== "DITERIMA") {
       throw new HttpException('Pengguna Belum Terverifikasi', 401);
     }
+
     const accessToken: string = await this.tokenManager.generateToken(
       user,
       'accessToken',
@@ -237,7 +242,15 @@ export class UserService {
     request: any,
   ): Promise<UserResponse> {
     const userData: UserResult = await this.prismaService.user.findUnique({
-      where: { id: user.id },
+      where: {
+        id: user.id,
+        ...(type === 'public' && {
+          isVerified: true,
+          detailUser: {
+            status: "DITERIMA",
+          }
+        })
+      },
       select: this.userHelper.userSelectCondition(user.role),
     });
 
@@ -394,5 +407,21 @@ export class UserService {
       select: this.userHelper.userbankSelectCondition(),
     });
     return userBank.map((userBank) => this.userHelper.toUserBankResponse(userBank));
+  }
+
+  async userDeactivate(user: Auth, payload: UserDeactivationDto) {
+    await this.userHelper.checkUserDeactivation(user.id);
+    const result = await this.prismaService.user_Deactivation.create({
+      data: {
+        userId: user.id,
+        ...payload,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (!result) {
+      throw new HttpException('Gagal Mengajukan Permohonan Untuk Menonaktifkan Akun', 500);
+    }
   }
 }

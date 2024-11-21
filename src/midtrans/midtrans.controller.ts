@@ -56,6 +56,8 @@ export class MidtransController {
   async updateSaldoWebHook(
     @Body() payload: UpdateWebhookDto,
   ): Promise<WebResponse<true>> {
+    console.log(payload);
+
     await this.midtransService.updateSaldoWebhook(payload);
     return {
       status: 'success',

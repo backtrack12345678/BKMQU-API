@@ -11,16 +11,21 @@ import {
   UploadedFile,
   HttpCode,
   ParseFilePipeBuilder,
+  UploadedFiles,
 } from '@nestjs/common';
 import { CharityService } from './charity.service';
 import {
+  CreateDonasi,
   CreateDonasiInfaqDto,
+  CreateDonasiPenceramahDto,
   CreateDonasiSedekahDto,
   CreateInfaqMesjidDto,
   CreatePenerimaSedekahDto,
+  CreateTransaksiEnchanceKasBank,
+  UpdateInfaqMesjidDto,
 } from './dto/create-charity.dto';
 import { UpdatePenerimaSedekahDto } from './dto/update-charity.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { WebResponse } from '../model/web.model';
 import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
@@ -33,7 +38,22 @@ const allowedMimeTypes = {
 
 @Controller('/api/charity')
 export class CharityController {
-  constructor(private readonly charityService: CharityService) {}
+  constructor(private readonly charityService: CharityService) { }
+
+  @Post('/donasi')
+  @Auth()
+  @HttpCode(201)
+  async createDonasi(
+    @Req() request: any,
+    @Body() payload: CreateDonasi,
+  ) {
+    const result = await this.charityService.createDonasi(request.user, payload);
+    return {
+      status: 'success',
+      message: 'Donasi Berhasil',
+      data: result,
+    };
+  }
 
   @Post('/infaq')
   @Auth()
@@ -51,6 +71,24 @@ export class CharityController {
       message: 'Donasi Infaq Berhasil Dibuat',
       data: result,
     };
+  }
+
+  @Post('/kafalah')
+  @Auth()
+  @HttpCode(201)
+  async createDonasiKafalah(
+    @Req() request: any,
+    @Body() payload: CreateDonasiPenceramahDto,
+  ) {
+    const result = await this.charityService.createDonasiKafalah(
+      request.user,
+      payload,
+    );
+    return {
+      status: 'success',
+      message: 'Donasi Kafalah Berhasil Dibuat',
+      data: result,
+    }
   }
 
   @Post('/infaq/:infaqId')
@@ -98,14 +136,14 @@ export class CharityController {
   @Roles(Role.MESJID)
   @HttpCode(201)
   @UseInterceptors(
-    FileInterceptor('content', {
+    FilesInterceptor('content', Infinity, {
       dest: './uploads/infaq',
     }),
   )
   async createInfaqMesjid(
     @Req() request: any,
     @Body() payload: CreateInfaqMesjidDto,
-    @UploadedFile(
+    @UploadedFiles(
       new ParseFilePipeBuilder()
         .addValidator(
           new FileTypesValidator({
@@ -114,7 +152,7 @@ export class CharityController {
         )
         .build(),
     )
-    content: Express.Multer.File,
+    content: Express.Multer.File[],
   ) {
     const result = await this.charityService.createInfaq(
       request,
@@ -123,8 +161,46 @@ export class CharityController {
     );
     return {
       status: 'success',
-      message: 'Infaq Berhasil Dibuat',
+      message: 'Program Infaq Berhasil Dibuat',
       data: result,
+    };
+  }
+
+  @Patch('/mesjid/infaq/:infaqId')
+  @Auth()
+  @Roles(Role.MESJID)
+  async updateInfaqMesjid(
+    @Req() request: any,
+    @Param('infaqId') infaqId: string,
+    @Body() payload: UpdateInfaqMesjidDto,
+  ) {
+    const result = await this.charityService.updateInfaq(
+      request,
+      infaqId,
+      payload
+    );
+    return {
+      status: 'success',
+      message: 'Program Infaq Berhasil Diupdate',
+      data: result,
+    };
+  }
+
+  @Delete('/mesjid/infaq/:infaqId')
+  @Auth()
+  @Roles(Role.MESJID)
+  async removeInfaqMesjid(
+    @Req() request: any,
+    @Param('infaqId') infaqId: string,
+  ) {
+    await this.charityService.removeInfaq(
+      request,
+      infaqId
+    );
+    return {
+      status: 'success',
+      message: 'Program Infaq Berhasil Dihapus',
+      data: true,
     };
   }
 
@@ -181,4 +257,21 @@ export class CharityController {
       data: true,
     };
   }
+
+
+  // @Post('/mesjid/kas/enchance')
+  // @Auth()
+  // @Roles(Role.MESJID)
+  // @HttpCode(201)
+  // async createKasBankEnchance(
+  //   @Req() request: any,
+  //   @Body() payload: CreateTransaksiEnchanceKasBank,
+  // ): Promise<WebResponse<true>> {
+  //   await this.charityService.createKasBankEnchance(request.user, payload);
+  //   return {
+  //     status: 'success',
+  //     message: 'Transaksi Penaikan Limit Kas Bank Berhasil',
+  //     data: true,
+  //   };
+  // }
 }

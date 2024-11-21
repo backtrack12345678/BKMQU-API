@@ -15,6 +15,7 @@ import { MidtransModule } from './midtrans/midtrans.module';
 import { KajianModule } from './kajian/kajian.module';
 import { CharityModule } from './charity/charity.module';
 import { LiveModule } from './live/live.module';
+import { WithdrawModule } from './withdraw/withdraw.module';
 import { PodcastModule } from './podcast/podcast.module';
 
 @Module({
@@ -33,6 +34,7 @@ import { PodcastModule } from './podcast/podcast.module';
     KajianModule,
     CharityModule,
     LiveModule,
+    WithdrawModule,
     PodcastModule,
   ],
   controllers: [AppController],
