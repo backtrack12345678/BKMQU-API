@@ -47,7 +47,7 @@ export class MesjidService {
           {
             user: {
               detailUser: {
-                status: query.status,
+                status: query.status === 'PENDING' ? 'DIPENDING' : query.status,
               },
             },
           },

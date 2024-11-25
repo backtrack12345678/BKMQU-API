@@ -39,6 +39,7 @@ export async function sendOTPToWA(
   );
 
   if (result.data.success === false) {
+    console.log(result.data.message);
     throw new HttpException('OTP Gagal Dikirim', 500);
   }
 
