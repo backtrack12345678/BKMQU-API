@@ -110,7 +110,7 @@ export class MesjidService {
         status: param.status,
         user: {
           update: {
-            isVerified: status === 'DITERIMA',
+            isVerified: param.status === 'DITERIMA',
           },
         },
       },
