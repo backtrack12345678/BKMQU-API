@@ -54,6 +54,35 @@ export class CharityService {
     }
   }
 
+  async getAllDonasi(user: Auth) {
+    const donasi = await this.prismaService.donasi.findMany({
+      where: {
+        userId: user.id,
+      },
+      select: {
+        id: true,
+        pesan: true,
+        createdAt: true,
+        updatedAt: true,
+        midtrans: {
+          select: {
+            id: true,
+            netAmount: true,
+            redirectUrl: true,
+          },
+        },
+      }
+    });
+    return donasi.map((donasi) => ({
+      id: donasi.id,
+      pesan: donasi.pesan,
+      amount: donasi.midtrans.netAmount,
+      redirectUrl: donasi.midtrans.redirectUrl,
+      createdAt: donasi.createdAt,
+      updatedAt: donasi.updatedAt,
+    }));
+  }
+
   async verifyInfaqId(infaqId: string, mesjidUserId?: string): Promise<void> {
     const infaq = await this.prismaService.infaq.findUnique({
       where: {

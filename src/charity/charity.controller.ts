@@ -12,6 +12,7 @@ import {
   HttpCode,
   ParseFilePipeBuilder,
   UploadedFiles,
+  Get,
 } from '@nestjs/common';
 import { CharityService } from './charity.service';
 import {
@@ -51,6 +52,18 @@ export class CharityController {
     return {
       status: 'success',
       message: 'Donasi Berhasil',
+      data: result,
+    };
+  }
+
+  @Get('/donasi')
+  @Auth()
+  async getAllDonasi(
+    @Req() request: any,
+  ) {
+    const result = await this.charityService.getAllDonasi(request.user);
+    return {
+      status: 'success',
       data: result,
     };
   }
