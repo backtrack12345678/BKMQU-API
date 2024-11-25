@@ -63,6 +63,7 @@ uploads/users/*
 uploads/posts/*
 uploads/kajian/*
 uploads/live/*
+uploads/podcast/*
 uploads/rekening/*
 uploads/aktivitas/*
 uploads/qris/*
@@ -79,6 +80,7 @@ uploads/arus-kas/*
 !uploads/posts/.gitkeep
 !uploads/kajian/.gitkeep
 !uploads/live/.gitkeep
+!uploads/podcast/.gitkeep
 !uploads/rekening/.gitkeep
 !uploads/aktivitas/.gitkeep
 !uploads/qris/.gitkeep

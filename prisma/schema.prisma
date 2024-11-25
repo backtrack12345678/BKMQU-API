@@ -44,6 +44,7 @@ model User {
   User_Deactivation User_Deactivation?
   Withdraw          Withdraw[]
   Donasi            Donasi[]
+  podcast           Podcast[]
 
   @@map("user")
 }
@@ -427,6 +428,47 @@ model Live_Thumbnail {
   updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
 
   @@map("live_thumbnail")
+}
+
+model Podcast {
+  id       String @id @db.VarChar(150)
+  userId   String @map("user_id") @db.VarChar(150)
+  user     User   @relation(fields: [userId], references: [id])
+  judul    String @db.VarChar(100)
+  captions String @db.Text
+
+  createdAt DateTime           @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime?          @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  thumbnail Podcast_Thumbnail?
+  video     Podcast_Video?
+
+  @@map("podcast")
+}
+
+model Podcast_Thumbnail {
+  id        Int     @id @default(autoincrement())
+  podcastId String  @unique @map("podcast_id") @db.VarChar(150)
+  podcast   Podcast @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  nama      String  @db.VarChar(250)
+  path      String  @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("podcast_thumbnail")
+}
+
+model Podcast_Video {
+  id        Int     @id @default(autoincrement())
+  podcastId String  @unique @map("podcast_id") @db.VarChar(150)
+  podcast   Podcast @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  nama      String  @db.VarChar(250)
+  path      String  @db.Text
+
+  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
+  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  @@map("podcast_video")
 }
 
 model Kas {
