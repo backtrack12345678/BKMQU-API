@@ -28,7 +28,7 @@ export class AdminController {
     };
   }
 
-  @Patch('/withdraw/:withdrawId')
+  @Patch('/withdraw/:withdrawId/:status')
   @Auth()
   @Roles(Role.ADMIN)
   async acceptUserWithdraw(

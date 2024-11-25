@@ -71,7 +71,11 @@ export class CharityService {
             redirectUrl: true,
           },
         },
-      }
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 10,
     });
     return donasi.map((donasi) => ({
       id: donasi.id,
