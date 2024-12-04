@@ -10,14 +10,18 @@ import { OtpService } from '../../otp/otp.service';
 import { v4 as uuid } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { getHost } from '../../common/utils/utils';
-import { UserBankResponse, UserResponse, UserResult } from '../dto/response.dto';
+import {
+  UserBankResponse,
+  UserResponse,
+  UserResult,
+} from '../dto/response.dto';
 
 @Injectable()
 export class UserHelper {
   constructor(
     private prismaService: PrismaService,
     private otpService: OtpService,
-  ) { }
+  ) {}
 
   async verifyEmailUser(email: string) {
     const countEmail: number = await this.prismaService.user.count({
@@ -155,7 +159,16 @@ export class UserHelper {
         imam: true,
         _count: { select: { jamaah: true } },
       },
-      pengurus: { jabatan: true, uraianJabatan: true },
+      pengurus: {
+        jabatan: true,
+        uraianJabatan: true,
+        mesjid: {
+          select: {
+            id: true,
+            userId: true,
+          },
+        },
+      },
       penceramah: { keahlian: true },
       jamaah: { mesjid: { select: { id: true, userId: true } } },
     };
@@ -192,6 +205,8 @@ export class UserHelper {
       pengurus: {
         jabatan: user.pengurus?.jabatan,
         uraianJabatan: user.pengurus?.uraianJabatan,
+        mesjidId: user.pengurus?.mesjid.id,
+        mesjidUserId: user.pengurus?.mesjid.userId,
       },
       penceramah: {
         keahlian: user.penceramah?.keahlian,
@@ -261,9 +276,9 @@ export class UserHelper {
       bank: {
         select: {
           nama: true,
-        }
-      }
-    }
+        },
+      },
+    };
   }
 
   toUserBankResponse(userbank): UserBankResponse {
@@ -274,15 +289,15 @@ export class UserHelper {
       noRekening: userbank.noRekening,
       status: userbank.status,
       createdAt: userbank.createdAt,
-    }
+    };
   }
 
   async checkBank(bankId: number) {
     const bank = await this.prismaService.bank.count({
-      where: { id: bankId }
+      where: { id: bankId },
     });
     if (bank < 1) {
-      throw new NotFoundException("Bank Tidak Ditemukan");
+      throw new NotFoundException('Bank Tidak Ditemukan');
     }
   }
 
@@ -293,27 +308,27 @@ export class UserHelper {
       },
       select: {
         userId: true,
-      }
+      },
     });
 
     if (!userBank) {
-      throw new NotFoundException("Akun Bank Tidak Ditemukan");
-    };
+      throw new NotFoundException('Akun Bank Tidak Ditemukan');
+    }
 
     if (userBank.userId !== userId) {
-      throw new HttpException("Akun Bank Ini Bukan Milik Anda", 403);
-    };
+      throw new HttpException('Akun Bank Ini Bukan Milik Anda', 403);
+    }
   }
 
   async checkRekening(userId: string, noRekening: string) {
     const userBank = await this.prismaService.user_Bank.findFirst({
       where: { userId: userId },
-      select: { noRekening: true }
+      select: { noRekening: true },
     });
 
     if (userBank?.noRekening == noRekening) {
-      throw new BadRequestException("Nomor Rekening Sudah Digunakan");
-    };
+      throw new BadRequestException('Nomor Rekening Sudah Digunakan');
+    }
   }
 
   async checkUserDeactivation(userId: string) {
@@ -321,9 +336,11 @@ export class UserHelper {
       where: {
         userId: userId,
       },
-    })
+    });
     if (result > 0) {
-      throw new BadRequestException("Anda sudah Mengajukan Permohonan Untuk Menonaktifkan Akun");
+      throw new BadRequestException(
+        'Anda sudah Mengajukan Permohonan Untuk Menonaktifkan Akun',
+      );
     }
   }
 }

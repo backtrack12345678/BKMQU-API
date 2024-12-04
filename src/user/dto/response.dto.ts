@@ -16,7 +16,7 @@ export class Wilayah {
 
 export class MesjidResult {
   id: number;
-  noRegister: string;
+  noRegister?: string;
   userId?: string;
   imam?: string;
   _count?: {
@@ -29,6 +29,9 @@ export class PengurusResult {
   id: number;
   jabatan: string;
   uraianJabatan: string;
+  mesjid: MesjidResult;
+  mesjidId?: number;
+  mesjidUserId?: string;
 }
 
 export class JamaahResult {
