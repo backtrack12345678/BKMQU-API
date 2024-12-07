@@ -20,7 +20,12 @@ import { User } from '@prisma/client';
 import { Token } from '../common/token/token';
 import { UserHelper } from './helper/user.helper';
 import { UserBankResponse, UserResponse, UserResult } from './dto/response.dto';
-import { CreateUserBankDto, UpdateProfileDto, UpdateUserBankDto, UpdateUserImageDto } from './dto/update.dto';
+import {
+  CreateUserBankDto,
+  UpdateProfileDto,
+  UpdateUserBankDto,
+  UpdateUserImageDto,
+} from './dto/update.dto';
 import { FilesService } from '../files/files.service';
 import { getHost } from '../common/utils/utils';
 
@@ -32,7 +37,7 @@ export class UserService {
     private tokenManager: Token,
     private userHelper: UserHelper,
     private filesService: FilesService,
-  ) { }
+  ) {}
 
   async registerMesjid(
     payload: RegisterMesjidDto,
@@ -143,8 +148,8 @@ export class UserService {
         phone: payload.phone,
       },
       include: {
-        detailUser: true
-      }
+        detailUser: true,
+      },
     });
 
     if (!user) {
@@ -160,7 +165,7 @@ export class UserService {
       throw new HttpException('Kredensial Tidak Valid', 401);
     }
 
-    if (!user.isVerified || user.detailUser.status !== "DITERIMA") {
+    if (!user.isVerified || user.detailUser.status !== 'DITERIMA') {
       throw new HttpException('Pengguna Belum Terverifikasi', 401);
     }
 
@@ -247,9 +252,9 @@ export class UserService {
         ...(type === 'public' && {
           isVerified: true,
           detailUser: {
-            status: "DITERIMA",
-          }
-        })
+            status: 'DITERIMA',
+          },
+        }),
       },
       select: this.userHelper.userSelectCondition(user.role),
     });
@@ -370,7 +375,10 @@ export class UserService {
     }
   }
 
-  async addUserBank(user: Auth, payload: CreateUserBankDto): Promise<UserBankResponse> {
+  async addUserBank(
+    user: Auth,
+    payload: CreateUserBankDto,
+  ): Promise<UserBankResponse> {
     await this.userHelper.checkBank(payload.bankId);
     await this.userHelper.checkRekening(user.id, payload.noRekening);
     const userBank = await this.prismaService.user_Bank.create({
@@ -383,7 +391,11 @@ export class UserService {
     return this.userHelper.toUserBankResponse(userBank);
   }
 
-  async updateUserBank(user: Auth, userBankId: number, payload: UpdateUserBankDto): Promise<UserBankResponse> {
+  async updateUserBank(
+    user: Auth,
+    userBankId: number,
+    payload: UpdateUserBankDto,
+  ): Promise<UserBankResponse> {
     await this.userHelper.checkBank(payload.bankId);
     await this.userHelper.checkUserBankOwner(user.id, userBankId);
     const userBank = await this.prismaService.user_Bank.update({
@@ -392,7 +404,7 @@ export class UserService {
       },
       data: {
         ...payload,
-        status: "PENDING",
+        status: 'PENDING',
       },
       select: this.userHelper.userbankSelectCondition(),
     });
@@ -406,7 +418,9 @@ export class UserService {
       },
       select: this.userHelper.userbankSelectCondition(),
     });
-    return userBank.map((userBank) => this.userHelper.toUserBankResponse(userBank));
+    return userBank.map((userBank) =>
+      this.userHelper.toUserBankResponse(userBank),
+    );
   }
 
   async userDeactivate(user: Auth, payload: UserDeactivationDto) {
@@ -421,7 +435,10 @@ export class UserService {
       },
     });
     if (!result) {
-      throw new HttpException('Gagal Mengajukan Permohonan Untuk Menonaktifkan Akun', 500);
+      throw new HttpException(
+        'Gagal Mengajukan Permohonan Untuk Menonaktifkan Akun',
+        500,
+      );
     }
   }
 }
