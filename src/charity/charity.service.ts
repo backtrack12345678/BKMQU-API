@@ -17,6 +17,7 @@ import { MidtransService } from '../midtrans/midtrans.service';
 import { GetKasQueryDto } from '../kas/dto/get.dto';
 import { Request } from 'express';
 import { FilesService } from 'src/files/files.service';
+import { GetAllDonasiQueryDto } from './dto/get-charity.dto';
 
 @Injectable()
 export class CharityService {
@@ -54,7 +55,7 @@ export class CharityService {
     }
   }
 
-  async getAllDonasi(user: Auth) {
+  async getAllDonasi(user: Auth, query: GetAllDonasiQueryDto) {
     const donasi = await this.prismaService.donasi.findMany({
       where: {
         userId: user.id,
@@ -75,7 +76,8 @@ export class CharityService {
       orderBy: {
         createdAt: 'desc',
       },
-      take: 10,
+      take: query.takeCount || undefined,
+      skip: (query.page - 1) * query.takeCount || undefined,
     });
     return donasi.map((donasi) => ({
       id: donasi.id,

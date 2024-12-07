@@ -13,6 +13,7 @@ import {
   ParseFilePipeBuilder,
   UploadedFiles,
   Get,
+  Query,
 } from '@nestjs/common';
 import { CharityService } from './charity.service';
 import {
@@ -32,6 +33,7 @@ import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
 import { Role } from '../common/role/role.enum';
 import { FileTypesValidator } from '../common/pipes/file-types.validator';
+import { GetAllDonasiQueryDto } from './dto/get-charity.dto';
 
 const allowedMimeTypes = {
   content: ['image/jpeg', 'image/jpg', 'image/png'],
@@ -59,9 +61,10 @@ export class CharityController {
   @Get('/donasi')
   @Auth()
   async getAllDonasi(
+    @Query() query: GetAllDonasiQueryDto,
     @Req() request: any,
   ) {
-    const result = await this.charityService.getAllDonasi(request.user);
+    const result = await this.charityService.getAllDonasi(request.user, query);
     return {
       status: 'success',
       data: result,
