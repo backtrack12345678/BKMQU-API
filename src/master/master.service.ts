@@ -20,7 +20,7 @@ import {
 
 @Injectable()
 export class MasterService {
-  constructor(private prismaService: PrismaService) { }
+  constructor(private prismaService: PrismaService) {}
 
   async getMesjid(
     request: Request,
@@ -28,25 +28,25 @@ export class MasterService {
   ): Promise<MesjidResponse[]> {
     const filters = query.location
       ? [
-        {
-          OR: [
-            {
-              kecamatan: {
-                nama: {
-                  contains: query.location,
+          {
+            OR: [
+              {
+                kecamatan: {
+                  nama: {
+                    contains: query.location,
+                  },
                 },
               },
-            },
-            {
-              kota_kab: {
-                nama: {
-                  contains: query.location,
+              {
+                kota_kab: {
+                  nama: {
+                    contains: query.location,
+                  },
                 },
               },
-            },
-          ],
-        },
-      ]
+            ],
+          },
+        ]
       : [];
     const mesjid = await this.prismaService.detail_User.findMany({
       where: {
@@ -75,6 +75,7 @@ export class MasterService {
             },
           },
         },
+        alamat: true,
       },
     });
 
@@ -83,6 +84,7 @@ export class MasterService {
       mesjidId: m.user.mesjid.id,
       nama: m.nama,
       noRegister: m.user.mesjid.noRegister,
+      alamat: m.alamat,
       photo: `${getHost(request)}/api/files/users/${m.user.photo.nama}`,
     }));
   }
@@ -186,7 +188,7 @@ export class MasterService {
             {
               nama: {
                 contains: query?.nama,
-              }
+              },
             },
             {
               kode: {

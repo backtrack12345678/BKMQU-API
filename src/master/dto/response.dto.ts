@@ -3,6 +3,7 @@ export class MesjidResponse {
   mesjidId: number;
   nama: string;
   noRegister: string;
+  alamat: string | null;
   photo: string;
 }
 
