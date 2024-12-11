@@ -71,8 +71,6 @@ export class AdminService {
       },
     });
 
-    console.log(mesjid);
-
     return mesjid.map((m) => ({
       id: m.userId,
       phone: m.user.phone,
@@ -81,7 +79,7 @@ export class AdminService {
       nama: m.nama,
       status: m.status,
       kecamatan: m.kecamatan.nama,
-      SKM: `${getHost(request)}/api/files/bukti/mesjid/${m.user.dokumenBukti.nama}`,
+      SKM: `${getHost(request)}/api/files/bukti/mesjid/${m.user.dokumenBukti?.nama}`,
     }));
   }
 
