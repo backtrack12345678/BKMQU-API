@@ -585,6 +585,53 @@ export class CharityService {
     }));
   }
 
+  async getInfaqTargetById(infaqId: string) {
+    const infaq = await this.prismaService.infaq_Target.findMany({
+      where: {
+        infaqId: infaqId,
+      },
+      select: {
+        userInfaq: {
+          select: {
+            pesan: true,
+            midtrans: {
+              select: {
+                id: true,
+                amount: true,
+                netAmount: true,
+                isInserted: true,
+                redirectUrl: true,
+                createdAt: true,
+                updatedAt: true,
+                recipient: {
+                  select: {
+                    detailUser: {
+                      select: {
+                        nama: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return infaq.map((infaq) => ({
+      id: infaq.userInfaq.midtrans.id,
+      pesan: infaq.userInfaq.pesan,
+      amount: infaq.userInfaq.midtrans.amount,
+      netAmount: infaq.userInfaq.midtrans.netAmount,
+      paidStatus: infaq.userInfaq.midtrans.isInserted,
+      recipient: infaq.userInfaq.midtrans.recipient.detailUser.nama,
+      redirectUrl: infaq.userInfaq.midtrans.redirectUrl,
+      createdAt: infaq.userInfaq.midtrans.createdAt,
+      updatedAt: infaq.userInfaq.midtrans.updatedAt,
+    }));
+  }
+
   async getInfaqByKecamatan(request: any) {
     const userId = request.user.id;
     const kotaKabId = await this.prismaService.detail_User.findUnique({

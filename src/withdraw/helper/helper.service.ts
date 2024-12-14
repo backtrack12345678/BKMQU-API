@@ -107,6 +107,7 @@ export class WithdrawHelper {
       jumlah: parseInt(withdraw.jumlah),
       status: withdraw.status,
       nama: withdraw.userBank.nama,
+      role: withdraw.userBank.user.role,
       noRekening: withdraw.userBank.noRekening,
       namaBank: withdraw.userBank.bank.nama,
       createdAt: withdraw.createdAt,
@@ -123,6 +124,11 @@ export class WithdrawHelper {
         select: {
           nama: true,
           noRekening: true,
+          user: {
+            select: {
+              role: true,
+            }
+          },
           bank: {
             select: {
               nama: true,

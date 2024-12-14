@@ -8,12 +8,22 @@ import { MesjidQueryDto, UserBankQueryDto, UserDeactivationQueryDto, UserWithdra
 import { Request } from 'express';
 import { WebResponse } from '../model/web.model';
 import { GetMesjidResponse, GetUserBankResponse, GetUserDeactivationResponse } from './dto/response.dto';
-import { WithdrawResponse } from 'src/withdraw/dto/response.dto';
+import { SaldoResponse, WithdrawResponse } from 'src/withdraw/dto/response.dto';
 
 @Controller('/api/admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) { }
 
+  @Get('/saldo')
+  @Auth()
+  @Roles(Role.ADMIN)
+  async sumAllUserSaldo(): Promise<WebResponse<SaldoResponse>> {
+    const result = await this.adminService.sumAllUserSaldo();
+    return {
+      status: 'success',
+      data: result,
+    }
+  }
 
   @Get('/withdraw')
   @Auth()

@@ -19,6 +19,11 @@ export class AdminHelper {
         select: {
           nama: true,
         }
+      },
+      user: {
+        select: {
+          role: true,
+        }
       }
     }
   }
@@ -27,6 +32,7 @@ export class AdminHelper {
     return {
       id: userbank.id,
       nama: userbank.nama,
+      role: userbank.user.role,
       namaBank: userbank.bank.nama,
       noRekening: userbank.noRekening,
       status: userbank.status,

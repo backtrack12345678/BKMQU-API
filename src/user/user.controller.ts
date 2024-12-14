@@ -503,6 +503,19 @@ export class UserController {
     };
   }
 
+  @Get('/infaq/:infaqId')
+  @Auth()
+  async getInfaqTargetById(
+    @Param('infaqId') infaqId: string
+  ) {
+    const result = await this.charityService.getInfaqTargetById(infaqId);
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
+
   @Get('infaq')
   @Auth()
   async getInfaqByKecamatan(@Req() request: any) {

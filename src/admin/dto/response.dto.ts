@@ -4,6 +4,7 @@ export class GetMesjidResponse {
   email: string;
   noRegister: string;
   nama: string;
+  saldo: number;
   status: string;
   kecamatan: string;
   SKM: string;
@@ -12,6 +13,7 @@ export class GetMesjidResponse {
 export class GetUserBankResponse {
   id: number;
   nama: string;
+  role:string;
   namaBank: string;
   noRekening: string;
   status: string;

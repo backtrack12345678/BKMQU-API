@@ -19,6 +19,24 @@ export class AdminService {
     private withdrawService: WithdrawService,
   ) { }
 
+  async sumAllUserSaldo() {
+    const saldo = await this.prismaService.detail_User.aggregate({
+      where: {
+        NOT: {
+          userId: {
+            contains: 'admin',
+          },
+        },
+      },
+      _sum: {
+        saldo: true,
+      }
+    });
+    return {
+      saldo: Number(saldo._sum),
+    }
+  }
+
   async findAllMesjid(
     request: Request,
     query?: MesjidQueryDto,
@@ -35,6 +53,7 @@ export class AdminService {
         userId: true,
         nama: true,
         status: true,
+        saldo: true,
         kecamatan: {
           select: {
             nama: true,
@@ -65,6 +84,7 @@ export class AdminService {
       email: m.user.email,
       noRegister: m.user.mesjid.noRegister,
       nama: m.nama,
+      saldo: Number(m.saldo),
       status: m.status,
       kecamatan: m.kecamatan.nama,
       SKM: `${getHost(request)}/api/files/bukti/mesjid/${m.user.dokumenBukti.nama}`,
@@ -98,6 +118,10 @@ export class AdminService {
     const userBank = await this.prismaService.user_Bank.findMany({
       where: {
         status: query?.status || undefined,
+        nama: query?.nama || undefined,
+        user: {
+          role: query?.role || undefined,
+        }
       },
       select: this.adminHelper.userbankSelectCondition(),
       orderBy: {

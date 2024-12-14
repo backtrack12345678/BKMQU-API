@@ -64,6 +64,9 @@ export class WithdrawService {
     const withdraw = await this.prismaService.withdraw.findMany({
       where: {
         status: query?.status || undefined,
+        userBank: {
+          nama: query?.nama || undefined,
+        },
       },
       select: this.withdrawHelper.withdrawSelectCondition(),
       orderBy: {
