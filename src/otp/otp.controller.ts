@@ -19,4 +19,15 @@ export class OtpController {
       data: true,
     };
   }
+
+  @Post('/forgot-password')
+  @HttpCode(201)
+  async forgotPassword(@Body() payload: OtpRequestDto) {
+    const result = await this.otpService.createOTP('forgotPassword', payload);
+    return {
+      status: 'success',
+      message: result,
+      data: true,
+    };
+  }
 }

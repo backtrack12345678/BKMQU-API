@@ -29,7 +29,13 @@ import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { Auth } from '../common/auth.decorator';
 import { UserHelper } from './helper/user.helper';
-import { CreateUserBankDto, UpdateProfileDto, UpdateUserBankDto, UpdateUserImageDto } from './dto/update.dto';
+import {
+  CreateUserBankDto,
+  ForgotPasswordDto,
+  UpdateProfileDto,
+  UpdateUserBankDto,
+  UpdateUserImageDto,
+} from './dto/update.dto';
 import { UserBankResponse, UserResponse } from './dto/response.dto';
 import { PostsService } from '../posts/posts.service';
 import { GetPostsQueryDto } from '../posts/dto/get.dto';
@@ -38,10 +44,7 @@ import { GetAktivitasQueryDto } from '../aktivitas/dto/query.dto';
 import { AktivitasService } from '../aktivitas/aktivitas.service';
 import { AktivitasResponse } from '../aktivitas/dto/response.dto';
 import { KasService } from '../kas/kas.service';
-import {
-  GetDashboardKasArusDto,
-  GetKasQueryDto,
-} from '../kas/dto/get.dto';
+import { GetDashboardKasArusDto, GetKasQueryDto } from '../kas/dto/get.dto';
 import { KasArusDashboardResponse } from '../kas/dto/response.dto';
 import { CharityService } from '../charity/charity.service';
 import { GetKajianQueryDto } from '../kajian/dto/query.dto';
@@ -68,7 +71,7 @@ export class UserController {
     private liveService: LiveService,
     private kasService: KasService,
     private charityService: CharityService,
-  ) { }
+  ) {}
 
   @Post('/register/mesjid')
   @HttpCode(201)
@@ -248,6 +251,18 @@ export class UserController {
       status: 'success',
       message: 'Profile Berhasil Diperbarui',
       data: result,
+    };
+  }
+
+  @Patch('/forgot-password')
+  async forgotPassword(
+    @Body() payload: ForgotPasswordDto,
+  ): Promise<WebResponse<boolean>> {
+    await this.userService.forgotPassword(payload);
+    return {
+      status: 'success',
+      message: 'Kata Sandi Berhasil Diperbarui',
+      data: true,
     };
   }
 
@@ -468,7 +483,11 @@ export class UserController {
     @Param('userId') userId: string,
     @Query() query: GetDashboardKasArusDto,
   ): Promise<WebResponse<KasArusDashboardResponse>> {
-    const result = await this.kasService.getDashboardArusKas(request, userId, query);
+    const result = await this.kasService.getDashboardArusKas(
+      request,
+      userId,
+      query,
+    );
     return {
       status: 'success',
       data: result,
@@ -495,7 +514,10 @@ export class UserController {
   }
 
   @Get('/:userId/infaq')
-  async getInfaqByUserId(@Req() request: Request, @Param('userId') userId: string) {
+  async getInfaqByUserId(
+    @Req() request: Request,
+    @Param('userId') userId: string,
+  ) {
     const result = await this.charityService.getInfaqByUserId(userId, request);
     return {
       status: 'success',
@@ -623,8 +645,8 @@ export class UserController {
     return {
       status: 'success',
       message: 'Akun Bank Berhasil Ditambahkan',
-      data: result
-    }
+      data: result,
+    };
   }
 
   @Patch('/bank/:userBankId')
@@ -634,12 +656,16 @@ export class UserController {
     @Req() request: any,
     @Body() payload: UpdateUserBankDto,
   ): Promise<WebResponse<UserBankResponse>> {
-    const result = await this.userService.updateUserBank(request.user, userBankId, payload);
+    const result = await this.userService.updateUserBank(
+      request.user,
+      userBankId,
+      payload,
+    );
     return {
       status: 'success',
       message: 'Akun Bank Berhasil Diubah',
-      data: result
-    }
+      data: result,
+    };
   }
 
   @Get('/bank')
@@ -650,8 +676,8 @@ export class UserController {
     const result = await this.userService.getUserBank(request.user);
     return {
       status: 'success',
-      data: result
-    }
+      data: result,
+    };
   }
 
   @Post('/deactivate')
@@ -665,6 +691,6 @@ export class UserController {
       status: 'success',
       message: 'Akun Berhasil Dinonaktifkan',
       data: true,
-    }
+    };
   }
 }

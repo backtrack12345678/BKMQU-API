@@ -2,9 +2,21 @@ import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { PrismaService } from '../common/prisma.service';
 import { getHost } from '../common/utils/utils';
-import { GetMesjidResponse, GetUserBankResponse, GetUserDeactivationResponse } from './dto/response.dto';
-import { MesjidQueryDto, UserBankQueryDto, UserDeactivationQueryDto, UserWithdrawQueryDto } from './dto/get.dto';
-import { UpdateMesjidStatusParamDto, WithdrawParamDto } from './dto/update-admin.dto';
+import {
+  GetMesjidResponse,
+  GetUserBankResponse,
+  GetUserDeactivationResponse,
+} from './dto/response.dto';
+import {
+  MesjidQueryDto,
+  UserBankQueryDto,
+  UserDeactivationQueryDto,
+  UserWithdrawQueryDto,
+} from './dto/get.dto';
+import {
+  UpdateMesjidStatusParamDto,
+  WithdrawParamDto,
+} from './dto/update-admin.dto';
 import { MidtransService } from 'src/midtrans/midtrans.service';
 import { AdminHelper } from './helper/admin.helper';
 import { WithdrawService } from 'src/withdraw/withdraw.service';
@@ -17,7 +29,7 @@ export class AdminService {
     private midtansService: MidtransService,
     private adminHelper: AdminHelper,
     private withdrawService: WithdrawService,
-  ) { }
+  ) {}
 
   async sumAllUserSaldo() {
     const saldo = await this.prismaService.detail_User.aggregate({
@@ -87,7 +99,7 @@ export class AdminService {
       saldo: Number(m.saldo),
       status: m.status,
       kecamatan: m.kecamatan.nama,
-      SKM: `${getHost(request)}/api/files/bukti/mesjid/${m.user.dokumenBukti.nama}`,
+      SKM: `${getHost(request)}/api/files/bukti/mesjid/${m.user.dokumenBukti?.nama}`,
     }));
   }
 
@@ -114,7 +126,9 @@ export class AdminService {
     }
   }
 
-  async findAllUserBank(query: UserBankQueryDto): Promise<GetUserBankResponse[] | []> {
+  async findAllUserBank(
+    query: UserBankQueryDto,
+  ): Promise<GetUserBankResponse[] | []> {
     const userBank = await this.prismaService.user_Bank.findMany({
       where: {
         status: query?.status || undefined,
@@ -126,19 +140,24 @@ export class AdminService {
       select: this.adminHelper.userbankSelectCondition(),
       orderBy: {
         createdAt: 'asc',
-      }
+      },
     });
-    return userBank.map((userBank) => this.adminHelper.toUserBankResponse(userBank));
+    return userBank.map((userBank) =>
+      this.adminHelper.toUserBankResponse(userBank),
+    );
   }
 
-  async findAllUserDeactivation(query: UserDeactivationQueryDto): Promise<GetUserDeactivationResponse[]> {
-    const userDeactivation = await this.prismaService.user_Deactivation.findMany({
-      where: {
-        ...(query.acceptTerm && {
-          acceptTerm: query.acceptTerm,
-        }),
-      }
-    });
+  async findAllUserDeactivation(
+    query: UserDeactivationQueryDto,
+  ): Promise<GetUserDeactivationResponse[]> {
+    const userDeactivation =
+      await this.prismaService.user_Deactivation.findMany({
+        where: {
+          ...(query.acceptTerm && {
+            acceptTerm: query.acceptTerm,
+          }),
+        },
+      });
     return userDeactivation;
   }
 
@@ -154,20 +173,22 @@ export class AdminService {
             isVerified: false,
             detailUser: {
               update: {
-                status: "DITOLAK",
-              }
-            }
+                status: 'DITOLAK',
+              },
+            },
           },
         },
         acceptTerm: true,
       },
       select: {
         id: true,
-      }
+      },
     });
   }
 
-  async findAllUserWithdraw(query: UserWithdrawQueryDto): Promise<WithdrawResponse[]> {
+  async findAllUserWithdraw(
+    query: UserWithdrawQueryDto,
+  ): Promise<WithdrawResponse[]> {
     return await this.withdrawService.findWithdrawByQuery(query);
   }
 
@@ -178,11 +199,16 @@ export class AdminService {
   async updateUserBankStatus(userBankId: number): Promise<void> {
     try {
       const bankAccount = await this.adminHelper.getBankAccountData(userBankId);
-      const verifiedData = await this.midtansService.verifyBankAccount(bankAccount.kode, bankAccount.noRekening);
+      const verifiedData = await this.midtansService.verifyBankAccount(
+        bankAccount.kode,
+        bankAccount.noRekening,
+      );
       await this.adminHelper.updateUserBankData(userBankId, verifiedData);
     } catch (e) {
-      if (e.message === 'Gagal Memverifikasi Akun Bank, Akun Bank Tidak Terdaftar') {
-        await this.adminHelper.updateUserBankData(userBankId)
+      if (
+        e.message === 'Gagal Memverifikasi Akun Bank, Akun Bank Tidak Terdaftar'
+      ) {
+        await this.adminHelper.updateUserBankData(userBankId);
       }
       throw new HttpException(e.message, e.status);
     }
