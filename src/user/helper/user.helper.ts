@@ -143,11 +143,11 @@ export class UserHelper {
     return user.role;
   }
 
-  async deleteOtp(phone: string) {
+  async deleteOtp(phone: string, type: string) {
     await this.prismaService.otp.delete({
       where: {
         phone: phone,
-        type: 'register',
+        type: type,
       },
     });
   }

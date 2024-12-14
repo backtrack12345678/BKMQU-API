@@ -3,18 +3,21 @@ import * as bcrypt from 'bcrypt';
 import axios from 'axios';
 import { HttpException } from '@nestjs/common';
 
-export function generateOTP() {
+export function generateOTP(type: string) {
   const OTPNumber: string = generate(6, {
     digits: true,
     lowerCaseAlphabets: false,
     upperCaseAlphabets: false,
     specialChars: false,
   });
-  const expired = Date.now() + 2 * 60 * 1000;
+  const expired = {
+    register: Date.now() + 2 * 60 * 1000,
+    forgotPassword: Date.now() + 15 * 60 * 1000,
+  };
 
   return {
     OTPNumber,
-    expired,
+    expired: expired[type],
   };
 }
 

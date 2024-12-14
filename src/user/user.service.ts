@@ -22,6 +22,7 @@ import { UserHelper } from './helper/user.helper';
 import { UserBankResponse, UserResponse, UserResult } from './dto/response.dto';
 import {
   CreateUserBankDto,
+  ForgotPasswordDto,
   UpdateProfileDto,
   UpdateUserBankDto,
   UpdateUserImageDto,
@@ -58,7 +59,7 @@ export class UserService {
       },
     });
 
-    await this.userHelper.deleteOtp(payload.phone);
+    await this.userHelper.deleteOtp(payload.phone, 'register');
 
     return {
       id: user.id,
@@ -90,7 +91,7 @@ export class UserService {
       },
     });
 
-    await this.userHelper.deleteOtp(payload.phone);
+    await this.userHelper.deleteOtp(payload.phone, 'register');
 
     return {
       id: user.id,
@@ -112,7 +113,7 @@ export class UserService {
       },
     });
 
-    await this.userHelper.deleteOtp(payload.phone);
+    await this.userHelper.deleteOtp(payload.phone, 'register');
 
     return {
       id: user.id,
@@ -135,7 +136,7 @@ export class UserService {
       },
     });
 
-    await this.userHelper.deleteOtp(payload.phone);
+    await this.userHelper.deleteOtp(payload.phone, 'register');
 
     return {
       id: user.id,
@@ -440,5 +441,26 @@ export class UserService {
         500,
       );
     }
+  }
+
+  async forgotPassword(payload: ForgotPasswordDto) {
+    const OTP = {
+      type: 'forgotPassword',
+      number: payload.otp,
+    };
+    await this.otpService.verifyOTP(OTP, payload.phone);
+
+    await this.prismaService.user.update({
+      where: {
+        phone: payload.phone,
+      },
+      data: {
+        password: await bcrypt.hash(payload.password, 10),
+      },
+      select: {
+        id: true,
+      },
+    });
+    await this.userHelper.deleteOtp(payload.phone, 'forgotPassword');
   }
 }

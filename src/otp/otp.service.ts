@@ -22,12 +22,28 @@ export class OtpService {
     }
   }
 
+  async verifyRegisteredPhone(phone: string) {
+    const countPhone = await this.prismaService.user.count({
+      where: {
+        phone: phone,
+      },
+    });
+
+    if (countPhone <= 0) {
+      throw new HttpException('Pengguna Tidak Ditemukan', 404);
+    }
+  }
+
   async createOTP(type: string, request: OtpRequestDto): Promise<string> {
-    const { OTPNumber, expired } = generateOTP();
+    const { OTPNumber, expired } = generateOTP(type);
     const hashedOTP: string = await hashOTP(OTPNumber);
 
     if (type === 'register') {
       await this.verifyUnregisteredPhone(request.phone);
+    }
+
+    if (type === 'forgotPassword') {
+      await this.verifyRegisteredPhone(request.phone);
     }
 
     const OTP = await this.prismaService.otp.upsert({
