@@ -25,13 +25,11 @@ export class GetKasQueryDto {
 export class GetKasArusDto {
   @IsOptional()
   @Transform(({ value }) => value ? new Date(value) : new Date(value).setMonth(value.getMont() - 1))
-  @IsDateString()
   @IsDate()
   fromDate: Date;
 
   @IsOptional()
   @Transform(({ value }) => new Date(value))
-  @IsDateString()
   @IsDate()
   // @ValidateIf((o) => o.toDate > o.fromDate)
   toDate: Date;
