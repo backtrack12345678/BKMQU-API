@@ -21,6 +21,7 @@ import { Token } from '../common/token/token';
 import { UserHelper } from './helper/user.helper';
 import { UserBankResponse, UserResponse, UserResult } from './dto/response.dto';
 import {
+  ChangePassword,
   CreateUserBankDto,
   ForgotPasswordDto,
   UpdateProfileDto,
@@ -443,24 +444,44 @@ export class UserService {
     }
   }
 
+  async changePassword(user: Auth, payload: ChangePassword) {
+    const OTP = {
+      type: 'changePassword',
+      number: payload.otp,
+    };
+
+    const userData: { phone: string; password: string } =
+      await this.prismaService.user.findUnique({
+        where: {
+          id: user.id,
+        },
+        select: {
+          phone: true,
+          password: true,
+        },
+      });
+
+    await this.otpService.verifyOTP(OTP, userData.phone);
+    const isOldPasswordValid = await bcrypt.compare(
+      payload.oldPassword,
+      userData.password,
+    );
+
+    if (!isOldPasswordValid) {
+      throw new BadRequestException('Kata Sandi Lama Salah');
+    }
+
+    await this.userHelper.updatePassword(userData.phone, payload.password);
+    await this.userHelper.deleteOtp(userData.phone, 'changePassword');
+  }
+
   async forgotPassword(payload: ForgotPasswordDto) {
     const OTP = {
       type: 'forgotPassword',
       number: payload.otp,
     };
     await this.otpService.verifyOTP(OTP, payload.phone);
-
-    await this.prismaService.user.update({
-      where: {
-        phone: payload.phone,
-      },
-      data: {
-        password: await bcrypt.hash(payload.password, 10),
-      },
-      select: {
-        id: true,
-      },
-    });
+    await this.userHelper.updatePassword(payload.phone, payload.password);
     await this.userHelper.deleteOtp(payload.phone, 'forgotPassword');
   }
 }

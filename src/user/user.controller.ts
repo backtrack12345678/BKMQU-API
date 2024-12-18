@@ -30,6 +30,7 @@ import { Request, Response } from 'express';
 import { Auth } from '../common/auth.decorator';
 import { UserHelper } from './helper/user.helper';
 import {
+  ChangePassword,
   CreateUserBankDto,
   ForgotPasswordDto,
   UpdateProfileDto,
@@ -251,6 +252,17 @@ export class UserController {
       status: 'success',
       message: 'Profile Berhasil Diperbarui',
       data: result,
+    };
+  }
+
+  @Patch('/change-password')
+  @Auth()
+  async changePassword(@Req() request: any, @Body() payload: ChangePassword) {
+    await this.userService.changePassword(request.user, payload);
+    return {
+      status: 'success',
+      message: 'Kata Sandi Berhasil Diperbarui',
+      data: true,
     };
   }
 
@@ -527,16 +539,13 @@ export class UserController {
 
   @Get('/infaq/:infaqId')
   @Auth()
-  async getInfaqTargetById(
-    @Param('infaqId') infaqId: string
-  ) {
+  async getInfaqTargetById(@Param('infaqId') infaqId: string) {
     const result = await this.charityService.getInfaqTargetById(infaqId);
     return {
       status: 'success',
       data: result,
     };
   }
-
 
   @Get('infaq')
   @Auth()

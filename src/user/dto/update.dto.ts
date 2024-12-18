@@ -50,14 +50,7 @@ export class CreateUserBankDto {
 
 export class UpdateUserBankDto extends PartialType(CreateUserBankDto) {}
 
-export class ForgotPasswordDto {
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(1)
-  @MaxLength(20)
-  @Matches(/^[0-9]+$/, { message: 'phone must be digit' })
-  phone: string;
-
+export class UpdatePassword {
   @IsNotEmpty()
   @IsString()
   @MinLength(6)
@@ -76,4 +69,20 @@ export class ForgotPasswordDto {
   @IsString()
   @Matches(/^[0-9]{6}$/, { message: 'OTP must be a 6-digit number' })
   otp: string;
+}
+
+export class ChangePassword extends UpdatePassword {
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(6)
+  @MaxLength(12)
+  oldPassword: string;
+}
+export class ForgotPasswordDto extends UpdatePassword {
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(20)
+  @Matches(/^[0-9]+$/, { message: 'phone must be digit' })
+  phone: string;
 }

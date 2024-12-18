@@ -5,6 +5,7 @@ import { generateOTP, hashOTP, sendOTPToWA } from '../common/utils/otpManager';
 import * as bcrypt from 'bcrypt';
 import { OTP } from './model/otp.model';
 import { Otp } from '@prisma/client';
+import { Auth } from '../model/user.model';
 
 @Injectable()
 export class OtpService {
@@ -34,9 +35,32 @@ export class OtpService {
     }
   }
 
-  async createOTP(type: string, request: OtpRequestDto): Promise<string> {
+  async getUserPhone(userId: string): Promise<string> {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        phone: true,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('Pengguna Tidak Ditemukan', 404);
+    }
+
+    return user.phone;
+  }
+
+  async createOTP(
+    type: string,
+    request?: OtpRequestDto,
+    userId?: string,
+  ): Promise<string> {
     const { OTPNumber, expired } = generateOTP(type);
     const hashedOTP: string = await hashOTP(OTPNumber);
+    const messageTime: string = type === 'register' ? '2 menit' : '15 menit';
+    let userPhone;
 
     if (type === 'register') {
       await this.verifyUnregisteredPhone(request.phone);
@@ -46,9 +70,13 @@ export class OtpService {
       await this.verifyRegisteredPhone(request.phone);
     }
 
+    if (type === 'changePassword') {
+      userPhone = await this.getUserPhone(userId);
+    }
+
     const OTP = await this.prismaService.otp.upsert({
       where: {
-        phone: request.phone,
+        phone: request?.phone || userPhone,
       },
       update: {
         otp_hashed: hashedOTP,
@@ -56,7 +84,7 @@ export class OtpService {
         expired_otp: expired.toString(),
       },
       create: {
-        phone: request.phone,
+        phone: request?.phone || userPhone,
         otp_hashed: hashedOTP,
         type: type,
         expired_otp: expired.toString(),
@@ -67,7 +95,7 @@ export class OtpService {
       throw new HttpException('OTP Gagal Disimpan', 400);
     }
 
-    return sendOTPToWA(OTPNumber, OTP.phone);
+    return sendOTPToWA(OTPNumber, OTP.phone, messageTime);
   }
 
   async verifyOTP(OTP: OTP, phone: string) {

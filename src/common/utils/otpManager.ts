@@ -13,6 +13,7 @@ export function generateOTP(type: string) {
   const expired = {
     register: Date.now() + 2 * 60 * 1000,
     forgotPassword: Date.now() + 15 * 60 * 1000,
+    changePassword: Date.now() + 15 * 60 * 1000,
   };
 
   return {
@@ -28,11 +29,12 @@ export async function hashOTP(otpNumber: string): Promise<string> {
 export async function sendOTPToWA(
   otpNumber: string,
   phone: string,
+  messageTime: string,
 ): Promise<string> {
   const options = {
     instance_key: process.env.OTP_INSTANCE_KEY,
     jid: phone,
-    message: `Halo! Ini adalah kode OTP Anda: *${otpNumber}*. Berlaku Selama 2 Menit. Mohon jangan memberikan kode ini kepada siapa pun. Terima kasih!
+    message: `Halo! Ini adalah kode OTP Anda: *${otpNumber}*. Berlaku selama ${messageTime}. Mohon jangan memberikan kode ini kepada siapa pun. Terima kasih!
       `,
   };
 

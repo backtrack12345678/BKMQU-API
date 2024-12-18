@@ -1,7 +1,9 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common';
 import { OtpService } from './otp.service';
 import { OtpRequestDto } from './dto/otp.dto';
 import { WebResponse } from '../model/web.model';
+import { Auth } from '../common/auth.decorator';
+import { Auth as userAuth } from '../model/user.model';
 
 @Controller('/api/otp')
 export class OtpController {
@@ -13,6 +15,22 @@ export class OtpController {
     @Body() request: OtpRequestDto,
   ): Promise<WebResponse<boolean>> {
     const result = await this.otpService.createOTP('register', request);
+    return {
+      status: 'success',
+      message: result,
+      data: true,
+    };
+  }
+
+  @Auth()
+  @Get('/change-password')
+  async changePassword(@Req() request: any) {
+    const user: userAuth = request.user;
+    const result = await this.otpService.createOTP(
+      'changePassword',
+      null,
+      user.id,
+    );
     return {
       status: 'success',
       message: result,

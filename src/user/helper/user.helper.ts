@@ -343,4 +343,18 @@ export class UserHelper {
       );
     }
   }
+
+  async updatePassword(phone: string, password: string): Promise<void> {
+    await this.prismaService.user.update({
+      where: {
+        phone: phone,
+      },
+      data: {
+        password: await bcrypt.hash(password, 10),
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
 }
