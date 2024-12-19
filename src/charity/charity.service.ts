@@ -61,7 +61,6 @@ export class CharityService {
         userId: user.id,
       },
       select: {
-        id: true,
         pesan: true,
         createdAt: true,
         updatedAt: true,
@@ -80,7 +79,7 @@ export class CharityService {
       skip: (query.page - 1) * query.takeCount || undefined,
     });
     return donasi.map((donasi) => ({
-      id: donasi.id,
+      id: donasi.midtrans.id,
       pesan: donasi.pesan,
       amount: donasi.midtrans.netAmount,
       redirectUrl: donasi.midtrans.redirectUrl,
