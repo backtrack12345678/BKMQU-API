@@ -44,6 +44,11 @@ export class MidtransService {
               userId: true,
             },
           },
+          Donasi: {
+            select: {
+              userId: true,
+            }
+          }
         },
       });
 
@@ -54,7 +59,8 @@ export class MidtransService {
     if (
       senderId !==
       (midtransTransactions.userInfaq?.userId ||
-        midtransTransactions.userSedekah?.userId)
+        midtransTransactions.userSedekah?.userId ||
+        midtransTransactions.Donasi.userId)
     ) {
       throw new HttpException('Anda tidak berhak mengakses transaksi ini', 403);
     }
@@ -119,8 +125,8 @@ export class MidtransService {
         },
         select: {
           id: true,
-          amount:true,
-          redirectUrl:true,
+          amount: true,
+          redirectUrl: true,
         }
       });
     return midtransTransaction;
