@@ -14,15 +14,16 @@ datasource db {
 }
 
 model User {
-  id                String                  @id @db.VarChar(150)
-  phone             String                  @unique @db.VarChar(20)
-  password          String                  @db.VarChar(100)
-  email             String                  @unique @db.VarChar(200)
-  role              String                  @db.VarChar(10)
-  isVerified        Boolean                 @default(false) @map("is_verified")
-  acceptTerm        Boolean?                @map("accept_term")
-  createdAt         DateTime                @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt         DateTime?               @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id         String   @id @db.VarChar(150)
+  phone      String   @unique @db.VarChar(20)
+  password   String   @db.VarChar(100)
+  email      String   @unique @db.VarChar(200)
+  role       String   @db.VarChar(10)
+  isVerified Boolean  @default(false) @map("is_verified")
+  acceptTerm Boolean? @map("accept_term")
+
+  createdAt         DateTime                @default(now()) @map("created_at")
+  updatedAt         DateTime?               @updatedAt @map("updated_at")
   mesjid            Mesjid?
   pengurus          Pengurus?
   jamaah            Jamaah?
@@ -64,8 +65,9 @@ model Detail_User {
   provinsi     Provinsi       @relation(fields: [provinsiId], references: [id])
   alamat       String?        @db.Text
   saldo        BigInt         @default(0) @db.BigInt
-  createdAt    DateTime       @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt    DateTime?      @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("detail_user")
 }
@@ -81,8 +83,8 @@ model User_Bank {
   accountId  String @default("-") @map("account_id") @db.VarChar(200)
   status     String @default("PENDING") @db.VarChar(10)
 
-  createdAt DateTime   @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime?  @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime?  @updatedAt @map("updated_at")
   kasBank   Kas_Bank?
   withdraw  Withdraw[]
 
@@ -90,40 +92,43 @@ model User_Bank {
 }
 
 model Photo_User {
-  id        Int       @id @default(autoincrement())
-  userId    String    @unique @map("user_id") @db.VarChar(150)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  nama      String    @default("default_user.jpg") @db.VarChar(250)
-  path      String    @db.Text
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id     Int    @id @default(autoincrement())
+  userId String @unique @map("user_id") @db.VarChar(150)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nama   String @default("default_user.jpg") @db.VarChar(250)
+  path   String @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("photo_user")
 }
 
 model Sampul_User {
-  id        Int       @id @default(autoincrement())
-  userId    String    @unique @map("user_id") @db.VarChar(150)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  nama      String    @default("default_sampul.jpg") @db.VarChar(250)
-  path      String    @db.Text
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id     Int    @id @default(autoincrement())
+  userId String @unique @map("user_id") @db.VarChar(150)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nama   String @default("default_sampul.jpg") @db.VarChar(250)
+  path   String @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("sampul_user")
 }
 
 model Mesjid {
-  id              Int                @id @default(autoincrement())
-  userId          String             @unique @map("user_id") @db.VarChar(150)
-  user            User               @relation(fields: [userId], references: [id])
-  noRegister      String             @unique @map("no_register") @db.VarChar(200)
-  imam            String?            @db.VarChar(200)
-  kasBankLimit    Int                @default(2) @db.Int
-  pengurus        Pengurus[]
-  jamaah          Jamaah[]
-  kas             Kas[]
-  dokumenQr       Dokumen_QR?
+  id           Int         @id @default(autoincrement())
+  userId       String      @unique @map("user_id") @db.VarChar(150)
+  user         User        @relation(fields: [userId], references: [id])
+  noRegister   String      @unique @map("no_register") @db.VarChar(200)
+  imam         String?     @db.VarChar(200)
+  kasBankLimit Int         @default(2) @db.Int
+  pengurus     Pengurus[]
+  jamaah       Jamaah[]
+  kas          Kas[]
+  dokumenQr    Dokumen_QR?
+
   createdAt       DateTime           @default(now()) @map("created_at")
   updatedAt       DateTime           @updatedAt @map("updated_at")
   infaq           Infaq[]
@@ -135,74 +140,80 @@ model Mesjid {
 }
 
 model Pengurus {
-  id            Int       @id @default(autoincrement())
-  userId        String    @unique @map("user_id") @db.VarChar(150)
-  user          User      @relation(fields: [userId], references: [id])
-  jabatan       String    @db.VarChar(100)
-  uraianJabatan String?   @map("uraian_jabatan") @db.VarChar(150)
-  mesjidId      Int       @map("mesjid_id")
-  mesjid        Mesjid    @relation(fields: [mesjidId], references: [id])
-  createdAt     DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt     DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id            Int     @id @default(autoincrement())
+  userId        String  @unique @map("user_id") @db.VarChar(150)
+  user          User    @relation(fields: [userId], references: [id])
+  jabatan       String  @db.VarChar(100)
+  uraianJabatan String? @map("uraian_jabatan") @db.VarChar(150)
+  mesjidId      Int     @map("mesjid_id")
+  mesjid        Mesjid  @relation(fields: [mesjidId], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("pengurus")
 }
 
 model Jamaah {
-  id        Int       @id @default(autoincrement())
-  userId    String    @unique @map("user_id") @db.VarChar(150)
-  user      User      @relation(fields: [userId], references: [id])
-  mesjidId  Int       @map("mesjid_id")
-  mesjid    Mesjid    @relation(fields: [mesjidId], references: [id])
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id       Int    @id @default(autoincrement())
+  userId   String @unique @map("user_id") @db.VarChar(150)
+  user     User   @relation(fields: [userId], references: [id])
+  mesjidId Int    @map("mesjid_id")
+  mesjid   Mesjid @relation(fields: [mesjidId], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("jamaah")
 }
 
 model Penceramah {
-  id        Int       @id @default(autoincrement())
-  userId    String    @unique @map("user_id") @db.VarChar(150)
-  user      User      @relation(fields: [userId], references: [id])
-  keahlian  String    @db.VarChar(100)
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id       Int    @id @default(autoincrement())
+  userId   String @unique @map("user_id") @db.VarChar(150)
+  user     User   @relation(fields: [userId], references: [id])
+  keahlian String @db.VarChar(100)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("penceramah")
 }
 
 model Otp {
-  id          Int       @id @default(autoincrement())
-  phone       String    @unique @db.VarChar(20)
-  otp_hashed  String    @db.VarChar(150)
-  expired_otp String    @db.VarChar(100)
-  type        String    @db.VarChar(25)
-  createdAt   DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt   DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id          Int    @id @default(autoincrement())
+  phone       String @unique @db.VarChar(20)
+  otp_hashed  String @db.VarChar(150)
+  expired_otp String @db.VarChar(100)
+  type        String @db.VarChar(25)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("otp")
 }
 
 model Refresh_Token {
-  id                Int       @id @default(autoincrement())
-  userId            String    @unique @map("user_id") @db.VarChar(150)
-  user              User      @relation(fields: [userId], references: [id])
-  refreshToken      String    @map("refresh_token") @db.VarChar(250)
-  notificationToken String?   @map("notification_token") @db.VarChar(250)
-  createdAt         DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt         DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id                Int     @id @default(autoincrement())
+  userId            String  @unique @map("user_id") @db.VarChar(150)
+  user              User    @relation(fields: [userId], references: [id])
+  refreshToken      String  @map("refresh_token") @db.VarChar(250)
+  notificationToken String? @map("notification_token") @db.VarChar(250)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("refresh_token")
 }
 
 model Provinsi {
-  id         Int              @id @default(autoincrement())
-  kode       String           @db.VarChar(10)
-  nama       String           @db.VarChar(200)
+  id   Int    @id @default(autoincrement())
+  kode String @db.VarChar(10)
+  nama String @db.VarChar(200)
+
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime?        @updatedAt @map("updated_at")
   kota_kab   Kota_Kabupaten[]
   kecamatan  Kecamatan[]
-  createdAt  DateTime         @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt  DateTime?        @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
   detailUser Detail_User[]
 
   @@map("provinsi")
@@ -214,12 +225,13 @@ model Kota_Kabupaten {
   provinsi   Provinsi      @relation(fields: [provinsiId], references: [id])
   kode       String        @db.VarChar(10)
   nama       String        @db.VarChar(150)
-  createdAt  DateTime      @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt  DateTime?     @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
   kecamatan  Kecamatan[]
   detailUser Detail_User[]
 
-  @@map("kota_Kabupaten")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@map("kota_kabupaten")
 }
 
 model Kecamatan {
@@ -230,8 +242,10 @@ model Kecamatan {
   kota_kab   Kota_Kabupaten @relation(fields: [kotaKabId], references: [id])
   kode       String         @unique @db.VarChar(10)
   nama       String         @db.VarChar(150)
-  createdAt  DateTime       @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt  DateTime?      @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   detailUser Detail_User[]
 
   @@index([nama])
@@ -239,25 +253,27 @@ model Kecamatan {
 }
 
 model Dokumen_Bukti {
-  id        Int       @id @default(autoincrement())
-  userId    String    @unique @map("user_id") @db.VarChar(250)
-  user      User      @relation(fields: [userId], references: [id])
-  nama      String    @db.VarChar(250)
-  path      String    @db.Text
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id     Int    @id @default(autoincrement())
+  userId String @unique @map("user_id") @db.VarChar(250)
+  user   User   @relation(fields: [userId], references: [id])
+  nama   String @db.VarChar(250)
+  path   String @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("dokumen_bukti")
 }
 
 model Dokumen_QR {
-  id        Int       @id @default(autoincrement())
-  mesjidId  Int       @unique @map("mesjid_id") @db.Int()
-  mesjid    Mesjid    @relation(fields: [mesjidId], references: [id])
-  nama      String    @db.VarChar(250)
-  path      String    @db.Text
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id       Int    @id @default(autoincrement())
+  mesjidId Int    @unique @map("mesjid_id") @db.Int()
+  mesjid   Mesjid @relation(fields: [mesjidId], references: [id])
+  nama     String @db.VarChar(250)
+  path     String @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("dokumen_qr")
 }
@@ -269,8 +285,8 @@ model Posts {
   captions String?       @db.Text
   media    Posts_Media[]
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("posts")
 }
@@ -283,8 +299,8 @@ model Posts_Media {
   path   String  @db.Text
   type   String? @db.VarChar(100)
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("posts_media")
 }
@@ -298,10 +314,11 @@ model Aktivitas {
   mulai    DateTime
   selesai  DateTime
 
-  createdAt DateTime            @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime?           @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
-  media     Aktivitas_Media[]
-  dokumen   Aktivitas_Dokumen[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  media   Aktivitas_Media[]
+  dokumen Aktivitas_Dokumen[]
 
   @@map("aktivitas")
 }
@@ -313,8 +330,8 @@ model Aktivitas_Media {
   nama        String    @db.VarChar(250)
   path        String    @db.Text
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("aktivitas_media")
 }
@@ -326,8 +343,8 @@ model Aktivitas_Dokumen {
   nama        String    @db.VarChar(250)
   path        String    @db.Text
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("aktivitas_dokumen")
 }
@@ -339,8 +356,9 @@ model Kajian {
   judul     String @db.VarChar(100)
   deskripsi String @db.Text()
 
-  createdAt DateTime          @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime?         @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   thumbnail Kajian_Thumbnail?
   contents  Kajian_Konten[]
 
@@ -354,8 +372,8 @@ model Kajian_Thumbnail {
   nama     String @db.VarChar(250)
   path     String @db.Text
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("kajian_thumbnail")
 }
@@ -367,8 +385,9 @@ model Kajian_Konten {
   judul    String @db.VarChar(100)
   captions String @db.Text
 
-  createdAt DateTime                 @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime?                @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   media     Kajian_Konten_Media?
   thumbnail Kajian_Konten_Thumbnail?
 
@@ -382,8 +401,8 @@ model Kajian_Konten_Media {
   nama           String        @db.VarChar(250)
   path           String        @db.Text
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("kajian_konten_media")
 }
@@ -395,8 +414,8 @@ model Kajian_Konten_Thumbnail {
   nama           String        @db.VarChar(250)
   path           String        @db.Text
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("kajian_konten_thumbnail")
 }
@@ -410,8 +429,8 @@ model Live {
   mulai   DateTime
   selesai DateTime
 
-  createdAt DateTime        @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime?       @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime?       @updatedAt @map("updated_at")
   thumbnail Live_Thumbnail?
 
   @@map("live")
@@ -424,8 +443,8 @@ model Live_Thumbnail {
   nama   String @db.VarChar(250)
   path   String @db.Text
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("live_thumbnail")
 }
@@ -437,8 +456,9 @@ model Podcast {
   judul    String @db.VarChar(100)
   captions String @db.Text
 
-  createdAt DateTime           @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime?          @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   thumbnail Podcast_Thumbnail?
   video     Podcast_Video?
 
@@ -452,8 +472,8 @@ model Podcast_Thumbnail {
   nama      String  @db.VarChar(250)
   path      String  @db.Text
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("podcast_thumbnail")
 }
@@ -465,8 +485,8 @@ model Podcast_Video {
   nama      String  @db.VarChar(250)
   path      String  @db.Text
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("podcast_video")
 }
@@ -478,8 +498,9 @@ model Kas {
   nama         String @db.VarChar(200)
   saldo        BigInt @default(0) @db.BigInt
 
-  createdAt    DateTime     @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt    DateTime?    @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   kasBank      Kas_Bank?
   kasArus      Kas_Arus[]
   kasSender    Kas_Mutasi[] @relation("kasSender")
@@ -495,8 +516,8 @@ model Kas_Bank {
   userBankId Int       @unique @map("user_bank_id")
   userBank   User_Bank @relation(fields: [userBankId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("kas_bank")
 }
@@ -511,8 +532,9 @@ model Kas_Arus {
   metode     String @db.VarChar(50)
   keterangan String @db.Text
 
-  createdAt      DateTime          @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt      DateTime?         @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   kasArusDokumen Kas_Arus_Dokumen?
 
   @@map("kas_arus")
@@ -525,8 +547,8 @@ model Kas_Arus_Dokumen {
   nama      String   @db.VarChar(250)
   path      String   @db.Text
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("kas_arus_dokumen")
 }
@@ -541,8 +563,8 @@ model Kas_Mutasi {
   kasRecipientId String @map("kas_recipient_Id") @db.VarChar(150)
   kasRecipient   Kas    @relation("kasRecipient", fields: [kasRecipientId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("kas_mutasi")
 }
@@ -552,9 +574,10 @@ model Bank {
   kode String @unique @db.VarChar(100)
   nama String @db.VarChar(150)
 
-  createdAt DateTime    @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime?   @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
-  userBank  User_Bank[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  userBank User_Bank[]
 
   @@map("bank")
 }
@@ -580,27 +603,32 @@ model Ayat {
 }
 
 model List_Categories {
-  id                   Int                     @id @default(autoincrement())
-  nama                 String                  @db.VarChar(100)
-  createdAt            DateTime                @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt            DateTime?               @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id   Int    @id @default(autoincrement())
+  nama String @db.VarChar(100)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   midtransTransactions Midtrans_Transactions[]
 
   @@map("list_categories")
 }
 
 model Midtrans_Transactions {
-  id              String            @id @db.VarChar(150)
-  recipientId     String            @map("recipient_id") @db.VarChar(150)
-  recipient       User              @relation("recipient", fields: [recipientId], references: [id])
-  categoryId      Int               @map("category_id") @db.Int
-  category        List_Categories   @relation(fields: [categoryId], references: [id])
-  amount          Int               @db.Int
-  netAmount       Int               @default(0) @map("net_amount") @db.Int
-  redirectUrl     String            @map("redirect_url") @db.VarChar(150)
-  isInserted      Boolean           @default(false) @map("is_inserted")
-  createdAt       DateTime          @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt       DateTime?         @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id          String          @id @db.VarChar(150)
+  recipientId String          @map("recipient_id") @db.VarChar(150)
+  recipient   User            @relation("recipient", fields: [recipientId], references: [id])
+  categoryId  Int             @map("category_id") @db.Int
+  category    List_Categories @relation(fields: [categoryId], references: [id])
+  amount      Int             @db.Int
+  netAmount   Int             @default(0) @map("net_amount") @db.Int
+  adminFee    Int             @default(0) @map("admin_fee") @db.Int
+  redirectUrl String          @map("redirect_url") @db.VarChar(150)
+  isInserted  Boolean         @default(false) @map("is_inserted")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   userInfaq       User_Infaq?
   userSedekah     User_Sedekah?
   transaksiMesjid Transaksi_Mesjid?
@@ -611,16 +639,18 @@ model Midtrans_Transactions {
 }
 
 model Infaq {
-  id            String         @id @db.VarChar(150)
-  mesjidUserId  String         @map("mesjid_user_id") @db.VarChar(150)
-  mesjid        Mesjid         @relation(fields: [mesjidUserId], references: [userId])
-  uraian        String         @db.Text
-  targetNominal BigInt         @map("target_nominal") @db.BigInt
-  saldoMasuk    BigInt         @default(0) @map("saldo_masuk") @db.BigInt
-  createdAt     DateTime       @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt     DateTime?      @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
-  infaqTarget   Infaq_Target[]
-  infaqMedia    Infaq_Media[]
+  id            String @id @db.VarChar(150)
+  mesjidUserId  String @map("mesjid_user_id") @db.VarChar(150)
+  mesjid        Mesjid @relation(fields: [mesjidUserId], references: [userId])
+  uraian        String @db.Text
+  targetNominal BigInt @map("target_nominal") @db.BigInt
+  saldoMasuk    BigInt @default(0) @map("saldo_masuk") @db.BigInt
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  infaqTarget Infaq_Target[]
+  infaqMedia  Infaq_Media[]
 
   @@map("infaq")
 }
@@ -633,21 +663,23 @@ model Infaq_Media {
   path    String  @db.VarChar(150)
   type    String? @db.VarChar(100)
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("infaq_media")
 }
 
 model User_Infaq {
-  id          Int                   @id @default(autoincrement())
-  midtransId  String                @unique @map("midtrans_id") @db.VarChar(150)
-  midtrans    Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
-  userId      String                @map("user_id") @db.VarChar(150)
-  user        User                  @relation(fields: [userId], references: [id])
-  pesan       String?               @db.Text
-  createdAt   DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt   DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id         Int                   @id @default(autoincrement())
+  midtransId String                @unique @map("midtrans_id") @db.VarChar(150)
+  midtrans   Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
+  userId     String                @map("user_id") @db.VarChar(150)
+  user       User                  @relation(fields: [userId], references: [id])
+  pesan      String?               @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   infaqTarget Infaq_Target?
 
   @@map("user_infaq")
@@ -664,10 +696,12 @@ model Infaq_Target {
 }
 
 model Kategori_Sedekah {
-  id              Int                @id @default(autoincrement())
-  nama            String             @db.VarChar(100)
-  createdAt       DateTime           @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt       DateTime?          @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  id   Int    @id @default(autoincrement())
+  nama String @db.VarChar(100)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
   penerimaSedekah Penerima_Sedekah[]
   userSedekah     User_Sedekah[]
 
@@ -684,8 +718,9 @@ model Penerima_Sedekah {
   usia           Int              @db.Int
   jumlahKeluarga Int              @map("jumlah_keluarga") @db.Int
   alamat         String           @db.Text
-  createdAt      DateTime         @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt      DateTime?        @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("penerima_sedekah")
 }
@@ -699,8 +734,9 @@ model User_Sedekah {
   kategoriId Int                   @map("kategori_id") @db.Int()
   kategori   Kategori_Sedekah      @relation(fields: [kategoriId], references: [id])
   pesan      String?               @db.Text
-  createdAt  DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt  DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("user_sedekah")
 }
@@ -712,8 +748,9 @@ model User_Kafalah {
   midtransId String                @unique @map("midtrans_id") @db.VarChar(150)
   midtrans   Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
   pesan      String?               @db.Text
-  createdAt  DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt  DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 }
 
 model Donasi {
@@ -723,8 +760,9 @@ model Donasi {
   midtransId String                @unique @map("midtrans_id") @db.VarChar(150)
   midtrans   Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
   pesan      String?               @db.Text
-  createdAt  DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt  DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("donasi")
 }
@@ -735,8 +773,9 @@ model Transaksi_Mesjid {
   mesjid       Mesjid                @relation(fields: [mesjidUserId], references: [userId])
   midtransId   String                @unique @map("midtrans_id") @db.VarChar(150)
   midtrans     Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
-  createdAt    DateTime              @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt    DateTime?             @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("transaksi_mesjid")
 }
@@ -752,8 +791,8 @@ model User_Deactivation {
   alasan     String  @db.Text
   acceptTerm Boolean @default(false) @map("accept_term")
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("user_deactivation")
 }
@@ -768,8 +807,8 @@ model Withdraw {
   status     String    @default("PENDING") @db.VarChar(10)
   pesan      String?   @db.Text
 
-  createdAt DateTime  @default(dbgenerated("NOW()")) @map("created_at") @db.DateTime
-  updatedAt DateTime? @default(dbgenerated("NOW() ON UPDATE NOW()")) @map("updated_at") @db.DateTime
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("withdraw")
 }
