@@ -17,6 +17,7 @@ import { CharityModule } from './charity/charity.module';
 import { LiveModule } from './live/live.module';
 import { WithdrawModule } from './withdraw/withdraw.module';
 import { PodcastModule } from './podcast/podcast.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { PodcastModule } from './podcast/podcast.module';
     LiveModule,
     WithdrawModule,
     PodcastModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

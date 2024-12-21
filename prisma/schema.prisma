@@ -46,6 +46,8 @@ model User {
   Withdraw          Withdraw[]
   Donasi            Donasi[]
   podcast           Podcast[]
+  langganan         Langganan_User[]
+  riwayatLangganan  Riwayat_Langganan[]
 
   @@map("user")
 }
@@ -634,6 +636,7 @@ model Midtrans_Transactions {
   transaksiMesjid Transaksi_Mesjid?
   User_Kafalah    User_Kafalah?
   Donasi          Donasi?
+  langganan       Riwayat_Langganan?
 
   @@map("midtrans_transactions")
 }
@@ -811,4 +814,50 @@ model Withdraw {
   updatedAt DateTime? @updatedAt @map("updated_at")
 
   @@map("withdraw")
+}
+
+model Langganan {
+  id        Int                 @id @default(autoincrement())
+  nama      String              @db.VarChar(200)
+  jenis     String              @db.VarChar(200)
+  harga     Int
+  deskripsi String              @db.Text
+  user      Langganan_User[]
+  riwayat   Riwayat_Langganan[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@map("langganan")
+}
+
+model Langganan_User {
+  id          Int       @id @default(autoincrement())
+  userId      String    @map("user_id") @db.VarChar(150)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  langgananId Int
+  langganan   Langganan @relation(fields: [langgananId], references: [id])
+  mulai       DateTime
+  selesai     DateTime
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@map("langganan_user")
+}
+
+model Riwayat_Langganan {
+  id          Int                   @id @default(autoincrement())
+  userId      String                @map("user_id") @db.VarChar(150)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  midtransId  String                @unique @map("midtrans_id") @db.VarChar(150)
+  midtrans    Midtrans_Transactions @relation(fields: [midtransId], references: [id], onDelete: Cascade)
+  langgananId Int
+  langganan   Langganan             @relation(fields: [langgananId], references: [id])
+  durasi      Int?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@map("riwayat_langganan")
 }

@@ -12,16 +12,17 @@ import { v4 as uuid } from 'uuid';
 import { Snap } from 'midtrans-client';
 import * as crypto from 'crypto';
 import { UpdateWebhookDto } from './dto/update-midtrans.dto';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 @Injectable()
 export class MidtransService {
   constructor(
     private axiosService: AxiosService,
     private prismaService: PrismaService,
-  ) { }
+  ) {}
 
   public snap = new Snap({
-    isProduction: true,
+    isProduction: process.env.NODE_ENV === 'production',
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY,
   });
@@ -47,8 +48,8 @@ export class MidtransService {
           Donasi: {
             select: {
               userId: true,
-            }
-          }
+            },
+          },
         },
       });
 
@@ -127,7 +128,7 @@ export class MidtransService {
           id: true,
           amount: true,
           redirectUrl: true,
-        }
+        },
       });
     return midtransTransaction;
   }
@@ -135,13 +136,13 @@ export class MidtransService {
   async findAdminId() {
     const adminId = await this.prismaService.user.findFirst({
       where: {
-        id: { contains: "admin" },
+        id: { contains: 'admin' },
       },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (!adminId) {
-      throw new NotFoundException("Id Admin Tidak Ditemukan");
+      throw new NotFoundException('Id Admin Tidak Ditemukan');
     }
 
     return adminId.id;
@@ -152,9 +153,9 @@ export class MidtransService {
       .createHash('sha512')
       .update(
         payload.order_id +
-        payload.status_code +
-        payload.gross_amount +
-        process.env.MIDTRANS_SERVER_KEY,
+          payload.status_code +
+          payload.gross_amount +
+          process.env.MIDTRANS_SERVER_KEY,
       )
       .digest('hex');
     if (hash !== payload.signature_key) {
@@ -194,6 +195,11 @@ export class MidtransService {
               userId: true,
             },
           },
+          langganan: {
+            select: {
+              userId: true,
+            },
+          },
         },
       });
     if (!midtransTransaction) {
@@ -209,6 +215,7 @@ export class MidtransService {
       senderId:
         midtransTransaction.userInfaq?.userId ||
         midtransTransaction.userSedekah?.userId ||
+        midtransTransaction.langganan?.userId ||
         '',
       category: midtransTransaction.category.nama,
       infaqId: midtransTransaction.userInfaq?.infaqTarget?.infaqId || '',
@@ -229,10 +236,9 @@ export class MidtransService {
   }
 
   async addSaldo(paymentData, netAmount: number, role: string) {
-    if (role === "admin") {
+    if (role === 'admin') {
       await this.addAdminSaldo(paymentData, netAmount);
-    }
-    else {
+    } else {
       await this.addUserSaldo(paymentData, netAmount);
     }
   }
@@ -241,25 +247,25 @@ export class MidtransService {
     await this.prismaService.midtrans_Transactions.update({
       where: {
         id: paymentData.id,
-        recipientId: paymentData.recipientId
+        recipientId: paymentData.recipientId,
       },
       data: {
         isInserted: true,
         netAmount,
       },
-      select: { id: true }
+      select: { id: true },
     });
 
     await this.prismaService.detail_User.updateMany({
       where: {
         userId: {
-          contains: "admin",
+          contains: 'admin',
         },
       },
       data: {
         saldo: {
           increment: netAmount,
-        }
+        },
       },
     });
   }
@@ -443,6 +449,9 @@ export class MidtransService {
     if (paymentData.category === 'Program Infaq') {
       await this.addInfaqSaldoMasuk(paymentData, netAmount);
     }
+    if (paymentData.category === 'Langganan') {
+      await this.createUserSubscription(paymentData.senderId, paymentData.id);
+    }
     await this.pushNotification(paymentData);
   }
 
@@ -452,10 +461,74 @@ export class MidtransService {
 
   async verifyBankAccount(kode: string, noRekening: string) {
     try {
-      const result = await this.axiosService.irisInstance.get(`api/v1/account_validation?bank=${kode}&account=${noRekening}`);
+      const result = await this.axiosService.irisInstance.get(
+        `api/v1/account_validation?bank=${kode}&account=${noRekening}`,
+      );
       return result.data;
     } catch (e) {
-      throw new BadRequestException('Gagal Memverifikasi Akun Bank, Akun Bank Tidak Terdaftar')
+      throw new BadRequestException(
+        'Gagal Memverifikasi Akun Bank, Akun Bank Tidak Terdaftar',
+      );
     }
+  }
+
+  async createUserSubscriptionToDB(userId: string, langgananId: number, data) {
+    const userSubscription = await this.prismaService.langganan_User.findFirst({
+      where: {
+        userId,
+        langgananId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    await this.prismaService.langganan_User.upsert({
+      where: {
+        id: userSubscription.id || null,
+      },
+      create: {
+        userId,
+        langgananId,
+        ...data,
+      },
+      update: {
+        userId,
+        langgananId,
+        ...data,
+      },
+    });
+  }
+
+  async createUserSubscription(userId: string, orderId: string) {
+    const historySubcription =
+      await this.prismaService.riwayat_Langganan.findFirst({
+        where: {
+          midtransId: orderId,
+        },
+        select: {
+          langgananId: true,
+          durasi: true,
+          midtrans: {
+            select: {
+              amount: true,
+            },
+          },
+        },
+      });
+    const hari = historySubcription.durasi * 30;
+    const mulai = new Date();
+    const selesai = new Date(mulai);
+    selesai.setDate(selesai.getDate() + hari);
+    const data = {
+      mulai,
+      selesai,
+    };
+
+    await this.createUserSubscriptionToDB(
+      userId,
+      historySubcription.langgananId,
+      data,
+    );
   }
 }
