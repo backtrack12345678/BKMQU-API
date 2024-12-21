@@ -19,10 +19,11 @@ export class MidtransService {
   constructor(
     private axiosService: AxiosService,
     private prismaService: PrismaService,
-  ) {}
+  ) { }
 
   public snap = new Snap({
-    isProduction: process.env.NODE_ENV === 'production',
+    isProduction: false,
+    // isProduction: process.env.NODE_ENV === 'production',
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY,
   });
@@ -153,9 +154,9 @@ export class MidtransService {
       .createHash('sha512')
       .update(
         payload.order_id +
-          payload.status_code +
-          payload.gross_amount +
-          process.env.MIDTRANS_SERVER_KEY,
+        payload.status_code +
+        payload.gross_amount +
+        process.env.MIDTRANS_SERVER_KEY,
       )
       .digest('hex');
     if (hash !== payload.signature_key) {
