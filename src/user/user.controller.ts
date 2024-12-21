@@ -72,7 +72,7 @@ export class UserController {
     private liveService: LiveService,
     private kasService: KasService,
     private charityService: CharityService,
-  ) {}
+  ) { }
 
   @Post('/register/mesjid')
   @HttpCode(201)
@@ -537,6 +537,19 @@ export class UserController {
     };
   }
 
+  @Get('infaq/donatur')
+  @Auth()
+  async getDonaturInfaq(@Req() request: any, @Query() query: GetKasQueryDto) {
+    const result = await this.charityService.getDonaturInfaq(
+      request.user.id,
+      query,
+    );
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
   @Get('/infaq/:infaqId')
   @Auth()
   async getInfaqTargetById(@Param('infaqId') infaqId: string) {
@@ -551,19 +564,6 @@ export class UserController {
   @Auth()
   async getInfaqByKecamatan(@Req() request: any) {
     const result = await this.charityService.getInfaqByKecamatan(request);
-    return {
-      status: 'success',
-      data: result,
-    };
-  }
-
-  @Get('infaq/donatur')
-  @Auth()
-  async getDonaturInfaq(@Req() request: any, @Query() query: GetKasQueryDto) {
-    const result = await this.charityService.getDonaturInfaq(
-      request.user.id,
-      query,
-    );
     return {
       status: 'success',
       data: result,
