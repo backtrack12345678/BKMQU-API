@@ -485,7 +485,7 @@ export class MidtransService {
 
     await this.prismaService.langganan_User.upsert({
       where: {
-        id: userSubscription.id || null,
+        id: userSubscription.id || undefined,
       },
       create: {
         userId,
