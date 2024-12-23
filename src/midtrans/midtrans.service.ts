@@ -19,7 +19,7 @@ export class MidtransService {
   constructor(
     private axiosService: AxiosService,
     private prismaService: PrismaService,
-  ) { }
+  ) {}
 
   public snap = new Snap({
     isProduction: false,
@@ -154,9 +154,9 @@ export class MidtransService {
       .createHash('sha512')
       .update(
         payload.order_id +
-        payload.status_code +
-        payload.gross_amount +
-        process.env.MIDTRANS_SERVER_KEY,
+          payload.status_code +
+          payload.gross_amount +
+          process.env.MIDTRANS_SERVER_KEY,
       )
       .digest('hex');
     if (hash !== payload.signature_key) {
@@ -486,7 +486,7 @@ export class MidtransService {
 
     await this.prismaService.langganan_User.upsert({
       where: {
-        id: userSubscription.id || undefined,
+        id: userSubscription?.id || undefined,
       },
       create: {
         userId,
