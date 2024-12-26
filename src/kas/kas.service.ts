@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import {
   ConnectKasBankDto,
   CreateKasArusDto,
@@ -249,16 +249,20 @@ export class KasService {
     const user: Auth = request.user;
     const mesjidUserId: string = user.id;
     await this.kasHelper.checkKasOwner(mesjidUserId, param.kasId);
+    try {
+      await this.deleteKasArusFromDb(param)
+    } catch (e) {
+      throw new NotFoundException("Kas Arus Tidak Ditemukan")
+    }
+  }
+
+  async deleteKasArusFromDb(param: KasArusParamDto) {
     const arusKas = await this.prismaService.kas_Arus.delete({
       where: {
         id: param.arusKasId,
       },
       select: this.kasHelper.kasArusSelectCondition(),
     });
-
-    if (!arusKas) {
-      throw new HttpException('Arus Kas Gagal Dihapus', 500);
-    }
     await this.kasHelper.updateKasSaldoDelete(param.kasId, arusKas.tipe, arusKas.jumlah)
     if (arusKas.kasArusDokumen) {
       this.filesService.deleteSingleFile(arusKas.kasArusDokumen);
