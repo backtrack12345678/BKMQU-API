@@ -1,4 +1,9 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   CreateSubscriptionDto,
   SubscriptionsTransactionDto,
@@ -9,6 +14,8 @@ import { MidtransService } from '../midtrans/midtrans.service';
 import { PrismaService } from '../common/prisma.service';
 import { SubscriptionResponse } from './dto/response.dto';
 import { SubscriptionsTransactionParamDto } from './dto/params.dto';
+
+const RATE_FEE: number = 0.11;
 
 @Injectable()
 export class SubscriptionsService {
@@ -33,6 +40,35 @@ export class SubscriptionsService {
     });
 
     return subscription;
+  }
+
+  async getAllSubscriptions(user: Auth, param) {
+    if (user.role !== 'admin') {
+      if (param.jenis !== 'semua') {
+        if (param.jenis !== user.role) {
+          throw new HttpException(
+            'Tidak Dapat Melihat Paket Langganan Ini',
+            403,
+          );
+        }
+      }
+    }
+
+    const subscriptions = await this.prismaService.langganan.findMany({
+      where: {
+        jenis: param.jenis || undefined,
+      },
+      select: {
+        id: true,
+        nama: true,
+        harga: true,
+        jenis: true,
+        deskripsi: true,
+        createdAt: true,
+      },
+    });
+
+    return subscriptions;
   }
 
   findAll() {
@@ -72,6 +108,36 @@ export class SubscriptionsService {
     }
 
     return subscription;
+  }
+
+  async getUserSubscription(userId: string, type?: string) {
+    const userSubscriptions = await this.prismaService.langganan_User.findFirst(
+      {
+        where: {
+          userId,
+          ...(type && {
+            langganan: {
+              jenis: type,
+            },
+          }),
+        },
+        select: {
+          id: true,
+          langganan: {
+            select: {
+              id: true,
+              nama: true,
+              jenis: true,
+              harga: true,
+            },
+          },
+          mulai: true,
+          selesai: true,
+        },
+      },
+    );
+
+    return userSubscriptions;
   }
 
   async createSubscriptionTransaction(
@@ -131,12 +197,14 @@ export class SubscriptionsService {
       }
     }
 
-    const amount = subscription.harga * payload.durasi;
+    const totalPrice = subscription.harga * payload.durasi;
+    const fee = totalPrice * RATE_FEE;
+    const netPrice = totalPrice + fee;
     const snap = await this.midtransService.createAdminMitransTransaction(
       7,
-      amount,
+      netPrice,
     );
-    const historySubscriptions =
+    const historySubscription =
       await this.prismaService.riwayat_Langganan.create({
         data: {
           userId: user.id,
@@ -155,10 +223,124 @@ export class SubscriptionsService {
       id: snap.id,
       amount: snap.amount,
       redirectUrl: snap.redirectUrl,
-      createdAt: historySubscriptions.createdAt,
-      updatedAt: historySubscriptions.updatedAt,
+      createdAt: historySubscription.createdAt,
+      updatedAt: historySubscription.updatedAt,
+    };
+  }
+
+  async upgradeSubscriptionTransaction(user: Auth, payload, param) {
+    const subscription = await this.findOneSubsciption(
+      param.subscriptionId,
+      param.jenis,
+    );
+
+    if (subscription.jenis !== 'semua') {
+      if (subscription.jenis !== user.role) {
+        throw new HttpException('Tidak Dapat Membeli Paket Langganan Ini', 403);
+      }
+    }
+
+    const userSubscription = await this.getUserSubscription(
+      user.id,
+      subscription.jenis,
+    );
+
+    if (!userSubscription || userSubscription.selesai < new Date()) {
+      throw new NotFoundException(
+        'Kamu Belum Berlangganan, Tidak Bisa Meningkatkan',
+      );
+    }
+
+    // cek langganan harus lebih tinggi atau sama
+    if (subscription.harga < userSubscription.langganan.harga) {
+      throw new BadRequestException(
+        'Tidak Bisa Meningkatkan Paket Langganan Ke Yang Lebih Rendah',
+      );
+    }
+
+    await this.checkSubscriptionHistoryTransaction(
+      user.id,
+      param.subscriptionId,
+    );
+    const netPrice = this.calculateSubscriptionNetPrice(
+      subscription.harga,
+      payload.durasi,
+    );
+    const snap = await this.midtransService.createAdminMitransTransaction(
+      7,
+      netPrice,
+    );
+    const historySubscription = await this.createHistorySubscription(
+      user.id,
+      snap.id,
+      param.subscriptionId,
+      payload,
+    );
+
+    return {
+      id: snap.id,
+      amount: snap.amount,
+      redirectUrl: snap.redirectUrl,
+      createdAt: historySubscription.createdAt,
+      updatedAt: historySubscription.updatedAt,
     };
   }
 
   async mesjidSubscriptions() {}
+
+  async checkSubscriptionHistoryTransaction(
+    userId: string,
+    subscriptionId: number,
+  ) {
+    const historyTransaction =
+      await this.prismaService.riwayat_Langganan.findFirst({
+        where: {
+          userId: userId,
+          langgananId: subscriptionId,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        select: {
+          midtrans: {
+            select: {
+              isInserted: true,
+            },
+          },
+        },
+      });
+
+    if (historyTransaction && !historyTransaction.midtrans.isInserted) {
+      throw new BadRequestException(
+        'Transaksi Yang Lama Masih Ada Silahkan Hapus Atau Selesaikan Terlebih Dahulu',
+      );
+    }
+  }
+
+  calculateSubscriptionNetPrice(harga: number, durasi: number): number {
+    const totalPrice = harga * durasi;
+    const fee = totalPrice * RATE_FEE;
+    return totalPrice + fee;
+  }
+
+  async createHistorySubscription(
+    userId: string,
+    snapId: string,
+    subscriptionId: number,
+    payload,
+  ) {
+    return this.prismaService.riwayat_Langganan.create({
+      data: {
+        userId,
+        midtransId: snapId,
+        langgananId: subscriptionId,
+        ...payload,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
 }

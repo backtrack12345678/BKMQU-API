@@ -39,9 +39,17 @@ export class SubscriptionsController {
     };
   }
 
-  @Get()
-  findAll() {
-    return this.subscriptionsService.findAll();
+  @Get('/:jenis')
+  @Auth()
+  async getAllSubscriptions(@Req() request: any, @Param() param) {
+    const result = await this.subscriptionsService.getAllSubscriptions(
+      request.user,
+      param,
+    );
+    return {
+      status: 'success',
+      data: result,
+    };
   }
 
   @Get(':id')
@@ -65,6 +73,26 @@ export class SubscriptionsController {
   @Post(':jenis/:subscriptionId/buy')
   @Auth()
   async createSubscriptionTransaction(
+    @Req() request: any,
+    @Body() payload: SubscriptionsTransactionDto,
+    @Param() param: SubscriptionsTransactionParamDto,
+  ) {
+    const result =
+      await this.subscriptionsService.createSubscriptionTransaction(
+        request.user,
+        payload,
+        param,
+      );
+    return {
+      status: 'success',
+      message: 'Pembayaran Paket Langganan Berhasil Dibuat',
+      data: result,
+    };
+  }
+
+  @Patch(':jenis/:subscriptionId/upgrade')
+  @Auth()
+  async updateSubscriptionTransaction(
     @Req() request: any,
     @Body() payload: SubscriptionsTransactionDto,
     @Param() param: SubscriptionsTransactionParamDto,
