@@ -855,6 +855,7 @@ model Riwayat_Langganan {
   langgananId Int
   langganan   Langganan             @relation(fields: [langgananId], references: [id])
   durasi      Int?
+  jenis       String?               @db.VarChar(50)
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")

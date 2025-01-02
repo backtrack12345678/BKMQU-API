@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Req,
+  Query,
 } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import {
@@ -106,6 +107,19 @@ export class SubscriptionsController {
     return {
       status: 'success',
       message: 'Pembayaran Paket Langganan Berhasil Dibuat',
+      data: result,
+    };
+  }
+
+  @Get('/history')
+  @Auth()
+  async getHistoryTransactionSubscription(@Req() request: any, @Query() query) {
+    const result =
+      await this.subscriptionsService.getHistoryTransactionSubscription(
+        request.user,
+      );
+    return {
+      status: 'success',
       data: result,
     };
   }

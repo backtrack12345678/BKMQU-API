@@ -197,27 +197,23 @@ export class SubscriptionsService {
       }
     }
 
-    const totalPrice = subscription.harga * payload.durasi;
-    const fee = totalPrice * RATE_FEE;
-    const netPrice = totalPrice + fee;
+    const netPrice = this.calculateSubscriptionNetPrice(
+      subscription.harga,
+      payload.durasi,
+    );
+
     const snap = await this.midtransService.createAdminMitransTransaction(
       7,
       netPrice,
     );
-    const historySubscription =
-      await this.prismaService.riwayat_Langganan.create({
-        data: {
-          userId: user.id,
-          midtransId: snap.id,
-          langgananId: subscription.id,
-          ...payload,
-        },
-        select: {
-          id: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
+
+    const historySubscription = await this.createHistorySubscription(
+      user.id,
+      snap.id,
+      param.subscriptionId,
+      payload,
+      'beli',
+    );
 
     return {
       id: snap.id,
@@ -275,6 +271,7 @@ export class SubscriptionsService {
       snap.id,
       param.subscriptionId,
       payload,
+      'upgrade',
     );
 
     return {
@@ -328,12 +325,14 @@ export class SubscriptionsService {
     snapId: string,
     subscriptionId: number,
     payload,
+    jenis: string,
   ) {
     return this.prismaService.riwayat_Langganan.create({
       data: {
         userId,
         midtransId: snapId,
         langgananId: subscriptionId,
+        jenis,
         ...payload,
       },
       select: {
@@ -342,5 +341,59 @@ export class SubscriptionsService {
         updatedAt: true,
       },
     });
+  }
+
+  async getHistoryTransactionSubscription(user: Auth, query?) {
+    const historyTransaction =
+      await this.prismaService.riwayat_Langganan.findMany({
+        where: {
+          userId: user.id,
+          ...(query.jenis && {
+            langganan: {
+              jenis: query.jenis,
+            },
+          }),
+        },
+        orderBy: [
+          {
+            midtrans: {
+              isInserted: 'asc',
+            },
+          },
+          {
+            createdAt: 'desc',
+          },
+        ],
+        select: {
+          userId: true,
+          midtrans: {
+            select: {
+              id: true,
+              amount: true,
+              redirectUrl: true,
+              isInserted: true,
+            },
+          },
+          langganan: {
+            select: {
+              id: true,
+              nama: true,
+              jenis: true,
+              harga: true,
+            },
+          },
+        },
+      });
+
+    return historyTransaction.map((ht) => ({
+      id: ht.midtrans.id,
+      userId: ht.userId,
+      status: ht.midtrans.isInserted ? 'sudah dibayar' : 'belum dibayar',
+      langganan: {
+        ...ht.langganan,
+      },
+      hargaNet: ht.midtrans.amount,
+      url: ht.midtrans.redirectUrl,
+    }));
   }
 }

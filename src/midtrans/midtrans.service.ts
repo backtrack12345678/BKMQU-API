@@ -515,11 +515,30 @@ export class MidtransService {
               amount: true,
             },
           },
+          jenis: true,
         },
       });
+
+    let userSubscription;
+    if (historySubcription.jenis === 'upgrade') {
+      userSubscription = await this.prismaService.langganan_User.findFirst({
+        where: {
+          userId,
+          langgananId: historySubcription.langgananId,
+        },
+        select: {
+          id: true,
+          mulai: true,
+          selesai: true,
+        },
+      });
+    }
+    // jika update cek untuk mulai dan selesai nya terus cek dari riwayat dia update atau tidak
     const hari = historySubcription.durasi * 30;
-    const mulai = new Date();
-    const selesai = new Date(mulai);
+    const mulai = userSubscription ? userSubscription.mulai : new Date();
+    const selesai = userSubscription
+      ? new Date(userSubscription.selesai)
+      : new Date(mulai);
     selesai.setDate(selesai.getDate() + hari);
     const data = {
       mulai,
