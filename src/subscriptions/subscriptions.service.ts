@@ -348,9 +348,9 @@ export class SubscriptionsService {
       await this.prismaService.riwayat_Langganan.findMany({
         where: {
           userId: user.id,
-          ...(query.jenis && {
+          ...(query?.jenis && {
             langganan: {
-              jenis: query.jenis,
+              jenis: query?.jenis,
             },
           }),
         },
