@@ -40,6 +40,19 @@ export class SubscriptionsController {
     };
   }
 
+  @Get('/history')
+  @Auth()
+  async getHistoryTransactionSubscription(@Req() request: any, @Query() query) {
+    const result =
+      await this.subscriptionsService.getHistoryTransactionSubscription(
+        request.user,
+      );
+    return {
+      status: 'success',
+      data: result,
+    };
+  }
+
   @Get('/:jenis')
   @Auth()
   async getAllSubscriptions(@Req() request: any, @Param() param) {
@@ -107,19 +120,6 @@ export class SubscriptionsController {
     return {
       status: 'success',
       message: 'Pembayaran Paket Langganan Berhasil Dibuat',
-      data: result,
-    };
-  }
-
-  @Get('/history')
-  @Auth()
-  async getHistoryTransactionSubscription(@Req() request: any, @Query() query) {
-    const result =
-      await this.subscriptionsService.getHistoryTransactionSubscription(
-        request.user,
-      );
-    return {
-      status: 'success',
       data: result,
     };
   }
