@@ -366,6 +366,7 @@ export class SubscriptionsService {
         ],
         select: {
           userId: true,
+          durasi: true,
           midtrans: {
             select: {
               id: true,
@@ -392,6 +393,7 @@ export class SubscriptionsService {
       langganan: {
         ...ht.langganan,
       },
+      durasi: ht.durasi,
       hargaNet: ht.midtrans.amount,
       url: ht.midtrans.redirectUrl,
     }));
