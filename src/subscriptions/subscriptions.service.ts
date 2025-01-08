@@ -171,7 +171,9 @@ export class SubscriptionsService {
       await this.prismaService.riwayat_Langganan.findFirst({
         where: {
           userId: user.id,
-          langgananId: param.subscriptionId,
+          midtrans: {
+            isInserted: false,
+          },
         },
         orderBy: {
           createdAt: 'desc',
