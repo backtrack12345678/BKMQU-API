@@ -442,6 +442,8 @@ export class MidtransService {
       payload.payment_type,
       Number(payload.gross_amount),
     );
+    console.log(netAmount);
+
     await this.addSaldo(paymentData, netAmount, role);
 
     if (role === 'mesjid') {
