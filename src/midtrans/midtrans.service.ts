@@ -535,9 +535,9 @@ export class MidtransService {
     }
     // jika update cek untuk mulai dan selesai nya terus cek dari riwayat dia update atau tidak
     const hari = historySubcription.durasi * 30;
-    const mulai = userSubscription ? userSubscription.mulai : new Date();
+    const mulai = userSubscription ? userSubscription?.mulai : new Date();
     const selesai = userSubscription
-      ? new Date(userSubscription.selesai)
+      ? new Date(userSubscription?.selesai)
       : new Date(mulai);
     selesai.setDate(selesai.getDate() + hari);
     const data = {
