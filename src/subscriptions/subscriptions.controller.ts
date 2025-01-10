@@ -112,7 +112,7 @@ export class SubscriptionsController {
     @Param() param: SubscriptionsTransactionParamDto,
   ) {
     const result =
-      await this.subscriptionsService.createSubscriptionTransaction(
+      await this.subscriptionsService.upgradeSubscriptionTransaction(
         request.user,
         payload,
         param,
