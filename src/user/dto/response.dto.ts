@@ -56,6 +56,7 @@ export class UserResult extends User {
   pengurus?: PengurusResult;
   jamaah?: JamaahResult;
   penceramah?: PenceramahResult;
+  langganan?: any;
 }
 
 export class UserResponse extends User {
@@ -74,6 +75,7 @@ export class UserResponse extends User {
     mesjidUserId: string;
   };
   penceramah?: PenceramahResult;
+  langganan?: any;
 }
 
 export class UserBankResponse {

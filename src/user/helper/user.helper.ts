@@ -226,6 +226,10 @@ export class UserHelper {
       kota_kab: user.detailUser.kota_kab.nama,
       kecamatan: user.detailUser.kecamatan.nama,
       alamat: user.detailUser.alamat,
+      langganan:
+        type === 'private' && user.role === 'mesjid'
+          ? user.langganan
+          : undefined,
       saldo:
         type === 'private' || user.role === 'mesjid'
           ? parseInt(String(user.detailUser.saldo))

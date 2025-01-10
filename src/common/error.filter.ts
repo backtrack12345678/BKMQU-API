@@ -10,21 +10,21 @@ import { FilesService } from '../files/files.service';
 
 @Catch()
 export class ErrorFilter implements ExceptionFilter {
-  constructor(private filesService: FilesService) { }
+  constructor(private filesService: FilesService) {}
 
   catch(exception: any, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse();
     const request = host.switchToHttp().getRequest();
 
     //single file
-    if (request.file) {
-      this.filesService.deleteSingleFile(request.file);
-    }
+    // if (request.file) {
+    //   this.filesService.deleteSingleFile(request.file);
+    // }
 
     //multi file
-    if (request.files) {
-      this.filesService.deleteMultiFiles(request.files);
-    }
+    // if (request.files) {
+    //   this.filesService.deleteMultiFiles(request.files);
+    // }
 
     // const getFiles = (
     //   files:

@@ -45,17 +45,13 @@ const allowedMimeTypes = {
 
 @Controller('/api/kajian')
 export class KajianController {
-  constructor(private readonly kajianService: KajianService) { }
+  constructor(private readonly kajianService: KajianService) {}
 
   @Post('/')
   @Auth()
   @Roles(Role.PENCERAMAH)
   @HttpCode(201)
-  @UseInterceptors(
-    FileInterceptor('thumbnail', {
-      dest: './uploads/kajian',
-    }),
-  )
+  @UseInterceptors(FileInterceptor('thumbnail'))
   async createKajian(
     @Req() request: any,
     @Body() payload: CreateKajianDto,
@@ -70,6 +66,8 @@ export class KajianController {
     )
     thumbnail: Express.Multer.File,
   ): Promise<WebResponse<KajianResponse>> {
+    console.log(thumbnail);
+
     const result: KajianResponse = await this.kajianService.createKajian(
       request,
       payload,

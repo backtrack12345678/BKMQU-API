@@ -258,7 +258,22 @@ export class UserService {
           },
         }),
       },
-      select: this.userHelper.userSelectCondition(user.role),
+      select: {
+        langganan: {
+          select: {
+            mulai: true,
+            selesai: true,
+            langganan: {
+              select: {
+                nama: true,
+                jenis: true,
+                harga: true,
+              },
+            },
+          },
+        },
+        ...this.userHelper.userSelectCondition(user.role),
+      },
     });
 
     if (!userData) {

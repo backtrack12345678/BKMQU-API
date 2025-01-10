@@ -1,6 +1,6 @@
 // import { MimeType } from 'file-type/core';
 // import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
-import { fromFile } from 'file-type';
+import { fromBuffer, fromFile } from 'file-type';
 
 // @Injectable()
 // export class FileTypePipe implements PipeTransform {
@@ -45,7 +45,7 @@ export class FileTypesValidator extends FileValidator {
   validationOptions: Record<string, any>;
 
   async isValid(file: Express.Multer.File): Promise<boolean> {
-    const { ext, mime } = await fromFile(file.path);
+    const { ext, mime } = await fromBuffer(file.buffer);
     const allowedExtensions: string[] = this.mimeTypesToExtensions(
       this.validationOptions.mimeTypes[file.fieldname],
     );

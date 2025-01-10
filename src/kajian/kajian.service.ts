@@ -200,6 +200,12 @@ export class KajianService {
     thumbnail: Express.Multer.File,
   ): Promise<KajianResponse> {
     const user: Auth = request.user;
+
+    const { filename, url } = await this.filesService.uploadFileToAWS(
+      thumbnail,
+      'kajian',
+    );
+
     const kajian: KajianResult = await this.prismaService.kajian.create({
       data: {
         id: `kajian-${uuid().toString()}`,
@@ -207,8 +213,8 @@ export class KajianService {
         ...payload,
         thumbnail: {
           create: {
-            nama: thumbnail.filename,
-            path: thumbnail.path,
+            nama: filename,
+            path: url,
           },
         },
       },
