@@ -153,7 +153,9 @@ export class SubscriptionsService {
     const userSubscription = await this.prismaService.langganan_User.findFirst({
       where: {
         userId: user.id,
-        langgananId: param.subscriptionId,
+        langganan: {
+          jenis: subscription.jenis,
+        },
       },
       select: {
         id: true,
