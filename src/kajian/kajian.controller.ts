@@ -66,8 +66,6 @@ export class KajianController {
     )
     thumbnail: Express.Multer.File,
   ): Promise<WebResponse<KajianResponse>> {
-    console.log(thumbnail);
-
     const result: KajianResponse = await this.kajianService.createKajian(
       request,
       payload,
@@ -114,11 +112,7 @@ export class KajianController {
   @Patch('/:kajianId')
   @Auth()
   @Roles(Role.PENCERAMAH)
-  @UseInterceptors(
-    FileInterceptor('thumbnail', {
-      dest: './uploads/kajian',
-    }),
-  )
+  @UseInterceptors(FileInterceptor('thumbnail'))
   async updateKajian(
     @Req() request: any,
     @Param('kajianId') kajianId: string,
@@ -243,15 +237,10 @@ export class KajianController {
   @Auth()
   @Roles(Role.PENCERAMAH)
   @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'thumbnail', maxCount: 1 },
-        { name: 'media', maxCount: 1 },
-      ],
-      {
-        dest: './uploads/kajian',
-      },
-    ),
+    FileFieldsInterceptor([
+      { name: 'thumbnail', maxCount: 1 },
+      { name: 'media', maxCount: 1 },
+    ]),
   )
   async updateKajianContent(
     @Req() request: any,

@@ -70,6 +70,12 @@ export class LiveService {
     thumbnail: Express.Multer.File,
   ): Promise<LiveResponse> {
     const user: Auth = request.user;
+
+    const { filename, url } = await this.filesService.uploadFileToAWS(
+      thumbnail,
+      'live',
+    );
+
     const live: LiveResult = await this.prismaService.live.create({
       data: {
         id: `live-${uuid().toString()}`,
@@ -77,8 +83,8 @@ export class LiveService {
         ...payload,
         thumbnail: {
           create: {
-            nama: thumbnail.filename,
-            path: thumbnail.path,
+            nama: filename,
+            path: url,
           },
         },
       },
@@ -138,11 +144,13 @@ export class LiveService {
         thumbnail: {
           select: {
             path: true,
+            nama: true,
           },
         },
       },
     });
 
-    this.filesService.deleteSingleFile(live.thumbnail);
+    // this.filesService.deleteSingleFile(live.thumbnail);
+    await this.filesService.deleteFileFromAWS(live.thumbnail.nama, 'kajian');
   }
 }

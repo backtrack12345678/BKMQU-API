@@ -16,12 +16,9 @@ import { getHost } from 'src/common/utils/utils';
 import { Request } from 'express';
 import { CreateKasMutasiDto } from '../dto/create-kas.dto';
 
-
 @Injectable()
 export class Helper {
-  constructor(
-    private prismaService: PrismaService,
-  ) { }
+  constructor(private prismaService: PrismaService) {}
 
   createKasData(payload, mesjidUserId) {
     return {
@@ -49,9 +46,8 @@ export class Helper {
       fromKas: this.toKasResponse(kasMutasi.kasSender),
       toKas: this.toKasResponse(kasMutasi.kasRecipient),
       createdAt: kasMutasi.createdAt,
-    }
+    };
   }
-
 
   toKasArusResponse(kasArus, request: Request): KasArusResponse {
     return {
@@ -61,23 +57,31 @@ export class Helper {
       metode: kasArus.metode,
       keterangan: kasArus.keterangan,
       jumlah: Number(kasArus.jumlah),
-      dokumen: kasArus.kasArusDokumen ? `${getHost(request)}/api/files/arus-kas/${kasArus.kasArusDokumen.nama}` : undefined,
+      dokumen: kasArus.kasArusDokumen
+        ? `${getHost(request)}/api/files/arus-kas/${kasArus.kasArusDokumen.nama}`
+        : undefined,
       createdAt: kasArus.createdAt,
     };
   }
 
-  toKasDashboardResponse(kasArus, kasTotal, request: Request): KasArusDashboardResponse {
+  toKasDashboardResponse(
+    kasArus,
+    kasTotal,
+    request: Request,
+  ): KasArusDashboardResponse {
     return {
       totalMasuk: kasTotal.masuk,
       totalKeluar: kasTotal.keluar,
       saldo: kasTotal.saldo,
-      kasArus: kasArus.map(({ kasArus }) =>
-        kasArus.map((kas) => this.toKasArusResponse(kas, request))
-      ).flat(),
-    }
+      kasArus: kasArus
+        .map(({ kasArus }) =>
+          kasArus.map((kas) => this.toKasArusResponse(kas, request)),
+        )
+        .flat(),
+    };
   }
 
-  toKasArus
+  toKasArus;
 
   kasSelectionCondition() {
     return {
@@ -92,13 +96,13 @@ export class Helper {
               bank: {
                 select: {
                   nama: true,
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                },
+              },
+            },
+          },
+        },
+      },
+    };
   }
 
   kasMutasiSelectionCondition() {
@@ -111,8 +115,8 @@ export class Helper {
       },
       kasRecipient: {
         select: this.kasSelectionCondition(),
-      }
-    }
+      },
+    };
   }
 
   kasArusSelectCondition() {
@@ -127,15 +131,17 @@ export class Helper {
         select: {
           nama: true,
           path: true,
-        }
+        },
       },
       createdAt: true,
-    }
+    };
   }
 
-
-
-  async updateKasSaldo(kasId: string, jumlah: number, tipe: string): Promise<void> {
+  async updateKasSaldo(
+    kasId: string,
+    jumlah: number,
+    tipe: string,
+  ): Promise<void> {
     await this.prismaService.kas.update({
       where: {
         id: kasId,
@@ -145,15 +151,19 @@ export class Helper {
       },
       select: {
         id: true,
-      }
+      },
     });
   }
 
-  async updateExistingArusKasSaldo(kasId: string, arusKasId: number, tipe: string) {
+  async updateExistingArusKasSaldo(
+    kasId: string,
+    arusKasId: number,
+    tipe: string,
+  ) {
     let saldoUpdate;
     const result = await this.prismaService.kas_Arus.findUnique({
       where: {
-        id: arusKasId
+        id: arusKasId,
       },
       select: {
         jumlah: true,
@@ -161,22 +171,27 @@ export class Helper {
       },
     });
     if (tipe === 'Masuk') {
-      saldoUpdate = result.tipe === 'Masuk' ? { decrement: result.jumlah } : { increment: result.jumlah };
+      saldoUpdate =
+        result.tipe === 'Masuk'
+          ? { decrement: result.jumlah }
+          : { increment: result.jumlah };
     }
     if (tipe === 'Keluar') {
-      saldoUpdate = result.tipe === 'Keluar' ? { increment: result.jumlah } : { decrement: result.jumlah };
+      saldoUpdate =
+        result.tipe === 'Keluar'
+          ? { increment: result.jumlah }
+          : { decrement: result.jumlah };
     }
 
     await this.prismaService.kas.update({
       where: {
-        id: kasId
+        id: kasId,
       },
       data: {
-        saldo: saldoUpdate
+        saldo: saldoUpdate,
       },
     });
   }
-
 
   async updateKasSaldoDelete(kasId: string, tipe: string, jumlah: number) {
     await this.prismaService.kas.update({
@@ -184,19 +199,22 @@ export class Helper {
         id: kasId,
       },
       data: {
-        saldo: tipe == "Masuk" ? { decrement: jumlah } : { increment: jumlah },
-      }
-    })
+        saldo: tipe == 'Masuk' ? { decrement: jumlah } : { increment: jumlah },
+      },
+    });
   }
 
-  async verifyUserBank(mesjidUserId: string, userBankId: number): Promise<void> {
+  async verifyUserBank(
+    mesjidUserId: string,
+    userBankId: number,
+  ): Promise<void> {
     const userBank = await this.prismaService.user_Bank.findUnique({
       where: {
         id: userBankId,
       },
       select: {
         userId: true,
-      }
+      },
     });
 
     if (!userBank) {
@@ -211,7 +229,9 @@ export class Helper {
     const kasBankLimit = await this.getKasBankLimit(mesjidUserId);
     const countKasBank = await this.countKasBank(mesjidUserId);
     if (countKasBank >= kasBankLimit) {
-      throw new BadRequestException("Jumlah Kas Bank Sudah Mencapai Maksimum!, Lakukan Pembayaran Terlebih Dahulu");
+      throw new BadRequestException(
+        'Jumlah Kas Bank Sudah Mencapai Maksimum!, Lakukan Pembayaran Terlebih Dahulu',
+      );
     }
   }
 
@@ -222,7 +242,7 @@ export class Helper {
       },
       select: {
         kasBankLimit: true,
-      }
+      },
     });
     return kas.kasBankLimit;
   }
@@ -233,20 +253,20 @@ export class Helper {
         mesjidUserId: mesjidUserId,
         kasBank: {
           isNot: null,
-        }
+        },
       },
     });
-    return countKasBank
+    return countKasBank;
   }
 
   async checkBank(bankId: number): Promise<void> {
     const bank = await this.prismaService.bank.count({
       where: {
-        id: bankId
-      }
+        id: bankId,
+      },
     });
     if (bank < 0) {
-      throw new NotFoundException("Bank Tidak Ditemukan");
+      throw new NotFoundException('Bank Tidak Ditemukan');
     }
   }
 
@@ -280,28 +300,33 @@ export class Helper {
         AND: {
           kasSenderId: kasId,
           kasRecipientId: kasId,
-        }
-      }
+        },
+      },
     });
-    if ((kasArus > 0) && (kasMutasi > 0)) {
-      throw new BadRequestException("Kas Yang Sudah Memiliki Transaksi Tidak Boleh Dihapus")
+    if (kasArus > 0 && kasMutasi > 0) {
+      throw new BadRequestException(
+        'Kas Yang Sudah Memiliki Transaksi Tidak Boleh Dihapus',
+      );
     }
   }
 
   async checkKasSaldo(mesjidUserId: string, kasId: string, jumlah: number) {
-    const kas = await this.checkKasOwner(mesjidUserId, kasId)
+    const kas = await this.checkKasOwner(mesjidUserId, kasId);
     if (kas.saldo < jumlah) {
       throw new BadRequestException('Saldo Kas Tidak Cukup');
     }
   }
 
-  async getOldArusKasFoto(arusKasId: number): Promise<{ path: string }> {
+  async getOldArusKasFoto(
+    arusKasId: number,
+  ): Promise<{ path: string; nama: string }> {
     const arusKas = await this.prismaService.kas_Arus_Dokumen.findUnique({
       where: {
         kasArusId: arusKasId,
       },
       select: {
-        path: true
+        path: true,
+        nama: true,
       },
     });
     return arusKas;
@@ -324,7 +349,7 @@ export class Helper {
           gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
         },
       },
-    })
+    });
 
     const kasSaldo = await this.prismaService.kas.aggregate({
       where: {
@@ -332,21 +357,24 @@ export class Helper {
       },
       _sum: {
         saldo: true,
-      }
-    })
+      },
+    });
 
     return {
       masuk: groupKasArus.find((g) => g.tipe === 'Masuk')?._sum.jumlah || 0,
       keluar: groupKasArus.find((g) => g.tipe === 'Keluar')?._sum.jumlah || 0,
       saldo: Number(kasSaldo._sum.saldo),
-    }
+    };
   }
 
-  async verifyKasMutasi(mesjidUserId: string, payload: CreateKasMutasiDto): Promise<void> {
+  async verifyKasMutasi(
+    mesjidUserId: string,
+    payload: CreateKasMutasiDto,
+  ): Promise<void> {
     await this.checkKasOwner(mesjidUserId, payload.fromKasId);
     await this.checkKasOwner(mesjidUserId, payload.toKasId);
     await this.checkKasSaldo(mesjidUserId, payload.fromKasId, payload.jumlah);
-    await this.updateKasSaldo(payload.toKasId, payload.jumlah, "Masuk")
-    await this.updateKasSaldo(payload.fromKasId, payload.jumlah, "Keluar")
+    await this.updateKasSaldo(payload.toKasId, payload.jumlah, 'Masuk');
+    await this.updateKasSaldo(payload.fromKasId, payload.jumlah, 'Keluar');
   }
 }

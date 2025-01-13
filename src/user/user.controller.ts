@@ -72,15 +72,11 @@ export class UserController {
     private liveService: LiveService,
     private kasService: KasService,
     private charityService: CharityService,
-  ) { }
+  ) {}
 
   @Post('/register/mesjid')
   @HttpCode(201)
-  @UseInterceptors(
-    FileInterceptor('bukti', {
-      dest: './uploads/bukti/mesjid',
-    }),
-  )
+  @UseInterceptors(FileInterceptor('bukti'))
   async registerMesjid(
     @UploadedFile(
       new ParseFilePipeBuilder()
@@ -110,11 +106,7 @@ export class UserController {
 
   @Post('/register/pengurus')
   @HttpCode(201)
-  @UseInterceptors(
-    FileInterceptor('bukti', {
-      dest: './uploads/bukti/pengurus',
-    }),
-  )
+  @UseInterceptors(FileInterceptor('bukti'))
   async registerPengurus(
     @UploadedFile(
       new ParseFilePipeBuilder()

@@ -38,10 +38,7 @@ import {
   GetKasQueryDto,
   GetMutasiQueryDto,
 } from './dto/get.dto';
-import {
-  UpdateKasArusDto,
-  UpdateKasDto,
-} from './dto/update-kas.dto';
+import { UpdateKasArusDto, UpdateKasDto } from './dto/update-kas.dto';
 import { KasArusParamDto } from './dto/params.dto';
 import { FileTypesValidator } from '../common/pipes/file-types.validator';
 
@@ -52,7 +49,7 @@ const allowedMimeTypes = {
 
 @Controller('/api/kas')
 export class KasController {
-  constructor(private readonly kasService: KasService) { }
+  constructor(private readonly kasService: KasService) {}
 
   @Post()
   @Auth()
@@ -110,7 +107,7 @@ export class KasController {
     return {
       status: 'success',
       data: result,
-    }
+    };
   }
 
   @Patch('/:kasId')
@@ -121,7 +118,11 @@ export class KasController {
     @Body() payload: UpdateKasDto,
     @Param('kasId') kasId: string,
   ): Promise<WebResponse<KasResponse>> {
-    const result = await this.kasService.updateKas(request.user, payload, kasId);
+    const result = await this.kasService.updateKas(
+      request.user,
+      payload,
+      kasId,
+    );
     return {
       status: 'success',
       message: 'Kas Berhasil Diperbarui',
@@ -148,11 +149,7 @@ export class KasController {
   @Auth()
   @Roles(Role.MESJID)
   @HttpCode(201)
-  @UseInterceptors(
-    FileInterceptor('buktiKasArus', {
-      dest: './uploads/arus-kas',
-    }),
-  )
+  @UseInterceptors(FileInterceptor('buktiKasArus'))
   async createKasArus(
     @Req() request: any,
     @Param('kasId') kasId: string,
@@ -201,11 +198,7 @@ export class KasController {
   @Patch('/:kasId/arus/:arusKasId')
   @Auth()
   @Roles(Role.MESJID)
-  @UseInterceptors(
-    FileInterceptor('buktiKasArus', {
-      dest: './uploads/arus-kas',
-    }),
-  )
+  @UseInterceptors(FileInterceptor('buktiKasArus'))
   async updateKasArus(
     @Req() request: any,
     @Body() payload: UpdateKasArusDto,

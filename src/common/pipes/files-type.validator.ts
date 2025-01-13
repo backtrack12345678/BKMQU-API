@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { FileValidator } from '@nestjs/common';
-import { fromFile } from 'file-type';
+import { fromBuffer, fromFile } from 'file-type';
 
 @Injectable()
 export class FilesTypeValidator extends FileValidator {
   validationOptions: Record<string, any>;
 
-  async isValid(files: Record<string, Express.Multer.File[]>): Promise<boolean> {
+  async isValid(
+    files: Record<string, Express.Multer.File[]>,
+  ): Promise<boolean> {
     for (const fieldname in files) {
       const fileArray = files[fieldname];
       for (const file of fileArray) {
-        const { ext, mime } = await fromFile(file.path);
+        const { ext, mime } = await fromBuffer(file.buffer);
         const allowedExtensions: string[] = this.mimeTypesToExtensions(
           this.validationOptions.mimeTypes[fieldname],
         );

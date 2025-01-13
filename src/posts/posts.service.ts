@@ -71,23 +71,36 @@ export class PostsService {
     request,
     payload: CreatePostDto,
     media: Express.Multer.File[] | undefined,
-  ): Promise<PostResponse> {
+  ): Promise<PostResponse | any> {
     if (Object.keys(payload).length === 0 && !media) {
       throw new BadRequestException(['Payload Cannot Be Empty']);
     }
+
+    const uploadMedia =
+      media && media.length > 0
+        ? await Promise.all(
+            media.map(async (m) => {
+              const { filename, url } = await this.filesService.uploadFileToAWS(
+                m,
+                'posts',
+              );
+              return {
+                nama: filename,
+                path: url,
+                type: m.mimetype,
+              };
+            }),
+          )
+        : [];
 
     const post: PostResult = await this.prismaService.posts.create({
       data: {
         userId: request.user.id,
         ...payload,
-        ...(media &&
-          media.length > 0 && {
+        ...(uploadMedia &&
+          uploadMedia.length > 0 && {
             media: {
-              create: media.map((m) => ({
-                nama: m.filename,
-                path: m.path,
-                type: m.mimetype,
-              })),
+              create: uploadMedia,
             },
           }),
       },
@@ -155,13 +168,22 @@ export class PostsService {
         media: {
           select: {
             path: true,
+            nama: true,
           },
         },
       },
     });
 
     if (post.media.length > 0) {
-      this.filesService.deleteMultiFiles(post.media);
+      try {
+        await Promise.all(
+          post.media.map((post) =>
+            this.filesService.deleteFileFromAWS(post.nama, 'posts'),
+          ),
+        );
+      } catch (error) {
+        console.error('Gagal menghapus salah satu file:', error);
+      }
     }
   }
 }

@@ -1,4 +1,9 @@
-import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   ConnectKasBankDto,
   CreateKasArusDto,
@@ -31,12 +36,9 @@ export class KasService {
     private prismaService: PrismaService,
     private filesService: FilesService,
     private kasHelper: Helper,
-  ) { }
+  ) {}
 
-  async createKas(
-    user: Auth,
-    payload: CreateKasDto,
-  ): Promise<KasResponse> {
+  async createKas(user: Auth, payload: CreateKasDto): Promise<KasResponse> {
     const mesjidUserId: string = user.id;
     const kas = await this.prismaService.kas.create({
       data: this.kasHelper.createKasData(payload, mesjidUserId),
@@ -64,24 +66,21 @@ export class KasService {
       },
       select: {
         id: true,
-      }
+      },
     });
     if (!kasBank) {
       throw new HttpException('Kas Gagal Dihubungkan', 500);
     }
   }
 
-  async getKas(
-    user: Auth,
-    query: GetKasQueryDto
-  ): Promise<KasResponse[] | []> {
+  async getKas(user: Auth, query: GetKasQueryDto): Promise<KasResponse[] | []> {
     const mesjidUserId = user.id;
     const kas = await this.prismaService.kas.findMany({
       where: {
         mesjidUserId: mesjidUserId,
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
       take: query.takeCount || undefined,
       skip: (query.page - 1) * query.takeCount || undefined,
@@ -90,15 +89,13 @@ export class KasService {
     return kas.map((kas) => this.kasHelper.toKasResponse(kas));
   }
 
-  async getKuotaKasBank(
-    user: Auth
-  ): Promise<KuotaResponse> {
+  async getKuotaKasBank(user: Auth): Promise<KuotaResponse> {
     const mesjidUserId = user.id;
     const kasBankLimit = await this.kasHelper.getKasBankLimit(mesjidUserId);
     const countKasBank = await this.kasHelper.countKasBank(mesjidUserId);
     return {
-      kuota: kasBankLimit - countKasBank
-    }
+      kuota: kasBankLimit - countKasBank,
+    };
   }
 
   async updateKas(
@@ -120,8 +117,8 @@ export class KasService {
         kasBank: {
           update: {
             userBankId: payload.userBankId || undefined,
-          }
-        }
+          },
+        },
       },
       select: this.kasHelper.kasSelectionCondition(),
     });
@@ -141,7 +138,7 @@ export class KasService {
       },
       select: {
         id: true,
-      }
+      },
     });
     if (!kas) {
       throw new HttpException('Kas Gagal Dihapus', 500);
@@ -157,17 +154,22 @@ export class KasService {
     const user: Auth = request.user;
     const mesjidUserId: string = user.id;
     await this.kasHelper.checkKasOwner(mesjidUserId, kasId);
+
+    const uploadedBuktiKasArus = buktiKasArus
+      ? await this.filesService.uploadFileToAWS(buktiKasArus, 'arus-kas')
+      : '';
+
     const kasArus = await this.prismaService.kas_Arus.create({
       data: {
         kasId: kasId,
         ...payload,
-        ...(buktiKasArus && {
+        ...(uploadedBuktiKasArus && {
           kasArusDokumen: {
             create: {
-              nama: buktiKasArus.filename,
-              path: buktiKasArus.path
-            }
-          }
+              nama: uploadedBuktiKasArus.filename,
+              path: uploadedBuktiKasArus.url,
+            },
+          },
         }),
       },
       select: this.kasHelper.kasArusSelectCondition(),
@@ -191,14 +193,16 @@ export class KasService {
         createdAt: {
           gte: query.fromDate,
           lte: query.toDate,
-        }
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
       select: this.kasHelper.kasArusSelectCondition(),
     });
-    return kasArus.map((kasArus) => this.kasHelper.toKasArusResponse(kasArus, request));
+    return kasArus.map((kasArus) =>
+      this.kasHelper.toKasArusResponse(kasArus, request),
+    );
   }
 
   async updateKasArus(
@@ -210,8 +214,21 @@ export class KasService {
     const user: Auth = request.user;
     const mesjidUserId: string = user.id;
     await this.kasHelper.checkKasOwner(mesjidUserId, param.kasId);
-    await this.kasHelper.updateExistingArusKasSaldo(param.kasId, param.arusKasId, payload.tipe)
-    await this.kasHelper.updateKasSaldo(param.kasId, payload.jumlah, payload.tipe);
+
+    const uploadedBuktiKasArus = buktiKasArus
+      ? await this.filesService.uploadFileToAWS(buktiKasArus, 'arus-kas')
+      : '';
+
+    await this.kasHelper.updateExistingArusKasSaldo(
+      param.kasId,
+      param.arusKasId,
+      payload.tipe,
+    );
+    await this.kasHelper.updateKasSaldo(
+      param.kasId,
+      payload.jumlah,
+      payload.tipe,
+    );
     const oldBukti = await this.kasHelper.getOldArusKasFoto(param.arusKasId);
     const arusKas = await this.prismaService.kas_Arus.update({
       where: {
@@ -219,20 +236,21 @@ export class KasService {
       },
       data: {
         ...payload,
-        ...(buktiKasArus && {
+        ...(uploadedBuktiKasArus && {
           kasArusDokumen: {
             update: {
-              nama: buktiKasArus.filename,
-              path: buktiKasArus.path
-            }
-          }
+              nama: uploadedBuktiKasArus.filename,
+              path: uploadedBuktiKasArus.url,
+            },
+          },
         }),
       },
       select: this.kasHelper.kasArusSelectCondition(),
     });
 
     if (oldBukti) {
-      this.filesService.deleteSingleFile(oldBukti);
+      // this.filesService.deleteSingleFile(oldBukti);
+      await this.filesService.deleteFileFromAWS(oldBukti?.nama, 'arus-kas');
     }
 
     if (!arusKas) {
@@ -242,17 +260,14 @@ export class KasService {
     return this.kasHelper.toKasArusResponse(arusKas, request);
   }
 
-  async deleteKasArus(
-    request: any,
-    param: KasArusParamDto,
-  ): Promise<void> {
+  async deleteKasArus(request: any, param: KasArusParamDto): Promise<void> {
     const user: Auth = request.user;
     const mesjidUserId: string = user.id;
     await this.kasHelper.checkKasOwner(mesjidUserId, param.kasId);
     try {
-      await this.deleteKasArusFromDb(param)
+      await this.deleteKasArusFromDb(param);
     } catch (e) {
-      throw new NotFoundException("Kas Arus Tidak Ditemukan")
+      throw new NotFoundException('Kas Arus Tidak Ditemukan');
     }
   }
 
@@ -263,9 +278,17 @@ export class KasService {
       },
       select: this.kasHelper.kasArusSelectCondition(),
     });
-    await this.kasHelper.updateKasSaldoDelete(param.kasId, arusKas.tipe, arusKas.jumlah)
+    await this.kasHelper.updateKasSaldoDelete(
+      param.kasId,
+      arusKas.tipe,
+      arusKas.jumlah,
+    );
     if (arusKas.kasArusDokumen) {
-      this.filesService.deleteSingleFile(arusKas.kasArusDokumen);
+      // this.filesService.deleteSingleFile(arusKas.kasArusDokumen);
+      await this.filesService.deleteFileFromAWS(
+        arusKas.kasArusDokumen.nama,
+        'arus-kas',
+      );
     }
   }
 
@@ -283,7 +306,7 @@ export class KasService {
         jumlah: payload.jumlah,
       },
       select: this.kasHelper.kasMutasiSelectionCondition(),
-    })
+    });
     return this.kasHelper.toKasMutasiResponse(kasMutasi);
   }
 
@@ -303,7 +326,9 @@ export class KasService {
       },
       select: this.kasHelper.kasMutasiSelectionCondition(),
     });
-    return kasMutasi.map((kasMutasi) => this.kasHelper.toKasMutasiResponse(kasMutasi));
+    return kasMutasi.map((kasMutasi) =>
+      this.kasHelper.toKasMutasiResponse(kasMutasi),
+    );
   }
 
   async getDashboardArusKas(
@@ -322,7 +347,7 @@ export class KasService {
             createdAt: {
               gte: query.fromDate,
               lte: query.toDate,
-            }
+            },
           },
           take: query.takeCount || undefined,
           skip: (query.page - 1) * query.takeCount || undefined,

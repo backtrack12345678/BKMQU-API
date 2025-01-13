@@ -146,7 +146,9 @@ export class KajianService {
     }
   }
 
-  async getOldThumbnail(kajianId: string): Promise<{ path: string }> {
+  async getOldThumbnail(
+    kajianId: string,
+  ): Promise<{ path: string; nama: string }> {
     const kajian = await this.prismaService.kajian.findUnique({
       where: {
         id: kajianId,
@@ -155,6 +157,7 @@ export class KajianService {
         thumbnail: {
           select: {
             path: true,
+            nama: true,
           },
         },
       },
@@ -170,14 +173,14 @@ export class KajianService {
   async getKajianContentFile(
     kajianContentId: string,
     type: string = 'all',
-  ): Promise<{ [fieldname: string]: { path: string } | null }> {
+  ): Promise<{ [fieldname: string]: { path: string; nama: string } | null }> {
     const selectCondition: any = {};
 
     if (type === 'media' || type === 'all') {
-      selectCondition.media = { select: { path: true } };
+      selectCondition.media = { select: { path: true, nama: true } };
     }
     if (type === 'thumbnail' || type === 'all') {
-      selectCondition.thumbnail = { select: { path: true } };
+      selectCondition.thumbnail = { select: { path: true, nama: true } };
     }
 
     const kajianContent = await this.prismaService.kajian_Konten.findUnique({
@@ -268,6 +271,9 @@ export class KajianService {
     const user: Auth = request.user;
     await this.checkKajianOwner(user.id, kajianId);
 
+    const kajianThumbnail = thumbnail
+      ? await this.filesService.uploadFileToAWS(thumbnail, 'kajian')
+      : '';
     const oldThumbnail = thumbnail ? await this.getOldThumbnail(kajianId) : '';
 
     const kajian: KajianResult = await this.prismaService.kajian.update({
@@ -276,15 +282,15 @@ export class KajianService {
       },
       data: {
         ...payload,
-        ...(thumbnail && {
+        ...(kajianThumbnail && {
           thumbnail: {
             update: {
               where: {
                 kajianId: kajianId,
               },
               data: {
-                nama: thumbnail.filename,
-                path: thumbnail.path,
+                nama: kajianThumbnail.filename,
+                path: kajianThumbnail.url,
               },
             },
           },
@@ -294,7 +300,7 @@ export class KajianService {
     });
 
     if (oldThumbnail) {
-      this.filesService.deleteSingleFile(oldThumbnail);
+      await this.filesService.deleteFileFromAWS(oldThumbnail.nama, 'kajian');
     }
 
     return this.toKajianResponse(kajian, request);
@@ -311,28 +317,42 @@ export class KajianService {
         ...this.kajianSelectCondition,
         contents: {
           select: {
-            media: { select: { path: true } },
-            thumbnail: { select: { path: true } },
+            media: { select: { path: true, nama: true } },
+            thumbnail: { select: { path: true, nama: true } },
           },
         },
       },
     });
 
-    this.filesService.deleteSingleFile(kajian.thumbnail);
+    await this.filesService.deleteFileFromAWS(kajian.thumbnail.nama, 'kajian');
 
     if (kajian.contents.length > 0) {
-      const mediaPaths: { path: string }[] = kajian.contents?.map(
-        (content) => ({
-          path: content.media.path,
-        }),
-      );
-      this.filesService.deleteMultiFiles(mediaPaths);
-      const thumbnailPaths: { path: string }[] = kajian.contents?.map(
-        (content) => ({
-          path: content.thumbnail.path,
-        }),
-      );
-      this.filesService.deleteMultiFiles(thumbnailPaths);
+      // const mediaPaths: { path: string }[] = kajian.contents?.map(
+      //   (content) => ({
+      //     path: content.media.path,
+      //   }),
+      // );
+      // this.filesService.deleteMultiFiles(mediaPaths);
+      // const thumbnailPaths: { path: string }[] = kajian.contents?.map(
+      //   (content) => ({
+      //     path: content.thumbnail.path,
+      //   }),
+      // );
+      // this.filesService.deleteMultiFiles(thumbnailPaths);
+
+      try {
+        await Promise.all(
+          kajian.contents?.flatMap((content) => [
+            this.filesService.deleteFileFromAWS(
+              content.thumbnail.nama,
+              'kajian',
+            ),
+            this.filesService.deleteFileFromAWS(content.media.nama, 'kajian'),
+          ]) || [], // Using flatMap to combine results into a single array
+        );
+      } catch (error) {
+        console.error('Gagal menghapus salah satu file:', error);
+      }
     }
   }
 
@@ -345,6 +365,11 @@ export class KajianService {
     const user: Auth = request.user;
     await this.checkKajianOwner(user.id, kajianId);
 
+    const [uploadedMedia, uploadedThumbnail] = await Promise.all([
+      this.filesService.uploadFileToAWS(files.media[0], 'kajian'),
+      this.filesService.uploadFileToAWS(files.thumbnail[0], 'kajian'),
+    ]);
+
     const kajianContent: KajianContentResult =
       await this.prismaService.kajian_Konten.create({
         data: {
@@ -352,14 +377,14 @@ export class KajianService {
           ...payload,
           media: {
             create: {
-              nama: files.media[0].filename,
-              path: files.media[0].path,
+              nama: uploadedMedia.filename,
+              path: uploadedMedia.url,
             },
           },
           thumbnail: {
             create: {
-              nama: files.thumbnail[0].filename,
-              path: files.thumbnail[0].path,
+              nama: uploadedThumbnail.filename,
+              path: uploadedThumbnail.url,
             },
           },
         },
@@ -425,32 +450,40 @@ export class KajianService {
       param.kajianContentId,
     );
 
+    const updateData: any = { ...payload };
+
+    if (files?.media) {
+      const { filename, url } = await this.filesService.uploadFileToAWS(
+        files.media[0],
+        'kajian',
+      );
+      updateData.media = {
+        update: {
+          nama: filename,
+          path: url,
+        },
+      };
+    }
+
+    if (files?.thumbnail) {
+      const { filename, url } = await this.filesService.uploadFileToAWS(
+        files.thumbnail[0],
+        'kajian',
+      );
+      updateData.thumbnail = {
+        update: {
+          nama: filename,
+          path: url,
+        },
+      };
+    }
+
     const oldMedia = files?.media
       ? await this.getKajianContentFile(param.kajianContentId, 'media')
       : '';
     const oldThumbnail = files?.thumbnail
       ? await this.getKajianContentFile(param.kajianContentId, 'thumbnail')
       : '';
-
-    const updateData: any = { ...payload };
-
-    if (files?.media) {
-      updateData.media = {
-        update: {
-          nama: files.media[0].filename,
-          path: files.media[0].path,
-        },
-      };
-    }
-
-    if (files?.thumbnail) {
-      updateData.thumbnail = {
-        update: {
-          nama: files.thumbnail[0].filename,
-          path: files.thumbnail[0].path,
-        },
-      };
-    }
 
     const kajianContent = await this.prismaService.kajian_Konten.update({
       where: {
@@ -461,10 +494,15 @@ export class KajianService {
     });
 
     if (oldMedia) {
-      this.filesService.deleteSingleFile(oldMedia.media);
+      // this.filesService.deleteSingleFile(oldMedia.media);
+      await this.filesService.deleteFileFromAWS(oldMedia.media.nama, 'kajian');
     }
     if (oldThumbnail) {
-      this.filesService.deleteSingleFile(oldThumbnail.thumbnail);
+      // this.filesService.deleteSingleFile(oldThumbnail.thumbnail);
+      await this.filesService.deleteFileFromAWS(
+        oldThumbnail.thumbnail.nama,
+        'kajian',
+      );
     }
 
     return this.toKajianContentResponse(kajianContent, request);
@@ -480,12 +518,20 @@ export class KajianService {
     const kajianContent = await this.prismaService.kajian_Konten.delete({
       where: { id: param.kajianContentId },
       select: {
-        media: { select: { path: true } },
-        thumbnail: { select: { path: true } },
+        media: { select: { path: true, nama: true } },
+        thumbnail: { select: { path: true, nama: true } },
       },
     });
 
-    this.filesService.deleteSingleFile(kajianContent.media);
-    this.filesService.deleteSingleFile(kajianContent.thumbnail);
+    // this.filesService.deleteSingleFile(kajianContent.media);
+    // this.filesService.deleteSingleFile(kajianContent.thumbnail);
+
+    await Promise.all([
+      this.filesService.deleteFileFromAWS(kajianContent.media.nama, 'kajian'),
+      this.filesService.deleteFileFromAWS(
+        kajianContent.thumbnail.nama,
+        'kajian',
+      ),
+    ]);
   }
 }

@@ -1,4 +1,9 @@
-import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   CreateDonasi,
   CreateDonasiInfaqDto,
@@ -25,13 +30,13 @@ export class CharityService {
     private prismaService: PrismaService,
     private midtransService: MidtransService,
     private filesService: FilesService,
-  ) { }
+  ) {}
 
-  async createDonasi(
-    user: Auth,
-    payload: CreateDonasi,
-  ) {
-    const snap = await this.midtransService.createAdminMitransTransaction(6, payload.amount);
+  async createDonasi(user: Auth, payload: CreateDonasi) {
+    const snap = await this.midtransService.createAdminMitransTransaction(
+      6,
+      payload.amount,
+    );
     const donasi = await this.prismaService.donasi.create({
       data: {
         userId: user.id,
@@ -52,7 +57,7 @@ export class CharityService {
       redirectUrl: snap.redirectUrl,
       createdAt: donasi.createdAt,
       updatedAt: donasi.updatedAt,
-    }
+    };
   }
 
   async getAllDonasi(user: Auth, query: GetAllDonasiQueryDto) {
@@ -190,11 +195,11 @@ export class CharityService {
     };
   }
 
-  async createDonasiKafalah(
-    user: Auth,
-    payload: CreateDonasiPenceramahDto,
-  ) {
-    const snap = await this.midtransService.createMidtransTransaction(4, payload);
+  async createDonasiKafalah(user: Auth, payload: CreateDonasiPenceramahDto) {
+    const snap = await this.midtransService.createMidtransTransaction(
+      4,
+      payload,
+    );
     const userKafalah = await this.prismaService.user_Kafalah.create({
       data: {
         midtransId: snap.id,
@@ -214,7 +219,7 @@ export class CharityService {
       redirectUrl: snap.redirectUrl,
       createdAt: userKafalah.createdAt,
       updatedAt: userKafalah.updatedAt,
-    }
+    };
   }
 
   async createDonasiSedekah(
@@ -268,6 +273,21 @@ export class CharityService {
       throw new BadRequestException(['Photos Cannot Be Empty']);
     }
     const user: Auth = request.user;
+
+    const uploadedContent = await Promise.all(
+      content.map(async (m) => {
+        const { filename, url } = await this.filesService.uploadFileToAWS(
+          m,
+          'infaq',
+        );
+        return {
+          nama: filename,
+          path: url,
+          type: m.mimetype,
+        };
+      }),
+    );
+
     const infaq = await this.prismaService.infaq.create({
       data: {
         id: `infaq-${uuid()}`,
@@ -275,12 +295,8 @@ export class CharityService {
         uraian: payload.uraian,
         targetNominal: payload.targetNominal,
         infaqMedia: {
-          create: content.map((c) => ({
-            nama: c.filename,
-            path: c.path,
-            type: c.mimetype,
-          })),
-        }
+          create: uploadedContent,
+        },
       },
       select: {
         id: true,
@@ -291,7 +307,7 @@ export class CharityService {
         infaqMedia: {
           select: {
             nama: true,
-          }
+          },
         },
       },
     });
@@ -299,7 +315,9 @@ export class CharityService {
     return {
       id: infaq.id,
       uraian: infaq.uraian,
-      foto: infaq.infaqMedia.map((infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`),
+      foto: infaq.infaqMedia.map(
+        (infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`,
+      ),
       targetNominal: parseInt(String(infaq.targetNominal)),
       createdAt: infaq.createdAt,
       updatedAt: infaq.updatedAt,
@@ -325,7 +343,7 @@ export class CharityService {
         infaqMedia: {
           select: {
             nama: true,
-          }
+          },
         },
       },
     });
@@ -333,17 +351,16 @@ export class CharityService {
     return {
       id: infaq.id,
       uraian: infaq.uraian,
-      foto: infaq.infaqMedia.map((infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`),
+      foto: infaq.infaqMedia.map(
+        (infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`,
+      ),
       targetNominal: parseInt(String(infaq.targetNominal)),
       createdAt: infaq.createdAt,
       updatedAt: infaq.updatedAt,
     };
   }
 
-  async removeInfaq(
-    request: any,
-    infaqId: string,
-  ) {
+  async removeInfaq(request: any, infaqId: string) {
     const user: Auth = request.user;
     await this.validateInfaqOwner(user.id, infaqId);
     const infaq = await this.prismaService.infaq.delete({
@@ -354,12 +371,22 @@ export class CharityService {
         infaqMedia: {
           select: {
             path: true,
-          }
-        }
-      }
+            nama: true,
+          },
+        },
+      },
     });
     if (infaq.infaqMedia.length > 0) {
-      this.filesService.deleteMultiFiles(infaq.infaqMedia);
+      // this.filesService.deleteMultiFiles(infaq.infaqMedia);
+      try {
+        await Promise.all(
+          infaq.infaqMedia.map((media) =>
+            this.filesService.deleteFileFromAWS(media.nama, 'infaq'),
+          ),
+        );
+      } catch (error) {
+        console.error('Gagal menghapus salah satu file:', error);
+      }
     }
   }
 
@@ -375,13 +402,13 @@ export class CharityService {
       },
     });
     if (!result) {
-      throw new NotFoundException("Program Infaq Tidak Ditemukan");
+      throw new NotFoundException('Program Infaq Tidak Ditemukan');
     }
     if (result.mesjidUserId !== mesjidUserId) {
-      throw new HttpException("Program Infaq Ini Bukan Milik Anda", 403);
+      throw new HttpException('Program Infaq Ini Bukan Milik Anda', 403);
     }
     if (result.saldoMasuk > 0) {
-      throw new BadRequestException("Program Tidak Dapat Diupdate");
+      throw new BadRequestException('Program Tidak Dapat Diupdate');
     }
   }
 
@@ -566,7 +593,7 @@ export class CharityService {
         infaqMedia: {
           select: {
             nama: true,
-          }
+          },
         },
       },
       orderBy: {
@@ -576,7 +603,9 @@ export class CharityService {
     return result.map((infaq) => ({
       id: infaq.id,
       uraian: infaq.uraian,
-      foto: infaq.infaqMedia.map((infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`),
+      foto: infaq.infaqMedia.map(
+        (infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`,
+      ),
       targetNominal: Number(infaq.targetNominal),
       saldoMasuk: Number(infaq.saldoMasuk),
       createdAt: infaq.createdAt,
@@ -639,7 +668,7 @@ export class CharityService {
       },
       select: {
         kotaKabId: true,
-      }
+      },
     });
     const result = await this.prismaService.infaq.findMany({
       where: {
@@ -665,7 +694,7 @@ export class CharityService {
         infaqMedia: {
           select: {
             nama: true,
-          }
+          },
         },
       },
       orderBy: {
@@ -676,7 +705,9 @@ export class CharityService {
       id: infaq.id,
       mesjidUserId: infaq.mesjidUserId,
       uraian: infaq.uraian,
-      foto: infaq.infaqMedia.map((infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`),
+      foto: infaq.infaqMedia.map(
+        (infaq) => `${getHost(request)}/api/files/infaq/${infaq.nama}`,
+      ),
       targetNominal: Number(infaq.targetNominal),
       saldoMasuk: Number(infaq.saldoMasuk),
       createdAt: infaq.createdAt,

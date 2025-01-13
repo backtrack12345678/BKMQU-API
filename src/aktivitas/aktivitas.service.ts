@@ -15,7 +15,7 @@ export class AktivitasService {
   constructor(
     private prismaService: PrismaService,
     private filesService: FilesService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
   ) {}
 
   toAktivitasResponse(
@@ -28,10 +28,10 @@ export class AktivitasService {
       judul: aktivitas.judul,
       captions: aktivitas.captions,
       media: aktivitas.media.map(
-        (m) => `${host}/api/files/aktivitas/${m.nama}`,
+        (m) => `${host}/api/files/aktivitas/media/${m.nama}`,
       ),
       dokumen: aktivitas.dokumen.map(
-        (d) => `${host}/api/files/aktivitas/${d.nama}`,
+        (d) => `${host}/api/files/aktivitas/document/${d.nama}`,
       ),
       createdAt: aktivitas.createdAt,
     };
@@ -57,7 +57,10 @@ export class AktivitasService {
     };
   }
 
-  async checkAktivitasOwner(userId, aktivitasId): Promise<void> {
+  async checkAktivitasOwner(
+    userId: string,
+    aktivitasId: string,
+  ): Promise<void> {
     const aktivitas: { userId: string } =
       await this.prismaService.aktivitas.findUnique({
         where: {
@@ -81,19 +84,35 @@ export class AktivitasService {
     request,
     payload: CreateAktivitasDto,
     files?: { [fieldname: string]: Express.Multer.File[] },
-  ): Promise<AktivitasResponse> {
+  ): Promise<AktivitasResponse | any> {
     const media = files?.media
-      ? files.media.map((m) => ({
-          nama: m.filename,
-          path: m.path,
-        }))
+      ? await Promise.all(
+          files.media.map(async (m) => {
+            const { filename, url } = await this.filesService.uploadFileToAWS(
+              m,
+              'aktivitas',
+            );
+            return {
+              nama: filename,
+              path: url,
+            };
+          }),
+        )
       : [];
 
     const dokumen = files?.dokumen
-      ? files.dokumen.map((m) => ({
-          nama: m.filename,
-          path: m.path,
-        }))
+      ? await Promise.all(
+          files.dokumen.map(async (d) => {
+            const { filename, url } = await this.filesService.uploadFileToAWS(
+              d,
+              'aktivitas',
+            );
+            return {
+              nama: filename,
+              path: url,
+            };
+          }),
+        )
       : [];
 
     const aktivitas = await this.prismaService.aktivitas.create({
@@ -114,7 +133,7 @@ export class AktivitasService {
             detailUser: {
               select: {
                 nama: true,
-              }
+              },
             },
             mesjid: {
               select: {
@@ -124,34 +143,38 @@ export class AktivitasService {
                       select: {
                         refreshToken: {
                           select: {
-                            notificationToken: true
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                            notificationToken: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
-    const jamaahNotifToken = aktivitas.user.mesjid.jamaah.length === 0 ? [] 
-    : aktivitas.user.mesjid.jamaah
-      .filter((j) => j.user.refreshToken !== null)
-      .map((j) => j.user.refreshToken.notificationToken)
-      .filter((token) => token !== null);
-  
+    const jamaahNotifToken =
+      aktivitas.user.mesjid.jamaah.length === 0
+        ? []
+        : aktivitas.user.mesjid.jamaah
+            .filter((j) => j.user.refreshToken !== null)
+            .map((j) => j.user.refreshToken.notificationToken)
+            .filter((token) => token !== null);
+
     if (jamaahNotifToken.length > 0) {
       const notificationOptions = {
         aktivitasId: aktivitas.id,
-        mesjid: aktivitas.user.detailUser.nama
-      }
-      await this.notificationService.aktivitas(jamaahNotifToken, notificationOptions)
+        mesjid: aktivitas.user.detailUser.nama,
+      };
+      await this.notificationService.aktivitas(
+        jamaahNotifToken,
+        notificationOptions,
+      );
     }
-    
 
     return this.toAktivitasResponse(aktivitas, getHost(request));
   }
@@ -215,22 +238,40 @@ export class AktivitasService {
         media: {
           select: {
             path: true,
+            nama: true,
           },
         },
         dokumen: {
           select: {
             path: true,
+            nama: true,
           },
         },
       },
     });
 
     if (aktivitas.media.length > 0) {
-      await this.filesService.deleteMultiFiles(aktivitas.media);
+      try {
+        await Promise.all(
+          aktivitas.media.map((am) =>
+            this.filesService.deleteFileFromAWS(am.nama, 'aktivitas'),
+          ),
+        );
+      } catch (error) {
+        console.error('Gagal menghapus salah satu file:', error);
+      }
     }
 
     if (aktivitas.dokumen.length > 0) {
-      await this.filesService.deleteMultiFiles(aktivitas.dokumen);
+      try {
+        await Promise.all(
+          aktivitas.dokumen.map((ad) =>
+            this.filesService.deleteFileFromAWS(ad.nama, 'aktivitas'),
+          ),
+        );
+      } catch (error) {
+        console.error('Gagal menghapus salah satu file:', error);
+      }
     }
   }
 }

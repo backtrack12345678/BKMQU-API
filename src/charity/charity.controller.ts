@@ -41,16 +41,16 @@ const allowedMimeTypes = {
 
 @Controller('/api/charity')
 export class CharityController {
-  constructor(private readonly charityService: CharityService) { }
+  constructor(private readonly charityService: CharityService) {}
 
   @Post('/donasi')
   @Auth()
   @HttpCode(201)
-  async createDonasi(
-    @Req() request: any,
-    @Body() payload: CreateDonasi,
-  ) {
-    const result = await this.charityService.createDonasi(request.user, payload);
+  async createDonasi(@Req() request: any, @Body() payload: CreateDonasi) {
+    const result = await this.charityService.createDonasi(
+      request.user,
+      payload,
+    );
     return {
       status: 'success',
       message: 'Donasi Berhasil',
@@ -104,7 +104,7 @@ export class CharityController {
       status: 'success',
       message: 'Donasi Kafalah Berhasil Dibuat',
       data: result,
-    }
+    };
   }
 
   @Post('/infaq/:infaqId')
@@ -151,11 +151,7 @@ export class CharityController {
   @Auth()
   @Roles(Role.MESJID)
   @HttpCode(201)
-  @UseInterceptors(
-    FilesInterceptor('content', Infinity, {
-      dest: './uploads/infaq',
-    }),
-  )
+  @UseInterceptors(FilesInterceptor('content', Infinity))
   async createInfaqMesjid(
     @Req() request: any,
     @Body() payload: CreateInfaqMesjidDto,
@@ -193,7 +189,7 @@ export class CharityController {
     const result = await this.charityService.updateInfaq(
       request,
       infaqId,
-      payload
+      payload,
     );
     return {
       status: 'success',
@@ -209,10 +205,7 @@ export class CharityController {
     @Req() request: any,
     @Param('infaqId') infaqId: string,
   ) {
-    await this.charityService.removeInfaq(
-      request,
-      infaqId
-    );
+    await this.charityService.removeInfaq(request, infaqId);
     return {
       status: 'success',
       message: 'Program Infaq Berhasil Dihapus',
@@ -273,7 +266,6 @@ export class CharityController {
       data: true,
     };
   }
-
 
   // @Post('/mesjid/kas/enchance')
   // @Auth()

@@ -39,9 +39,7 @@ export class AktivitasController {
   @Auth()
   @Roles(Role.MESJID, Role.PENCERAMAH)
   @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'media' }, { name: 'dokumen' }], {
-      dest: './uploads/aktivitas',
-    }),
+    FileFieldsInterceptor([{ name: 'media' }, { name: 'dokumen' }]),
   )
   @HttpCode(201)
   async createAktivitas(

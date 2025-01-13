@@ -49,11 +49,16 @@ export class UserService {
     await this.userHelper.verifyNoRegisterMesjid(payload.noRegister);
     const wilayah = await this.userHelper.getWilayah(payload.kecamatanId);
 
+    const { filename, url } = await this.filesService.uploadFileToAWS(
+      bukti,
+      'bukti/mesjid',
+    );
+
     const user = await this.prismaService.user.create({
       data: {
         ...(await this.userHelper.dataRegister(payload, 'mesjid', wilayah)),
         mesjid: { create: { noRegister: payload.noRegister } },
-        dokumenBukti: { create: { nama: bukti.filename, path: bukti.path } },
+        dokumenBukti: { create: { nama: filename, path: url } },
       },
       select: {
         id: true,
@@ -75,6 +80,11 @@ export class UserService {
     await this.userHelper.verifyRegisteredMesjid(payload.mesjidId);
     const wilayah = await this.userHelper.getWilayah(payload.kecamatanId);
 
+    const { filename, url } = await this.filesService.uploadFileToAWS(
+      bukti,
+      'bukti/pengurus',
+    );
+
     const user = await this.prismaService.user.create({
       data: {
         ...(await this.userHelper.dataRegister(payload, 'pengurus', wilayah)),
@@ -85,7 +95,7 @@ export class UserService {
             uraianJabatan: payload.uraianJabatan,
           },
         },
-        dokumenBukti: { create: { nama: bukti.filename, path: bukti.path } },
+        dokumenBukti: { create: { nama: filename, path: url } },
       },
       select: {
         id: true,
@@ -338,14 +348,19 @@ export class UserService {
     image: Express.Multer.File,
   ): Promise<{ photo?: string; sampul?: string }> {
     const user: Auth = request.user;
+
+    const { filename, url } = await this.filesService.uploadFileToAWS(
+      image,
+      'users',
+    );
     const oldImage = await this.userHelper.getUserImage(user.id, param.type);
     let updateImage;
 
     const updateConditons = {
       where: { userId: user.id },
       data: {
-        nama: image.filename,
-        path: image.path,
+        nama: filename,
+        path: url,
       },
       select: { nama: true },
     };
@@ -367,7 +382,8 @@ export class UserService {
       oldImage &&
       !['default_user.jpg', 'default_sampul.jpg'].includes(oldImage.nama)
     ) {
-      this.filesService.deleteSingleFile(oldImage);
+      // this.filesService.deleteSingleFile(oldImage);
+      await this.filesService.deleteFileFromAWS(oldImage.nama, 'users');
     }
 
     return {

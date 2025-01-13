@@ -36,11 +36,7 @@ export class PostsController {
   @HttpCode(201)
   @Auth()
   @Roles(Role.MESJID, Role.PENCERAMAH)
-  @UseInterceptors(
-    FilesInterceptor('media', Infinity, {
-      dest: './uploads/posts',
-    }),
-  )
+  @UseInterceptors(FilesInterceptor('media', Infinity))
   async createPost(
     @Req() request,
     @Body() payload: CreatePostDto,

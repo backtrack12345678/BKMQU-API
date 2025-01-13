@@ -4,17 +4,18 @@ import { Response } from 'express';
 import { Auth } from '../common/auth.decorator';
 import { Roles } from '../common/role/role.decorator';
 import { Role } from '../common/role/role.enum';
+import * as fs from 'fs';
 
 @Controller('/api/files')
 export class FilesController {
-  constructor(private readonly filesService: FilesService) { }
+  constructor(private readonly filesService: FilesService) {}
 
   @Get('/users/:filename')
   async getUserPhoto(
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mime } = await this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.getFileFromAWS(
       filename,
       'users',
     );
@@ -29,7 +30,7 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mime } = await this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.getFileFromAWS(
       filename,
       'bukti/mesjid',
     );
@@ -45,7 +46,7 @@ export class FilesController {
     @Res() response: Response,
   ) {
     await this.filesService.checkBuktiPengurusOwner(request.user.id, filename);
-    const { fileStream, mime } = await this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.getFileFromAWS(
       filename,
       'bukti/pengurus',
     );
@@ -58,7 +59,7 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mime } = await this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.getFileFromAWS(
       filename,
       'posts',
     );
@@ -71,7 +72,7 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mime } = await this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.getFileFromAWS(
       filename,
       'aktivitas',
     );
@@ -84,7 +85,7 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mime } = await this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.getFileFromAWS(
       filename,
       'kajian',
     );
@@ -97,7 +98,7 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mime } = await this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.getFileFromAWS(
       filename,
       'infaq',
     );
@@ -105,13 +106,12 @@ export class FilesController {
     fileStream.pipe(response);
   }
 
-
   @Get('/arus-kas/:filename')
   async getArusKasPhoto(
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mime } = await this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.getFileFromAWS(
       filename,
       'arus-kas',
     );
@@ -124,7 +124,7 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() response: Response,
   ) {
-    const { fileStream, mime } = await this.filesService.serveFiles(
+    const { fileStream, mime } = await this.filesService.getFileFromAWS(
       filename,
       'live',
     );

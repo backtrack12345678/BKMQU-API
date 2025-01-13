@@ -37,11 +37,7 @@ export class LiveController {
   @Auth()
   @Roles(Role.PENCERAMAH)
   @HttpCode(201)
-  @UseInterceptors(
-    FileInterceptor('thumbnail', {
-      dest: './uploads/live',
-    }),
-  )
+  @UseInterceptors(FileInterceptor('thumbnail'))
   async createLive(
     @Req() request: any,
     @Body() payload: CreateLiveDto,
